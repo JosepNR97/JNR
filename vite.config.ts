@@ -4,7 +4,8 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Carga variables de entorno desde el archivo .env si existe
-  const env = loadEnv(mode, process.cwd(), '');
+  // Fix: Cast process to any to bypass TS error when @types/node is not fully loaded
+  const env = loadEnv(mode, (process as any).cwd(), '');
   
   return {
     plugins: [react()],
