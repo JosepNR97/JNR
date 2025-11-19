@@ -9,3 +9,6 @@ export const UNIVERSAL_DATA = {
     accenture: "https://upload.wikimedia.org/wikipedia/commons/c/cd/Accenture.svg"
   }
 };
+
+// Año de inicio para el cálculo automático de experiencia
+export const CAREER_START_YEAR = 2021;

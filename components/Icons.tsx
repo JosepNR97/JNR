@@ -13,20 +13,19 @@ import {
   MessageSquare,
   X,
   Send,
-  Cpu,
   Menu,
-  ShieldCheck,
+  LayoutTemplate, // For Enterprise Architecture
   Bot,
   Quote,
-  TrendingUp,
-  Briefcase
+  Briefcase,
+  GraduationCap,
+  BarChart3
 } from 'lucide-react';
 
 export const StrategyIcon = ({ className }: { className?: string }) => <Brain className={className} />;
-export const DigitalIcon = ({ className }: { className?: string }) => <Cpu className={className} />;
+export const ArchitectureIcon = ({ className }: { className?: string }) => <LayoutTemplate className={className} />;
 export const CloudIcon = ({ className }: { className?: string }) => <Cloud className={className} />;
 export const AgileIcon = ({ className }: { className?: string }) => <Rocket className={className} />;
-export const SecurityIcon = ({ className }: { className?: string }) => <ShieldCheck className={className} />;
 export const AIIcon = ({ className }: { className?: string }) => <Bot className={className} />;
 
 export const LinkedinIcon = ({ className }: { className?: string }) => <Linkedin className={className} />;
@@ -41,17 +40,17 @@ export const SendIcon = ({ className }: { className?: string }) => <Send classNa
 export const MenuIcon = ({ className }: { className?: string }) => <Menu className={className} />;
 export const CodeIcon = ({ className }: { className?: string }) => <Code2 className={className} />;
 export const QuoteIcon = ({ className }: { className?: string }) => <Quote className={className} />;
-export const ChartIcon = ({ className }: { className?: string }) => <TrendingUp className={className} />;
+export const EducationIcon = ({ className }: { className?: string }) => <GraduationCap className={className} />;
 export const BriefcaseIcon = ({ className }: { className?: string }) => <Briefcase className={className} />;
+export const ChartIcon = ({ className }: { className?: string }) => <BarChart3 className={className} />;
 
 export const getServiceIcon = (iconName: string, className?: string) => {
   switch (iconName) {
     case 'Strategy': return <StrategyIcon className={className} />;
-    case 'Digital': return <DigitalIcon className={className} />;
+    case 'Architecture': return <ArchitectureIcon className={className} />;
     case 'Cloud': return <CloudIcon className={className} />;
     case 'Agile': return <AgileIcon className={className} />;
     case 'AI': return <AIIcon className={className} />;
-    case 'Security': return <SecurityIcon className={className} />;
     default: return <CodeIcon className={className} />;
   }
 };

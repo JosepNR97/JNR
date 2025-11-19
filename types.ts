@@ -12,7 +12,7 @@ export interface ServiceItem {
   id: string;
   title: string;
   description: string;
-  iconName: 'Strategy' | 'Digital' | 'Cloud' | 'Agile' | 'AI' | 'Security';
+  iconName: 'Strategy' | 'Architecture' | 'Cloud' | 'Agile' | 'AI';
 }
 
 export interface TestimonialItem {
@@ -20,6 +20,14 @@ export interface TestimonialItem {
   quote: string;
   author: string;
   role: string;
+}
+
+export interface EducationItem {
+  id: string;
+  title: string;
+  institution: string;
+  description: string;
+  items: string[];
 }
 
 export interface CaseStudyItem {
@@ -57,7 +65,7 @@ export interface TranslationStructure {
   nav: {
     about: string;
     services: string;
-    work: string;
+    education: string;
     testimonials: string;
     experience: string;
     contact: string;
@@ -74,9 +82,7 @@ export interface TranslationStructure {
     p1: string;
     p2: string;
     p3: string;
-    years: string;
     yearsLabel: string;
-    projects: string;
     projectsLabel: string;
   };
   services: {
@@ -84,11 +90,11 @@ export interface TranslationStructure {
     subtitle: string;
     items: ServiceItem[];
   };
-  caseStudies: {
+  education: {
     badge: string;
     title: string;
     subtitle: string;
-    items: CaseStudyItem[];
+    items: EducationItem[];
   };
   testimonials: {
     title: string;
@@ -105,6 +111,12 @@ export interface TranslationStructure {
   };
   certifications: {
     title: string;
+  };
+  caseStudies: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    items: CaseStudyItem[];
   };
   contact: {
     title: string;

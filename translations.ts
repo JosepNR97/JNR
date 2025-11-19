@@ -6,7 +6,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
     nav: {
       about: "Sobre mi",
       services: "Serveis",
-      work: "Casos d'èxit",
+      education: "Formació",
       testimonials: "Testimonis",
       experience: "Experiència",
       contact: "Contactar"
@@ -23,10 +23,8 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
       p1: "Consultor d'estratègia tecnològica orientat a resultats amb més de 10 anys d'experiència especialitzant-me en transformació digital, intel·ligència artificial i ciberseguretat. Compto amb un historial provat alineant iniciatives tecnològiques complexes amb objectius de negoci crítics per millorar dràsticament l'eficiència operativa i accelerar el creixement dels ingressos.",
       p2: "Com a consultor independent, combino visió estratègica amb un profund coneixement tècnic. El meu enfocament es centra en desmitificar la tecnologia per a l'alta direcció, permetent decisions informades que impulsen el creixement.",
       p3: "He treballat amb startups en fase de creixement i grans corporacions, adaptant metodologies àgils i arquitectures modernes a les necessitats específiques de cada negoci.",
-      years: "10+",
       yearsLabel: "Anys d'experiència",
-      projects: "25+",
-      projectsLabel: "Projectes liderats"
+      projectsLabel: "Projectes executats"
     },
     services: {
       title: "Àrees d'especialització",
@@ -40,60 +38,52 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
         },
         {
           id: "s2",
-          title: "Intel·ligència artificial",
-          description: "Implementació d'IA i Machine Learning per a automatització i anàlisi predictiu.",
-          iconName: "AI"
+          title: "Arquitectura empresarial",
+          description: "Disseny de mapes de capacitats, gestió de portafoli d'aplicacions i definició d'arquitectures objectiu.",
+          iconName: "Architecture"
         },
         {
           id: "s3",
-          title: "Ciberseguretat estratègica",
-          description: "Disseny de marcs de seguretat resilients i gestió de riscos corporatius.",
-          iconName: "Security"
+          title: "Transformació cloud i aplicacions",
+          description: "Modernització d'arquitectures, estratègies de migració (6R) i disseny d'aplicacions natives al núvol.",
+          iconName: "Cloud"
         },
         {
           id: "s4",
-          title: "Transformació cloud",
-          description: "Modernització d'infraestructura per a màxima agilitat i optimització de costos.",
-          iconName: "Cloud"
+          title: "Intel·ligència artificial i GenAI",
+          description: "Exploració de casos d'ús, desplegament d'agents intel·ligents i adopció d'IA Generativa.",
+          iconName: "AI"
         }
       ]
     },
-    caseStudies: {
-      badge: "Portafoli selecte",
-      title: "Casos d'èxit",
-      subtitle: "Exemples reals de transformació estratègica i resultats quantificables en entorns complexos.",
+    education: {
+      badge: "Formació continuada",
+      title: "Formació i certificacions",
+      subtitle: "El compromís amb l'excel·lència tècnica requereix un aprenentatge constant i validació pels estàndards de la indústria.",
       items: [
         {
-          id: "cs1",
-          title: "Transformació digital integral en retail global",
-          client: "Cadena Multinacional de Moda (Confidencial)",
-          challengeTitle: "El desafiament",
-          challenge: "El client operava amb sistemes heretats desconnectats (silos), la qual cosa causava ineficiències en la cadena de subministrament i una experiència de client fragmentada.",
-          approachTitle: "Enfocament estratègic",
-          approach: "Vaig dissenyar i implementar una estratègia omnicanal basada en microserveis al núvol, integrant inventari en temps real i anàlisi de dades de clients.",
-          resultsTitle: "Resultats clau",
-          results: [
-            "Millora del 40% en l'eficiència de la cadena de subministrament.",
-            "Augment del 22% en les vendes online gràcies a la personalització.",
-            "Reducció del 30% en costos de manteniment de TI."
-          ],
-          cta: "Sol·licitar detalls complets"
+          id: "ed1",
+          title: "Certificacions professionals",
+          institution: "Estàndards de la indústria",
+          description: "Acreditacions tècniques i metodològiques que validen el coneixement en arquitectura, agilitat i plataformes cloud.",
+          items: [
+            "The Open Group Certified: TOGAF 9",
+            "Scaled Agile: SAFe 6 Agilist",
+            "AWS Certified Cloud Practitioner",
+            "Google Cloud Digital Leader",
+            "Microsoft Certified: Azure Fundamentals",
+            "Ardoq & LeanIX Certified"
+          ]
         },
         {
-          id: "cs2",
-          title: "Optimització operativa mitjançant IA en fintech",
-          client: "Plataforma de Pagaments Digitals",
-          challengeTitle: "El desafiament",
-          challenge: "El ràpid creixement d'usuaris va saturar el suport al client i va augmentar els falsos positius en la detecció de fraus, frenant l'expansió.",
-          approachTitle: "Enfocament estratègic",
-          approach: "Vaig liderar l'adopció de models d'IA per a la detecció predictiva de fraus i vaig desplegar assistents virtuals avançats (NLP) per a atenció al client.",
-          resultsTitle: "Resultats clau",
-          results: [
-            "Reducció del 95% en temps de resposta de suport (Nivell 1).",
-            "Disminució del 60% en pèrdues per frau transaccional.",
-            "Creixement d'ingressos del 15% en recuperar transaccions legítimes."
-          ],
-          cta: "Sol·licitar detalls complets"
+          id: "ed2",
+          title: "Formació acadèmica",
+          institution: "Universitat i Postgrau",
+          description: "Base acadèmica sòlida en enginyeria i gestió tecnològica.",
+          items: [
+            "Grau en Enginyeria Informàtica",
+            "Màster en Gestió i Direcció de Sistemes TI"
+          ]
         }
       ]
     },
@@ -136,9 +126,9 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           description: "Consultoria estratègica enfocada en evolució d'arquitectura, anàlisi de sistemes crítics i definició de marcs d'arquitectura empresarial.",
           logoUrl: UNIVERSAL_DATA.logos.ntt,
           achievements: [
-            "2025: SECTOR PÚBLIC (TRANSPORT) - Evolució d'arquitectura i sistemes: Anàlisi de les capacitats actuals a nivell d'aplicacions i tecnologia com a part d'un important programa de Transformació Digital, amb l'objectiu de definir l'arquitectura objectiu i formular un pla estratègic de transició, detallant iniciatives concretes per migrar cap a una plataforma tecnològica modernitzada.",
-            "2025: SECTOR PÚBLIC - Anàlisi de disposició per a la presa d'un sistema: Com a part d'una Oficina Tècnica, alineació estratègica de múltiples línies de treball (Arquitectura de Solució, Interoperabilitat i Integració, DevOps, Seguretat, etc.) per dur a terme una avaluació de preparació per a l'assumpció d'un sistema crític. El projecte va incloure una anàlisi de riscos sobre els serveis del proveïdor actual, que va concloure amb la creació d'un pla de mitigació integral, iniciatives de remediació i un full de ruta detallat per a la implementació.",
-            "2025: COMPANYIA D'ASSEGURANCES - Visió i anàlisi d'arquitectura: Avaluació de les capacitats actuals de la funció d'arquitectura empresarial per analitzar el seu grau de maduresa i generació de principis directors per al futur de l'arquitectura de la companyia, acompanyada de la descripció d'iniciatives a executar per assolir els objectius proposats en termes de definició del marc d'arquitectura i evolució tecnològica."
+            "2025: SECTOR PÚBLIC (TRANSPORT) - Evolución de arquitectura y sistemas: Análisis de las capacidades actuales a nivel de aplicaciones y tecnología como parte de un importante programa de Transformación Digital, con el objetivo de definir la arquitectura objetivo y formular un plan estratégico de transición, detallando iniciativas concretas para migrar hacia una plataforma tecnológica modernizada.",
+            "2025: SECTOR PÚBLIC - Análisis de disposición para la toma de un sistema: Como parte de una Oficina Técnica, alineación estratégica de múltiples líneas de trabajo (Arquitectura de Solución, Interoperabilidad e Integración, DevOps, Seguridad, etc.) para llevar a cabo una evaluación de preparación para la asunción de un sistema crítico. El proyecto incluyó un análisis de riesgos sobre los servicios del proveedor actual, que concluyó con la creación d'un plan de mitigación integral, iniciativas de remediación y una hoja de ruta detallada para la implementación.",
+            "2025: COMPANYIA D'ASSEGURANCES - Visión y análisis de arquitectura: Evaluación de las capacidades actuales de la función de arquitectura empresarial para analizar su grado de madurez y generación de principios directors per al futur de l'arquitectura de la companyia, acompanyada de la descripció d'iniciatives a executar per assolir els objectius proposats en termes de definició del marc d'arquitectura i evolució tecnològica."
           ]
         },
         {
@@ -149,10 +139,10 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           description: "Consultoria de transformació cloud, modernització de sistemes i optimització de processos IT per a grans clients.",
           logoUrl: UNIVERSAL_DATA.logos.accenture,
           achievements: [
-            "2024~2025: ASSEGURADORA NACIONAL - Oficina de Transformació Cloud: Acompanyament dels J2C de les distintes entitats internacionals de la companyia amb l'objectiu d'estandarditzar el procés d'adopció del núvol, analitzar el parc d'aplicacions actual, definir arquetips, acceleradors i trackers de migració, planificar les migracions a alt nivell, definir el nou model operatiu i crear una comunitat cloud a l'empresa.",
-            "2024: SECTOR PÚBLIC - Pla de Modernització de Sistemes: Avaluació del mapa d'aplicacions en base a criteris tècnics i revisió d'arquitectura tècnica per al posterior disseny del mapa d'aplicacions futur, identificació d'iniciatives i programes addicionals incloent automatització i actius d'intel·ligència artificial, culminant en l'elaboració del pla per als següents 3 anys amb un conjunt de programes e iniciatives que donin resposta a les necessitats tecnològiques avaluades.",
-            "2024: COMPANYIA DE MARKETPLACES DIGITALS - Anàlisi per Insourcing de EPSS: Anàlisi en profunditat de les dades, els processos i la tecnologia relacionats amb el servei de EPSS proporcionat per proveïdor extern per comprendre el servei actual i originar l'estratègia futura d'internalització de l'esmentat servei.",
-            "2022~2024: ENTITAT BANCÀRIA NACIONAL - Implantació d'eina de PPM: Definició i operativització de processos i metodologies de treball de les distintes organitzacions del client a través d'implantacions a mida en eina de PPM per a funcionalitats com: gestió de projectes i demanda, assignació de recursos, gestió de pressupost, inclusió de noves organitzacions, etc."
+            "2024~2025: ASSEGURADORA NACIONAL - Oficina de Transformación Cloud: Acompañamiento de los J2C de las distintas entidades internacionales de la compañía con el objetivo de estandarizar el proceso de adopción de la nube, analizar el parque de aplicaciones actual, definir arquetipos, aceleradores y trackers de migración, planificar las migraciones a alto nivel, definir el nuevo modelo operativo y crear una comunidad cloud en la empresa.",
+            "2024: SECTOR PÚBLIC - Plan de Modernización de Sistemas: Evaluación del mapa de aplicaciones en base a criterios técnicos y revisión de arquitectura técnica para el posterior diseño del mapa de aplicaciones futuro, identificación de iniciativas y programas adicionales incluyendo automatización y activos de inteligencia artificial, culminant en la elaboración del plan per als següents 3 anys amb un conjunto de programes e iniciatives que donin resposta a les necessitats tecnològiques avaluades.",
+            "2024: COMPANYIA DE MARKETPLACES DIGITALS - Análisis para Insourcing de EPSS: Análisis en profundidad de los datos, los procesos y la tecnología relacionados con el servicio de EPSS proporcionado por proveedor externo para comprender el servicio actual y originar la estrategia futura de internalización de dicho servicio.",
+            "2022~2024: ENTITAT BANCÀRIA NACIONAL - Implantación de herramienta de PPM: Definición y operativización de procesos y metodologías de trabajo de las distintas organizaciones del cliente a través de implantaciones a medida en herramienta de PPM para funcionalidades como: gestión de proyectos y demanda, asignación de recursos, gestión de presupuesto, inclusión de nuevas organizaciones, etc."
           ]
         },
         {
@@ -163,13 +153,32 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           description: "Inici de carrera professional participant en projectes estratègics per al sector financer.",
           logoUrl: UNIVERSAL_DATA.logos.accenture,
           achievements: [
-            "2021~2022: SECTOR BANCARI - Govern de negoci: Desenvolupament de projectes de govern de negoci per al sector bancari."
+            "2021~2022: SECTOR BANCARI - Gobierno de negocio: Desarrollo de proyectos de gobierno de negocio para el sector bancario."
           ]
         }
       ]
     },
     certifications: {
       title: "Certificacions i tecnologies"
+    },
+    caseStudies: {
+      badge: "Casos d'Èxit",
+      title: "Projectes amb Impacte",
+      subtitle: "Resultats tangibles a través de l'estratègia i la tecnologia.",
+      items: [
+        {
+          id: "cs1",
+          title: "Modernització de Plataforma Bancària",
+          client: "Banc Nacional Top 3",
+          challengeTitle: "El Repte",
+          challenge: "Sistemes 'legacy' monolítics que frenaven el time-to-market de nous productes financers.",
+          approachTitle: "L'Enfocament",
+          approach: "Disseny d'arquitectura orientada a esdeveniments i migració gradual al núvol.",
+          resultsTitle: "Resultats",
+          results: ["Reducció del 40% en costos d'infraestructura", "Desplegament de features en dies en lloc de mesos"],
+          cta: "Veure detalls"
+        }
+      ]
     },
     contact: {
       title: "Parlem del teu proper desafiament",
@@ -184,7 +193,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
     nav: {
       about: "Sobre mí",
       services: "Servicios",
-      work: "Casos de éxito",
+      education: "Formación",
       testimonials: "Testimonios",
       experience: "Experiencia",
       contact: "Contactar"
@@ -201,10 +210,8 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
       p1: "Consultor de estrategia tecnológica orientado a resultados con más de 10 años de experiencia especializándome en transformación digital, inteligencia artificial y ciberseguridad. Cuento con un historial probado alineando iniciativas tecnológicas complejas con objetivos de negocio críticos para mejorar drásticamente la eficiencia operativa y acelerar el crecimiento de los ingresos.",
       p2: "Como consultor independiente, combino visión estratégica con un profundo conocimiento técnico. Mi enfoque se centra en desmitificar la tecnología para la alta dirección, permitiendo decisiones informadas que impulsan el crecimiento.",
       p3: "He trabajado con startups en fase de crecimiento y grandes corporaciones, adaptando metodologías ágiles y arquitecturas modernas a las necesidades específicas de cada negocio.",
-      years: "10+",
       yearsLabel: "Años de experiencia",
-      projects: "25+",
-      projectsLabel: "Proyectos liderados"
+      projectsLabel: "Proyectos ejecutados"
     },
     services: {
       title: "Áreas de especialización",
@@ -218,60 +225,52 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
         },
         {
           id: "s2",
-          title: "Inteligencia artificial",
-          description: "Implementación de IA y Machine Learning para automatización y análisis predictivo.",
-          iconName: "AI"
+          title: "Arquitectura empresarial",
+          description: "Diseño de mapas de capacidades, gestión de portafolio de aplicaciones y definición de arquitecturas objetivo.",
+          iconName: "Architecture"
         },
         {
           id: "s3",
-          title: "Ciberseguridad estratégica",
-          description: "Diseño de marcos de seguridad resilientes y gestión de riesgos corporativos.",
-          iconName: "Security"
+          title: "Transformación cloud y aplicaciones",
+          description: "Modernización de arquitecturas, estrategias de migración (6R) y diseño de aplicaciones nativas en la nube.",
+          iconName: "Cloud"
         },
         {
           id: "s4",
-          title: "Transformación cloud",
-          description: "Modernización de infraestructura para máxima agilidad y optimización de costes.",
-          iconName: "Cloud"
+          title: "Inteligencia artificial y GenAI",
+          description: "Exploración de casos de uso, despliegue de agentes inteligentes y adopción de IA Generativa.",
+          iconName: "AI"
         }
       ]
     },
-    caseStudies: {
-      badge: "Portafolio selecto",
-      title: "Casos de éxito",
-      subtitle: "Ejemplos reales de transformación estratégica y resultados cuantificables en entornos complejos.",
+    education: {
+      badge: "Formación continua",
+      title: "Formación y certificaciones",
+      subtitle: "El compromiso con la excelencia técnica requiere un aprendizaje constante y validación por los estándares de la industria.",
       items: [
         {
-          id: "cs1",
-          title: "Transformación digital integral en retail global",
-          client: "Cadena Multinacional de Moda (Confidencial)",
-          challengeTitle: "El desafío",
-          challenge: "El cliente operaba con sistemas heredados desconectados (silos), lo que causaba ineficiencias en la cadena de suministro y una experiencia de cliente fragmentada.",
-          approachTitle: "Enfoque estratégico",
-          approach: "Diseñé e implementé una estrategia omnicanal basada en microservicios en la nube, integrando inventario en tiempo real y análisis de datos de clientes.",
-          resultsTitle: "Resultados clave",
-          results: [
-            "Mejora del 40% en la eficiencia de la cadena de suministro.",
-            "Aumento del 22% en las ventas online gracias a la personalización.",
-            "Reducción del 30% en costes de mantenimiento de TI."
-          ],
-          cta: "Solicitar detalles completos"
+          id: "ed1",
+          title: "Certificaciones profesionales",
+          institution: "Estándares de la industria",
+          description: "Acreditaciones técnicas y metodológicas que validan el conocimiento en arquitectura, agilidad y plataformas cloud.",
+          items: [
+            "The Open Group Certified: TOGAF 9",
+            "Scaled Agile: SAFe 6 Agilist",
+            "AWS Certified Cloud Practitioner",
+            "Google Cloud Digital Leader",
+            "Microsoft Certified: Azure Fundamentals",
+            "Ardoq & LeanIX Certified"
+          ]
         },
         {
-          id: "cs2",
-          title: "Optimización operativa mediante IA en fintech",
-          client: "Plataforma de Pagos Digitales",
-          challengeTitle: "El desafío",
-          challenge: "El rápido crecimiento de usuarios saturó el soporte al cliente y aumentó los falsos positivos en la detección de fraudes, frenando la expansión.",
-          approachTitle: "Enfoque estratégico",
-          approach: "Lideré la adopción de modelos de IA para la detección predictiva de fraudes y desplegué asistentes virtuales avanzados (NLP) para atención al cliente.",
-          resultsTitle: "Resultados clave",
-          results: [
-            "Reducción del 95% en tiempos de respuesta de soporte (Nivel 1).",
-            "Disminución del 60% en pérdidas por fraude transaccional.",
-            "Crecimiento de ingresos del 15% al recuperar transacciones legítimas."
-          ],
-          cta: "Solicitar detalles completos"
+          id: "ed2",
+          title: "Formación académica",
+          institution: "Universidad y Postgrado",
+          description: "Base académica sólida en ingeniería y gestión tecnológica.",
+          items: [
+            "Grado en Ingeniería Informática",
+            "Máster en Gestión y Dirección de Sistemas TI"
+          ]
         }
       ]
     },
@@ -328,7 +327,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           logoUrl: UNIVERSAL_DATA.logos.accenture,
           achievements: [
             "2024~2025: ASEGURADORA NACIONAL - Oficina de Transformación Cloud: Acompañamiento de los J2C de las distintas entidades internacionales de la compañía con el objetivo de estandarizar el proceso de adopción de la nube, analizar el parque de aplicaciones actual, definir arquetipos, aceleradores y trackers de migración, planificar las migraciones a alto nivel, definir el nuevo modelo operativo y crear una comunidad cloud en la empresa.",
-            "2024: SECTOR PÚBLICO - Plan de Modernización de Sistemas: Evaluación del mapa de aplicaciones en base a criterios técnicos y revisión de arquitectura técnica para el posterior diseño del mapa de aplicaciones futuro, identificación de iniciativas y programas adicionales incluyendo automatización y activos de inteligencia artificial, culminando en la elaboración del plan para los siguientes 3 años con un conjunto de programas e iniciativas que den respuesta a las necesidades tecnológicas evaluadas.",
+            "2024: SECTOR PÚBLICO - Plan de Modernización de Sistemas: Evaluación del mapa de aplicaciones en base a criterios técnicos y revisión de arquitectura técnica para el posterior diseño del mapa de aplicaciones futuro, identificación de iniciativas y programas adicionales incluyendo automatización y activos de inteligencia artificial, culminant en la elaboración del plan para los siguientes 3 años con un conjunto de programas e iniciativas que den respuesta a las necesidades tecnológicas evaluadas.",
             "2024: COMPAÑÍA DE MARKETPLACES DIGITALES - Análisis para Insourcing de EPSS: Análisis en profundidad de los datos, los procesos y la tecnología relacionados con el servicio de EPSS proporcionado por proveedor externo para comprender el servicio actual y originar la estrategia futura de internalización del servicio.",
             "2022~2024: ENTIDAD BANCARIA NACIONAL - Implantación de herramienta de PPM: Definición y operativización de procesos y metodologías de trabajo de las distintas organizaciones del cliente a través de implantaciones a medida en herramienta de PPM para funcionalidades como: gestión de proyectos y demanda, asignación de recursos, gestión de presupuesto, inclusión de nuevas organizaciones, etc."
           ]
@@ -349,6 +348,25 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
     certifications: {
       title: "Certificaciones y tecnologías"
     },
+    caseStudies: {
+      badge: "Casos de Éxito",
+      title: "Proyectos con Impacto",
+      subtitle: "Resultados tangibles a través de la estrategia y la tecnología.",
+      items: [
+        {
+          id: "cs1",
+          title: "Modernización de Plataforma Bancaria",
+          client: "Banco Nacional Top 3",
+          challengeTitle: "El Reto",
+          challenge: "Sistemas 'legacy' monolíticos que frenaban el time-to-market de nuevos productos financieros.",
+          approachTitle: "El Enfoque",
+          approach: "Diseño de arquitectura orientada a eventos y migración gradual a la nube.",
+          resultsTitle: "Resultados",
+          results: ["Reducción del 40% en costes de infraestructura", "Despliegue de features en días en lugar de meses"],
+          cta: "Ver detalles"
+        }
+      ]
+    },
     contact: {
       title: "Hablemos de tu próximo desafío",
       subtitle: "Estoy siempre interesado en escuchar sobre nuevos proyectos y oportunidades de colaboración.",
@@ -362,7 +380,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
     nav: {
       about: "About me",
       services: "Services",
-      work: "Success Stories",
+      education: "Education",
       testimonials: "Testimonials",
       experience: "Experience",
       contact: "Contact"
@@ -379,10 +397,8 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
       p1: "Results-oriented Technology Strategy Consultant with over 10 years of experience specializing in digital transformation, artificial intelligence, and cybersecurity. I have a proven track record of aligning complex technology initiatives with critical business goals to dramatically improve operational efficiency and accelerate revenue growth.",
       p2: "As an independent consultant, I combine strategic vision with deep technical knowledge. My focus is on demystifying technology for senior management, enabling informed decisions that drive growth.",
       p3: "I have worked with growing startups and large corporations, adapting agile methodologies and modern architectures to the specific needs of each business.",
-      years: "10+",
       yearsLabel: "Years of Experience",
-      projects: "25+",
-      projectsLabel: "Projects Led"
+      projectsLabel: "Projects Executed"
     },
     services: {
       title: "Areas of Expertise",
@@ -396,60 +412,52 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
         },
         {
           id: "s2",
-          title: "Artificial Intelligence",
-          description: "Implementation of AI and Machine Learning for automation and predictive analytics.",
-          iconName: "AI"
+          title: "Enterprise Architecture",
+          description: "Capability map design, application portfolio management, and target architecture definition.",
+          iconName: "Architecture"
         },
         {
           id: "s3",
-          title: "Strategic Cybersecurity",
-          description: "Design of resilient security frameworks and corporate risk management.",
-          iconName: "Security"
+          title: "Cloud & App Transformation",
+          description: "Architecture modernization, migration strategies (6R), and cloud-native application development.",
+          iconName: "Cloud"
         },
         {
           id: "s4",
-          title: "Cloud Transformation",
-          description: "Infrastructure modernization for maximum agility and cost optimization.",
-          iconName: "Cloud"
+          title: "AI & GenAI",
+          description: "Use case exploration, intelligent agent deployment, and Generative AI adoption.",
+          iconName: "AI"
         }
       ]
     },
-    caseStudies: {
-      badge: "Select Portfolio",
-      title: "Success Stories",
-      subtitle: "Real examples of strategic transformation and quantifiable results in complex environments.",
+    education: {
+      badge: "Continuous Learning",
+      title: "Education & Certifications",
+      subtitle: "Commitment to technical excellence requires constant learning and validation by industry standards.",
       items: [
         {
-          id: "cs1",
-          title: "Comprehensive Digital Transformation in Global Retail",
-          client: "Multinational Fashion Chain (Confidential)",
-          challengeTitle: "The Challenge",
-          challenge: "The client operated with disconnected legacy systems (silos), causing supply chain inefficiencies and a fragmented customer experience.",
-          approachTitle: "Strategic Approach",
-          approach: "Designed and implemented an omnichannel strategy based on cloud microservices, integrating real-time inventory and customer data analytics.",
-          resultsTitle: "Key Results",
-          results: [
-            "40% improvement in supply chain efficiency.",
-            "22% increase in online sales thanks to personalization.",
-            "30% reduction in IT maintenance costs."
-          ],
-          cta: "Request full details"
+          id: "ed1",
+          title: "Professional Certifications",
+          institution: "Industry Standards",
+          description: "Technical and methodological accreditations validating knowledge in architecture, agility, and cloud platforms.",
+          items: [
+            "The Open Group Certified: TOGAF 9",
+            "Scaled Agile: SAFe 6 Agilist",
+            "AWS Certified Cloud Practitioner",
+            "Google Cloud Digital Leader",
+            "Microsoft Certified: Azure Fundamentals",
+            "Ardoq & LeanIX Certified"
+          ]
         },
         {
-          id: "cs2",
-          title: "Operational Optimization via AI in Fintech",
-          client: "Digital Payments Platform",
-          challengeTitle: "The Challenge",
-          challenge: "Rapid user growth saturated customer support and increased false positives in fraud detection, stalling expansion.",
-          approachTitle: "Strategic Approach",
-          approach: "Led the adoption of AI models for predictive fraud detection and deployed advanced virtual assistants (NLP) for customer support.",
-          resultsTitle: "Key Results",
-          results: [
-            "95% reduction in support response times (Level 1).",
-            "60% decrease in transactional fraud losses.",
-            "15% revenue growth by recovering legitimate transactions."
-          ],
-          cta: "Request full details"
+          id: "ed2",
+          title: "Academic Background",
+          institution: "University & Postgraduate",
+          description: "Solid academic foundation in engineering and technology management.",
+          items: [
+            "Degree in Computer Engineering",
+            "Master in IT Systems Management"
+          ]
         }
       ]
     },
@@ -526,6 +534,25 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
     },
     certifications: {
       title: "Certifications and Technologies"
+    },
+    caseStudies: {
+      badge: "Success Stories",
+      title: "Impactful Projects",
+      subtitle: "Tangible results through strategy and technology.",
+      items: [
+        {
+          id: "cs1",
+          title: "Banking Platform Modernization",
+          client: "Top 3 National Bank",
+          challengeTitle: "The Challenge",
+          challenge: "Monolithic legacy systems hindering time-to-market for new financial products.",
+          approachTitle: "The Approach",
+          approach: "Design of event-driven architecture and gradual migration to the cloud.",
+          resultsTitle: "Results",
+          results: ["40% reduction in infrastructure costs", "Feature deployment in days instead of months"],
+          cta: "View details"
+        }
+      ]
     },
     contact: {
       title: "Let's talk about your next challenge",
