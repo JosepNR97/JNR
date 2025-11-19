@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 
 const LOGOS = [
   {
@@ -31,38 +31,123 @@ const LOGOS = [
   }
 ];
 
+// Duplicamos los logos varias veces para asegurar que cubran pantallas muy anchas (4k, ultrawide)
+// y permitan el efecto de loop infinito suave.
+const REPEATED_LOGOS = [...LOGOS, ...LOGOS, ...LOGOS, ...LOGOS];
+
 export const Certifications: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const requestRef = useRef<number>(0);
+  const positionRef = useRef<number>(0);
+  const speedRef = useRef<number>(0.5); // Velocidad automática
+
+  // Bucle de animación para el scroll infinito automático
+  const animate = useCallback(() => {
+    if (!containerRef.current) return;
+    
+    // Si no estamos arrastrando, movemos la posición automáticamente
+    if (!isDragging) {
+      positionRef.current += speedRef.current;
+    }
+
+    const container = containerRef.current;
+    const maxScroll = container.scrollWidth / 2; // Asumimos que la mitad es el punto de reinicio por la duplicación
+
+    // Lógica de reinicio infinito (Loop)
+    if (positionRef.current >= maxScroll) {
+      positionRef.current = 0;
+    } else if (positionRef.current < 0) {
+      positionRef.current = maxScroll - 1;
+    }
+
+    container.scrollLeft = positionRef.current;
+    requestRef.current = requestAnimationFrame(animate);
+  }, [isDragging]);
+
+  useEffect(() => {
+    requestRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(requestRef.current);
+  }, [animate]);
+
+  // Eventos para Arrastrar (Mouse)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartX(e.pageX - (containerRef.current?.offsetLeft || 0));
+    setScrollLeft(positionRef.current);
+    // Cursor style handled by CSS class
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - (containerRef.current?.offsetLeft || 0);
+    const walk = (x - startX) * 2; // Velocidad del arrastre manual
+    positionRef.current = scrollLeft - walk;
+  };
+
+  // Eventos para Táctil (Móvil)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    setStartX(e.touches[0].pageX - (containerRef.current?.offsetLeft || 0));
+    setScrollLeft(positionRef.current);
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const x = e.touches[0].pageX - (containerRef.current?.offsetLeft || 0);
+    const walk = (x - startX) * 2;
+    positionRef.current = scrollLeft - walk;
+  };
+
   return (
-    <section className="py-10 bg-slate-50 border-y border-slate-200 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 mb-6 text-center">
+    <section className="py-12 bg-slate-50 border-y border-slate-200 overflow-hidden w-full">
+      <div className="max-w-7xl mx-auto px-4 mb-8 text-center">
         <h3 className="text-xs font-bold tracking-widest text-slate-400 uppercase">
           Certificaciones y tecnologías
         </h3>
       </div>
       
-      <div className="w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]">
-        <ul className="flex items-center justify-center md:justify-start [&_li]:mx-8 [&_img]:max-w-none animate-infinite-scroll">
-          {/* First Loop */}
-          {LOGOS.map((logo, index) => (
-            <li key={`1-${index}`}>
+      {/* Contenedor Full Width */}
+      <div 
+        className={`w-full overflow-x-hidden select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        ref={containerRef}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchMove}
+      >
+        <div className="inline-flex items-center gap-16 px-4 min-w-max py-4">
+          {REPEATED_LOGOS.map((logo, index) => (
+            <div 
+              key={`${logo.name}-${index}`} 
+              className="flex-shrink-0 group transition-transform duration-300 hover:scale-110"
+            >
               <img 
                 src={logo.url} 
                 alt={logo.name} 
-                className="h-12 w-auto object-contain opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300 mix-blend-multiply"
+                className="h-12 md:h-14 w-auto object-contain opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 pointer-events-none mix-blend-multiply"
               />
-            </li>
+            </div>
           ))}
-          {/* Second Loop (Duplicate for seamless scroll) */}
-          {LOGOS.map((logo, index) => (
-            <li key={`2-${index}`}>
-              <img 
-                src={logo.url} 
-                alt={logo.name} 
-                className="h-12 w-auto object-contain opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300 mix-blend-multiply"
-              />
-            </li>
-          ))}
-        </ul>
+        </div>
       </div>
     </section>
   );
