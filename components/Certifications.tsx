@@ -143,7 +143,7 @@ export const Certifications: React.FC = () => {
               <img 
                 src={logo.url} 
                 alt={logo.name} 
-                className="h-12 md:h-14 w-auto object-contain opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 pointer-events-none mix-blend-multiply"
+                className="h-12 md:h-14 w-auto object-contain opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none mix-blend-multiply"
               />
             </div>
           ))}
