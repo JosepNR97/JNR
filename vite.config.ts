@@ -1,23 +1,21 @@
-import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, '.', '');
-    return {
-      server: {
-        port: 3000,
-        host: '0.0.0.0',
-      },
-      plugins: [react()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, '.'),
-        }
-      }
-    };
+  // Carga variables de entorno desde el archivo .env si existe
+  const env = loadEnv(mode, process.cwd(), '');
+  
+  return {
+    plugins: [react()],
+    // CRUCIAL PARA GITHUB PAGES:
+    // Establece la base a './' para que los assets se carguen relativamente.
+    // Esto permite que la web funcione en subdirectorios (ej: usuario.github.io/repo/)
+    base: './',
+    define: {
+      // Esto reemplaza process.env.API_KEY con el valor real durante el build ('npm run build')
+      // para que el navegador pueda acceder a la clave.
+      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+    }
+  };
 });
