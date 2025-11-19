@@ -10,7 +10,6 @@ export const Experience: React.FC = () => {
   };
 
   // Helper function to parse the achievement string
-  // Expected format: "YEAR: SECTOR - TITLE: DESCRIPTION"
   const parseAchievement = (text: string) => {
     const firstColonIndex = text.indexOf(':');
     if (firstColonIndex === -1) return { description: text };
@@ -20,8 +19,6 @@ export const Experience: React.FC = () => {
 
     const hyphenIndex = remainder1.indexOf(' - ');
     if (hyphenIndex === -1) {
-      // Try to see if there is just a title and description without sector separator
-      // Or just return everything as description if format doesn't match
       return { year, description: remainder1 };
     }
 
@@ -41,13 +38,14 @@ export const Experience: React.FC = () => {
 
   return (
     <section id="experience" className="py-20 bg-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Cambiado a max-w-6xl para aprovechar más ancho de pantalla */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-slate-900 mb-4">
             Trayectoria profesional
           </h2>
           <p className="text-slate-500 text-sm">
-            Haz clic en cada experiencia para ver los proyectos detallados.
+            Haz clic en las tarjetas para explorar el detalle de los proyectos.
           </p>
         </div>
 
@@ -66,62 +64,67 @@ export const Experience: React.FC = () => {
                 {/* Content Card */}
                 <div 
                   onClick={() => toggleExpand(item.id)}
-                  className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white rounded-xl border shadow-sm transition-all duration-300 cursor-pointer overflow-hidden
+                  className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white rounded-xl border transition-all duration-300 cursor-pointer overflow-hidden relative
                     ${isExpanded 
-                      ? 'border-brand-200 shadow-lg ring-1 ring-brand-100' 
-                      : 'border-slate-100 hover:border-brand-200 hover:shadow-md'
+                      ? 'border-brand-500 shadow-lg ring-1 ring-brand-200' 
+                      : 'border-slate-200 hover:border-brand-300 hover:shadow-lg hover:-translate-y-1'
                     }`}
                 >
                   {/* Header Part (Always Visible) */}
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="p-6 md:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                        <img 
                           src={item.logoUrl} 
                           alt={`Logo ${item.company}`} 
-                          className="h-8 max-w-[120px] object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300"
+                          className="h-8 max-w-[140px] object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300"
                         />
-                       <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-1 rounded-md whitespace-nowrap shrink-0 ml-2">
+                       <span className="text-xs font-bold tracking-wide text-brand-700 bg-brand-50 border border-brand-100 px-3 py-1 rounded-full whitespace-nowrap w-fit">
                         {item.period}
                       </span>
                     </div>
 
-                    <h3 className={`font-bold text-lg transition-colors duration-300 ${isExpanded ? 'text-brand-700' : 'text-slate-900'}`}>
+                    <h3 className={`font-bold text-xl md:text-2xl transition-colors duration-300 ${isExpanded ? 'text-brand-700' : 'text-slate-900 group-hover:text-brand-700'}`}>
                       {item.role}
                     </h3>
-                    <div className="text-sm font-medium text-slate-500 mt-1">{item.company}</div>
+                    <div className="text-base font-medium text-slate-500 mt-1">{item.company}</div>
                     
                     {/* Short Description */}
-                     <p className={`text-slate-600 text-sm mt-3 leading-relaxed transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'opacity-80 line-clamp-2'}`}>
+                     <p className="text-slate-600 text-sm md:text-base mt-4 leading-relaxed">
                       {item.description}
                     </p>
 
-                    {/* Expand Indicator */}
-                    <div className="flex items-center justify-center mt-4 md:hidden">
-                       <ChevronDownIcon className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                    {/* Explicit Call to Action / Toggle Bar */}
+                    <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-100 group-hover:border-brand-100 transition-colors">
+                      <span className={`text-sm font-semibold transition-colors ${isExpanded ? 'text-brand-600' : 'text-slate-400 group-hover:text-brand-600'}`}>
+                        {isExpanded ? 'Ocultar detalles' : `Ver proyectos destacados`}
+                      </span>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isExpanded ? 'bg-brand-100 text-brand-600 rotate-180' : 'bg-slate-100 text-slate-400 group-hover:bg-brand-600 group-hover:text-white'}`}>
+                        <ChevronDownIcon className="w-5 h-5" />
+                      </div>
                     </div>
                   </div>
 
                   {/* Expanded Details (Projects) */}
                   <div 
-                    className={`grid transition-[grid-template-rows] duration-300 ease-in-out bg-slate-50 ${isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+                    className={`grid transition-[grid-template-rows] duration-500 ease-in-out bg-slate-50 ${isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
                   >
                     <div className="overflow-hidden">
-                      <div className="p-6 pt-2 border-t border-slate-100">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-5">Principales proyectos</h4>
-                        <ul className="space-y-6">
+                      <div className="px-6 md:px-8 pb-8 pt-2 border-t border-slate-200">
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 mt-4">Detalle de proyectos</h4>
+                        <ul className="space-y-8">
                           {item.achievements.map((achievement, i) => {
                             const { year, sector, title, description } = parseAchievement(achievement);
 
                             return (
-                              <li key={i} className="flex items-start text-sm text-slate-700 group/item relative pl-4 border-l-2 border-brand-100 hover:border-brand-400 transition-colors">
-                                <div className="flex flex-col gap-1.5 w-full">
+                              <li key={i} className="flex items-start text-sm text-slate-700 group/item relative pl-6 border-l-2 border-slate-200 hover:border-brand-500 transition-colors duration-300">
+                                <div className="flex flex-col gap-2 w-full">
                                   {year ? (
-                                    <div className="flex flex-wrap items-center gap-2 text-xs mb-0.5">
-                                      <span className="font-mono font-medium text-brand-700 bg-brand-50 px-1.5 py-0.5 rounded border border-brand-100">
+                                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                                      <span className="font-mono font-bold text-white bg-slate-800 px-2 py-1 rounded shadow-sm">
                                         {year}
                                       </span>
                                       {sector && (
-                                        <span className="text-slate-500 font-bold uppercase tracking-wide text-[10px]">
+                                        <span className="text-brand-600 font-bold uppercase tracking-wide text-[11px]">
                                           {sector}
                                         </span>
                                       )}
@@ -129,12 +132,12 @@ export const Experience: React.FC = () => {
                                   ) : null}
                                   
                                   {title ? (
-                                    <strong className="block text-slate-900 text-base leading-tight">
+                                    <strong className="block text-slate-900 text-lg leading-tight mt-1">
                                       {title}
                                     </strong>
                                   ) : null}
                                   
-                                  <span className="text-slate-600 leading-relaxed">
+                                  <span className="text-slate-600 leading-relaxed text-base">
                                     {description}
                                   </span>
                                 </div>
@@ -144,11 +147,6 @@ export const Experience: React.FC = () => {
                         </ul>
                       </div>
                     </div>
-                  </div>
-                  
-                  {/* Desktop Hover Indicator (Only visible on hover if not expanded) */}
-                  <div className={`hidden md:flex justify-center pb-2 transition-opacity duration-300 ${isExpanded ? 'opacity-0 hidden' : 'opacity-0 group-hover:opacity-100'}`}>
-                    <ChevronDownIcon className="w-5 h-5 text-slate-300" />
                   </div>
 
                 </div>
