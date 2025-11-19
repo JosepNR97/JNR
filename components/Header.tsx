@@ -38,9 +38,9 @@ export const Header: React.FC = () => {
   const navLinks = [
     { name: t.nav.about, href: '#about' },
     { name: t.nav.services, href: '#services' },
-    { name: t.nav.work, href: '#work' },
-    { name: t.nav.testimonials, href: '#testimonials' },
     { name: t.nav.experience, href: '#experience' },
+    { name: t.nav.education, href: '#education' },
+    // Testimonials removed as requested
   ];
 
   const headerBgClass = mobileMenuOpen 
@@ -61,7 +61,7 @@ export const Header: React.FC = () => {
   return (
     <>
       <header 
-        className={`fixed top-0 w-full transition-all duration-300 z-50 ${headerBgClass} ${isScrolled ? 'py-3' : 'py-6'}`}
+        className={`fixed top-0 w-full transition-all duration-300 z-[50] ${headerBgClass} ${isScrolled ? 'py-3' : 'py-6'}`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className={`font-serif font-bold text-2xl tracking-tight transition-colors duration-300 ${headerTextColorClass}`}>
@@ -117,7 +117,7 @@ export const Header: React.FC = () => {
       </header>
 
       <div 
-        className={`fixed inset-0 bg-brand-900 z-40 transition-transform duration-300 flex flex-col justify-center items-center ${
+        className={`fixed inset-0 bg-brand-900 z-[40] transition-transform duration-300 flex flex-col justify-center items-center ${
           mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
