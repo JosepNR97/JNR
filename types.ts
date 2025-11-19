@@ -40,17 +40,3 @@ export interface ProfileData {
   email: string;
   location: string;
 }
-
-export enum ChatState {
-  IDLE = 'IDLE',
-  THINKING = 'THINKING',
-  RESPONDING = 'RESPONDING',
-  ERROR = 'ERROR'
-}
-
-export interface ChatMessage {
-  id: string;
-  role: 'user' | 'model';
-  text: string;
-  timestamp: number;
-}
