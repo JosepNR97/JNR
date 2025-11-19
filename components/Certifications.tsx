@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 const LOGOS = [
   {
@@ -31,10 +32,10 @@ const LOGOS = [
   }
 ];
 
-// Duplicamos los logos varias veces para asegurar que cubran pantallas muy anchas y permitan el loop.
 const REPEATED_LOGOS = [...LOGOS, ...LOGOS, ...LOGOS, ...LOGOS, ...LOGOS];
 
 export const Certifications: React.FC = () => {
+  const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -42,21 +43,18 @@ export const Certifications: React.FC = () => {
   const [scrollLeft, setScrollLeft] = useState(0);
   const requestRef = useRef<number>(0);
   const positionRef = useRef<number>(0);
-  const speedRef = useRef<number>(0.5); // Velocidad base
+  const speedRef = useRef<number>(0.5);
 
-  // Bucle de animación para el scroll infinito
   const animate = useCallback(() => {
     if (!containerRef.current) return;
     
-    // Solo movemos automáticamente si no se está arrastrando Y no se está haciendo hover
     if (!isDragging && !isHovering) {
       positionRef.current += speedRef.current;
     }
 
     const container = containerRef.current;
-    const maxScroll = container.scrollWidth / 2; // Punto de reinicio
+    const maxScroll = container.scrollWidth / 2;
 
-    // Lógica de reinicio infinito (Loop)
     if (positionRef.current >= maxScroll) {
       positionRef.current = 0;
     } else if (positionRef.current < 0) {
@@ -72,7 +70,6 @@ export const Certifications: React.FC = () => {
     return () => cancelAnimationFrame(requestRef.current);
   }, [animate]);
 
-  // --- Eventos de Ratón (Escritorio) ---
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     setStartX(e.pageX - (containerRef.current?.offsetLeft || 0));
@@ -96,11 +93,10 @@ export const Certifications: React.FC = () => {
     if (!isDragging) return;
     e.preventDefault();
     const x = e.pageX - (containerRef.current?.offsetLeft || 0);
-    const walk = (x - startX) * 2; // Multiplicador para sensibilidad
+    const walk = (x - startX) * 2;
     positionRef.current = scrollLeft - walk;
   };
 
-  // --- Eventos Táctiles (Móvil) ---
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsDragging(true);
     setStartX(e.touches[0].pageX - (containerRef.current?.offsetLeft || 0));
@@ -122,11 +118,10 @@ export const Certifications: React.FC = () => {
     <section className="py-12 bg-slate-50 border-y border-slate-200 w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 mb-8 text-center">
         <h3 className="text-xs font-bold tracking-widest text-slate-400 uppercase">
-          Certificaciones y tecnologías
+          {t.certifications.title}
         </h3>
       </div>
       
-      {/* Contenedor Full Width */}
       <div 
         className={`w-full overflow-x-hidden select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         ref={containerRef}
@@ -139,14 +134,12 @@ export const Certifications: React.FC = () => {
         onTouchEnd={handleTouchEnd}
         onTouchMove={handleTouchMove}
       >
-        {/* Contenedor interno con los logos */}
         <div className="inline-flex items-center gap-16 px-4 min-w-max py-4">
           {REPEATED_LOGOS.map((logo, index) => (
             <div 
               key={`${logo.name}-${index}`} 
               className="flex-shrink-0 group transition-transform duration-300 hover:scale-110 relative z-10"
             >
-              {/* Importante: pointer-events-none en la imagen para que no interfiera con el drag del div padre */}
               <img 
                 src={logo.url} 
                 alt={logo.name} 

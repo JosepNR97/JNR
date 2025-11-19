@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { EXPERIENCE } from '../constants';
+import { useLanguage } from '../context/LanguageContext';
 import { ChevronDownIcon, BriefcaseIcon } from './Icons';
 
 export const Experience: React.FC = () => {
+  const { t } = useLanguage();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // Helper function to parse the achievement string
   const parseAchievement = (text: string) => {
     const firstColonIndex = text.indexOf(':');
     if (firstColonIndex === -1) return { description: text };
@@ -41,30 +41,27 @@ export const Experience: React.FC = () => {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            Trayectoria profesional
+            {t.experience.title}
           </h2>
           <p className="text-slate-500 text-sm">
-            Haz clic en las tarjetas para explorar el detalle de los proyectos.
+            {t.experience.subtitle}
           </p>
         </div>
 
         <div className="relative">
-          {/* Vertical Line - Single column layout to maximize width usage */}
           <div className="absolute left-6 md:left-0 top-2 bottom-0 w-0.5 bg-slate-200 md:ml-4"></div>
 
           <div className="space-y-8 md:space-y-12">
-            {EXPERIENCE.map((item) => {
+            {t.experience.items.map((item) => {
               const isExpanded = expandedId === item.id;
               
               return (
                 <div key={item.id} className="relative pl-20 md:pl-24">
                   
-                  {/* Timeline Dot */}
                   <div className={`absolute left-6 md:left-0 md:ml-4 -translate-x-1/2 top-0 flex items-center justify-center w-10 h-10 rounded-full border-4 border-white shadow z-10 transition-colors duration-300 ${isExpanded ? 'bg-brand-600' : 'bg-slate-300 group-hover:bg-brand-400'}`}>
                     <BriefcaseIcon className={`w-4 h-4 ${isExpanded ? 'text-white' : 'text-slate-600'}`} />
                   </div>
                   
-                  {/* Content Card - Takes full remaining width to avoid empty space */}
                   <div 
                     onClick={() => toggleExpand(item.id)}
                     className={`w-full bg-white rounded-xl border transition-all duration-300 cursor-pointer overflow-hidden group
@@ -73,10 +70,8 @@ export const Experience: React.FC = () => {
                         : 'border-slate-200 hover:border-brand-300 hover:shadow-lg hover:-translate-y-1'
                       }`}
                   >
-                    {/* Header Part (Always Visible) */}
                     <div className="p-6 md:p-8">
                       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-2">
-                         {/* Role and Company */}
                          <div className="flex-1">
                             <h3 className={`font-bold text-xl md:text-2xl transition-colors duration-300 ${isExpanded ? 'text-brand-700' : 'text-slate-900 group-hover:text-brand-700'}`}>
                               {item.role}
@@ -84,7 +79,6 @@ export const Experience: React.FC = () => {
                             <div className="text-lg font-medium text-slate-600 mt-1">{item.company}</div>
                          </div>
 
-                         {/* Logo and Date Badge */}
                          <div className="flex flex-row-reverse md:flex-col items-center md:items-end justify-between md:justify-start gap-3 md:gap-2 shrink-0">
                             <img 
                               src={item.logoUrl} 
@@ -97,15 +91,13 @@ export const Experience: React.FC = () => {
                          </div>
                       </div>
 
-                      {/* Short Description */}
                        <p className="text-slate-600 text-sm md:text-base mt-4 leading-relaxed max-w-3xl">
                         {item.description}
                       </p>
 
-                      {/* Explicit Call to Action / Toggle Bar */}
                       <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-100 group-hover:border-brand-100 transition-colors">
                         <span className={`text-sm font-semibold transition-colors ${isExpanded ? 'text-brand-600' : 'text-slate-400 group-hover:text-brand-600'}`}>
-                          {isExpanded ? 'Ocultar detalles' : `Ver proyectos destacados`}
+                          {isExpanded ? t.experience.collapse : t.experience.expand}
                         </span>
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isExpanded ? 'bg-brand-100 text-brand-600 rotate-180' : 'bg-slate-100 text-slate-400 group-hover:bg-brand-600 group-hover:text-white'}`}>
                           <ChevronDownIcon className="w-5 h-5" />
@@ -113,13 +105,12 @@ export const Experience: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Expanded Details (Projects) */}
                     <div 
                       className={`grid transition-[grid-template-rows] duration-500 ease-in-out bg-slate-50 ${isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
                     >
                       <div className="overflow-hidden">
                         <div className="px-6 md:px-8 pb-8 pt-2 border-t border-slate-200">
-                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 mt-4">Detalle de proyectos</h4>
+                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 mt-4">{t.experience.detailTitle}</h4>
                           <ul className="space-y-6">
                             {item.achievements.map((achievement, i) => {
                               const { year, sector, title, description } = parseAchievement(achievement);
