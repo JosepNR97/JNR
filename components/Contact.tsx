@@ -1,33 +1,36 @@
 import React from 'react';
-import { PROFILE } from '../constants';
+import { UNIVERSAL_DATA } from '../constants';
+import { useLanguage } from '../context/LanguageContext';
 import { LinkedinIcon, MailIcon, LocationIcon } from './Icons';
 
 export const Contact: React.FC = () => {
+  const { t } = useLanguage();
+
   return (
     <section id="contact" className="py-12 bg-slate-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
           <div>
             <h2 className="font-serif text-2xl md:text-3xl font-bold mb-4">
-              Hablemos de tu próximo desafío
+              {t.contact.title}
             </h2>
             <p className="text-slate-400 text-base mb-6">
-              Estoy siempre interesado en escuchar sobre nuevos proyectos y oportunidades de colaboración.
+              {t.contact.subtitle}
             </p>
             
             <div className="space-y-4">
               <a 
-                href={`mailto:${PROFILE.email}`} 
+                href={`mailto:${UNIVERSAL_DATA.email}`} 
                 className="flex items-center gap-3 text-slate-300 hover:text-white transition-colors group"
               >
                 <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-brand-400 group-hover:bg-brand-900 transition-colors">
                   <MailIcon className="w-4 h-4" />
                 </div>
-                <span className="text-sm">{PROFILE.email}</span>
+                <span className="text-sm">{UNIVERSAL_DATA.email}</span>
               </a>
               
               <a 
-                href={PROFILE.linkedinUrl}
+                href={UNIVERSAL_DATA.linkedinUrl}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 text-slate-300 hover:text-white transition-colors group"
@@ -42,24 +45,24 @@ export const Contact: React.FC = () => {
                 <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-brand-400">
                   <LocationIcon className="w-4 h-4" />
                 </div>
-                <span className="text-sm">{PROFILE.location}</span>
+                <span className="text-sm">{UNIVERSAL_DATA.location}</span>
               </div>
             </div>
           </div>
 
           <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 h-fit">
-             <h3 className="text-lg font-semibold mb-3">Disponibilidad</h3>
+             <h3 className="text-lg font-semibold mb-3">{t.contact.availabilityTitle}</h3>
              <p className="text-slate-400 text-sm leading-relaxed mb-4">
-               Actualmente estoy aceptando nuevos proyectos de consultoría estratégica y transformación digital.
+               {t.contact.availabilityText1}
              </p>
              <p className="text-slate-400 text-sm leading-relaxed">
-               No dudes en contactarme directamente por correo electrónico o LinkedIn para agendar una breve conversación introductoria.
+               {t.contact.availabilityText2}
              </p>
           </div>
         </div>
 
         <div className="mt-12 pt-6 border-t border-slate-800 text-center text-slate-600 text-xs">
-          © {new Date().getFullYear()} {PROFILE.name}. Todos los derechos reservados.
+          © {new Date().getFullYear()} {UNIVERSAL_DATA.name}. {t.contact.rights}
         </div>
       </div>
     </section>
