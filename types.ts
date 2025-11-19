@@ -74,9 +74,7 @@ export interface TranslationStructure {
     p1: string;
     p2: string;
     p3: string;
-    years: string;
     yearsLabel: string;
-    projects: string;
     projectsLabel: string;
   };
   services: {
