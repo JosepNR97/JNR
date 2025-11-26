@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { UNIVERSAL_DATA } from '../constants';
+import { PROFILE } from '../constants';
 import { useLanguage } from '../context/LanguageContext';
 import { ArrowRightIcon } from './Icons';
 
@@ -48,7 +48,7 @@ export const Hero: React.FC = () => {
         </span>
         
         <h1 className="font-serif text-5xl md:text-7xl font-bold text-white leading-tight mb-6 drop-shadow-lg">
-          {UNIVERSAL_DATA.name}
+          {PROFILE.name}
         </h1>
         
         <p className="text-xl md:text-2xl text-slate-200 font-light mb-8 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
@@ -61,7 +61,7 @@ export const Hero: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <a 
-            href={UNIVERSAL_DATA.linkedinUrl}
+            href={PROFILE.linkedin}
             target="_blank"
             rel="noopener noreferrer"
             className="px-8 py-4 bg-brand-600 text-white rounded-full font-medium hover:bg-brand-500 transition-all shadow-lg hover:shadow-brand-500/30 flex items-center gap-2 group"

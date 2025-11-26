@@ -1,42 +1,5 @@
 import { TranslationStructure } from './types';
-import { UNIVERSAL_DATA } from './constants';
-
-const VENDOR_LOGOS = {
-  togaf: "https://image.makewebeasy.net/makeweb/m_750x0/VC8hKuwUh/PartnerLogos/togaf.png",
-  safe: "https://scrumcraft.com/wp-content/uploads/2024/01/SAI_temp-logo_dteal.png",
-  aws: "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg",
-  google: "https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg",
-  azure: "https://www.bizstream.com/wp-content/uploads/2022/04/microsoft-azure-logo.png",
-  ardoq: "https://images.credly.com/images/074823c7-1b50-453c-ad9e-d254b1d89237/large_blob.png",
-  leanix: "https://confare.at/wp-content/uploads/Logo_LeanIX-RGB__horizontal_duotone_flat.png", // SAP LeanIX
-  accenture: "https://upload.wikimedia.org/wikipedia/commons/c/cd/Accenture.svg",
-  servicenow: "https://upload.wikimedia.org/wikipedia/commons/1/10/ServiceNow_logo.svg",
-  isdi: "https://isdi.education/app/uploads/2021/06/ISDI_LOGO_BLACK.png",
-  ub: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Logotip_UB.svg/256px-Logotip_UB.svg.png",
-  cambridge: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/University_of_Cambridge_logo.svg/256px-University_of_Cambridge_logo.svg.png"
-};
-
-const BADGES = {
-  togaf9: "https://images.credly.com/size/340x340/images/9623e061-6874-4b6c-829d-ee18c83a17e0/TOGAF_9_Certified.png",
-  togafF: "https://images.credly.com/size/340x340/images/c29c3686-259e-4a6c-94cc-e892d774f767/TOGAF_Enterprise_Architecture_Foundation.png",
-  togafP: "https://images.credly.com/size/340x340/images/42c3664e-0925-467a-9777-62624dd192c7/TOGAF_Enterprise_Architecture_Practitioner.png",
-  safe6: "https://images.credly.com/size/340x340/images/2d84e428-9078-49b6-a804-1371568b76e1/SAFe-Agilist-6_281_29.png",
-  awsPrac: "https://images.credly.com/size/340x340/images/00634f82-b07f-4bbd-a6bb-53de397fc3a6/image.png",
-  awsAI: "https://images.credly.com/size/340x340/images/c0b8529d-4054-469b-b054-080c3e9818b2/image.png", // Generic/Projected AI badge
-  awsPartnerTech: "https://images.credly.com/size/340x340/images/e562886f-570a-4284-934c-6825c8939c06/image.png",
-  awsPartnerSales: "https://images.credly.com/size/340x340/images/2f7c0068-d621-4d1a-8c29-37303c74900c/image.png",
-  googleLead: "https://images.credly.com/size/340x340/images/22375865-d01c-43f9-8692-a9b0c61839e8/image.png",
-  azureFund: "https://images.credly.com/size/340x340/images/be8fcaeb-c769-4858-b567-ffaaa73ce8cf/image.png",
-  azureAI: "https://images.credly.com/size/340x340/images/336eeb74-9b2d-458b-965d-255959600f91/image.png",
-  azureData: "https://images.credly.com/size/340x340/images/05680195-b98a-4462-811c-2c93806f194c/image.png",
-  powerFund: "https://images.credly.com/size/340x340/images/4a613d9c-1546-417d-815d-007f3542289c/image.png",
-  ardoqFund: "https://images.credly.com/size/340x340/images/074823c7-1b50-453c-ad9e-d254b1d89237/large_blob.png",
-  leanix1: "https://images.credly.com/size/340x340/images/0e152912-32a7-4712-a89e-5e265c690226/image.png",
-  leanix2: "https://images.credly.com/size/340x340/images/e6231011-0941-477c-a44d-d876878c772e/image.png",
-  accentureLeader: "https://images.credly.com/size/340x340/images/30745585-612b-450f-a99f-798b0467776b/People_Leadership_Credential_-_Bronze.png", // Generic Accenture Leadership badge
-  servicenow: "https://images.credly.com/size/340x340/images/26b9623e-1b84-482a-a924-d2e82502808c/image.png",
-  cambridge: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/University_of_Cambridge_logo.svg/256px-University_of_Cambridge_logo.svg.png"
-};
+import { PROFILE, IMAGES, LINKS } from './constants';
 
 export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
   ca: {
@@ -106,7 +69,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           degree: "Màster en Transformació Digital",
           institution: "ISDI",
           year: "Set. 2022 - Nov. 2022",
-          logoUrl: VENDOR_LOGOS.isdi,
+          logoUrl: IMAGES.logos.isdi,
           description: "Especialització en Cloud."
         },
         {
@@ -114,7 +77,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           degree: "Grau en Enginyeria Informàtica",
           institution: "Universitat de Barcelona",
           year: "Set. 2015 - Juny 2022",
-          logoUrl: VENDOR_LOGOS.ub,
+          logoUrl: IMAGES.logos.ub,
           description: "Minor en Informàtica."
         },
         {
@@ -122,7 +85,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           degree: "Grau en Matemàtiques",
           institution: "Universitat de Barcelona",
           year: "2015 - 2017",
-          logoUrl: VENDOR_LOGOS.ub,
+          logoUrl: IMAGES.logos.ub,
           description: "Dos primers cursos complets."
         }
       ],
@@ -130,102 +93,102 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
         {
           id: "v_aws",
           name: "Amazon Web Services (AWS)",
-          logoUrl: VENDOR_LOGOS.aws,
+          logoUrl: IMAGES.logos.aws,
           tags: ["Cloud", "AI", "Partner"],
           certifications: [
-            { name: "AWS Certified AI Practitioner", image: BADGES.awsAI, date: "Maig 2025", credentialUrl: "#" },
-            { name: "AWS Certified Cloud Practitioner", image: BADGES.awsPrac, date: "Des. 2022", credentialUrl: "#" },
-            { name: "AWS Partner: Accreditation (Technical)", image: BADGES.awsPartnerTech, date: "Nov. 2022", credentialUrl: "#" },
-            { name: "AWS Partner: Sales Accreditation (Business)", image: BADGES.awsPartnerSales, date: "Nov. 2022", credentialUrl: "#" }
+            { name: "AWS Certified AI Practitioner", image: IMAGES.badges.awsAI, date: "Maig 2025", credentialUrl: LINKS.credentials.default },
+            { name: "AWS Certified Cloud Practitioner", image: IMAGES.badges.awsPrac, date: "Des. 2022", credentialUrl: LINKS.credentials.default },
+            { name: "AWS Partner: Accreditation (Technical)", image: IMAGES.badges.awsPartnerTech, date: "Nov. 2022", credentialUrl: LINKS.credentials.default },
+            { name: "AWS Partner: Sales Accreditation (Business)", image: IMAGES.badges.awsPartnerSales, date: "Nov. 2022", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_ms",
           name: "Microsoft",
-          logoUrl: VENDOR_LOGOS.azure,
+          logoUrl: IMAGES.logos.azure,
           tags: ["Azure", "Data", "AI", "Power Platform"],
           certifications: [
-            { name: "Microsoft Certified: Azure AI Fundamentals", image: BADGES.azureAI, date: "Jul. 2024", credentialUrl: "#" },
-            { name: "Microsoft Certified: Azure Data Fundamentals", image: BADGES.azureData, date: "Jul. 2024", credentialUrl: "#" },
-            { name: "Microsoft Certified: Azure Fundamentals", image: BADGES.azureFund, date: "Jul. 2024", credentialUrl: "#" },
-            { name: "Microsoft Certified: Power Platform Fundamentals", image: BADGES.powerFund, date: "Maig 2024", credentialUrl: "#" }
+            { name: "Microsoft Certified: Azure AI Fundamentals", image: IMAGES.badges.azureAI, date: "Jul. 2024", credentialUrl: LINKS.credentials.default },
+            { name: "Microsoft Certified: Azure Data Fundamentals", image: IMAGES.badges.azureData, date: "Jul. 2024", credentialUrl: LINKS.credentials.default },
+            { name: "Microsoft Certified: Azure Fundamentals", image: IMAGES.badges.azureFund, date: "Jul. 2024", credentialUrl: LINKS.credentials.default },
+            { name: "Microsoft Certified: Power Platform Fundamentals", image: IMAGES.badges.powerFund, date: "Maig 2024", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_togaf",
           name: "The Open Group",
-          logoUrl: VENDOR_LOGOS.togaf,
+          logoUrl: IMAGES.logos.togaf,
           tags: ["Enterprise Architecture", "Framework"],
           certifications: [
-            { name: "TOGAF® Enterprise Architecture Practitioner", image: BADGES.togafP, date: "Juny 2025", credentialUrl: "#" },
-            { name: "TOGAF® Enterprise Architecture Foundation", image: BADGES.togafF, date: "Març 2025", credentialUrl: "#" }
+            { name: "TOGAF® Enterprise Architecture Practitioner", image: IMAGES.badges.togafP, date: "Juny 2025", credentialUrl: LINKS.credentials.default },
+            { name: "TOGAF® Enterprise Architecture Foundation", image: IMAGES.badges.togafF, date: "Març 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_leanix",
           name: "SAP LeanIX",
-          logoUrl: VENDOR_LOGOS.leanix,
+          logoUrl: IMAGES.logos.leanix,
           tags: ["EA Tooling", "SaaS Management"],
           certifications: [
-            { name: "LeanIX Certified Practitioner (Level 2)", image: BADGES.leanix2, date: "Març 2025", credentialUrl: "#" },
-            { name: "LeanIX Certified Practitioner (Level 1)", image: BADGES.leanix1, date: "Feb. 2025", credentialUrl: "#" }
+            { name: "LeanIX Certified Practitioner (Level 2)", image: IMAGES.badges.leanix2, date: "Març 2025", credentialUrl: LINKS.credentials.default },
+            { name: "LeanIX Certified Practitioner (Level 1)", image: IMAGES.badges.leanix1, date: "Feb. 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_ardoq",
           name: "Ardoq",
-          logoUrl: VENDOR_LOGOS.ardoq,
+          logoUrl: IMAGES.logos.ardoq,
           tags: ["EA Tooling", "Data Driven"],
           certifications: [
-            { name: "Ardoq Practitioner", image: BADGES.ardoqFund, date: "Oct. 2025", credentialUrl: "#" }
+            { name: "Ardoq Practitioner", image: IMAGES.badges.ardoqFund, date: "Oct. 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_safe",
           name: "Scaled Agile, Inc.",
-          logoUrl: VENDOR_LOGOS.safe,
+          logoUrl: IMAGES.logos.safe,
           tags: ["Agile", "Transformation"],
           certifications: [
-            { name: "Certificación SAFe® Agilist (SA) - Leading SAFe", image: BADGES.safe6, date: "Abr. 2024", credentialUrl: "#" }
+            { name: "Certificación SAFe® Agilist (SA) - Leading SAFe", image: IMAGES.badges.safe6, date: "Abr. 2024", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_google",
           name: "Google Cloud",
-          logoUrl: VENDOR_LOGOS.google,
+          logoUrl: IMAGES.logos.google,
           tags: ["Cloud", "Digital Transformation"],
           certifications: [
-            { name: "Google Cloud Certified Digital Cloud Leader", image: BADGES.googleLead, date: "Des. 2022", credentialUrl: "#" }
+            { name: "Google Cloud Certified Digital Cloud Leader", image: IMAGES.badges.googleLead, date: "Des. 2022", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_acc",
           name: "Accenture",
-          logoUrl: VENDOR_LOGOS.accenture,
+          logoUrl: IMAGES.logos.accenture,
           tags: ["Leadership", "Management"],
           certifications: [
-            { name: "People Leadership Credential - Chapter 3: Empower", image: BADGES.accentureLeader, date: "Juny 2024", credentialUrl: "#" },
-            { name: "People Leadership Credential - Chapter 2: Develop", image: BADGES.accentureLeader, date: "Maig 2024", credentialUrl: "#" },
-            { name: "People Leadership Credential - Chapter 1: Connect", image: BADGES.accentureLeader, date: "Nov. 2023", credentialUrl: "#" }
+            { name: "People Leadership Credential - Chapter 3: Empower", image: IMAGES.badges.accentureLeader, date: "Juny 2024", credentialUrl: LINKS.credentials.default },
+            { name: "People Leadership Credential - Chapter 2: Develop", image: IMAGES.badges.accentureLeader, date: "Maig 2024", credentialUrl: LINKS.credentials.default },
+            { name: "People Leadership Credential - Chapter 1: Connect", image: IMAGES.badges.accentureLeader, date: "Nov. 2023", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_snow",
           name: "ServiceNow",
-          logoUrl: VENDOR_LOGOS.servicenow,
+          logoUrl: IMAGES.logos.servicenow,
           tags: ["ITSM", "Platform"],
           certifications: [
-            { name: "Micro-Certification - Welcome to ServiceNow", image: BADGES.servicenow, date: "Jul. 2025", credentialUrl: "#" }
+            { name: "Micro-Certification - Welcome to ServiceNow", image: IMAGES.badges.servicenow, date: "Jul. 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_cambridge",
           name: "University of Cambridge",
-          logoUrl: VENDOR_LOGOS.cambridge,
+          logoUrl: IMAGES.logos.cambridge,
           tags: ["Languages", "English"],
           certifications: [
-            { name: "Certificate in Advanced English (CAE)", image: BADGES.togafF, date: "Oct. 2020", credentialUrl: "#" }, // Using generic badge placeholder if not available, usually handled by using vendor logo
-            { name: "First Certificate in English (FCE)", image: BADGES.togafF, date: "Maig 2012", credentialUrl: "#" }
+            { name: "Certificate in Advanced English (CAE)", image: IMAGES.badges.togafF, date: "Oct. 2020", credentialUrl: LINKS.credentials.default },
+            { name: "First Certificate in English (FCE)", image: IMAGES.badges.togafF, date: "Maig 2012", credentialUrl: LINKS.credentials.default }
           ]
         }
       ]
@@ -267,7 +230,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           company: "NTT DATA Europe & Latam",
           period: "Gen. 2025 - Actualitat",
           description: "Consultoria estratègica enfocada en evolució d'arquitectura, anàlisi de sistemes crítics i definició de marcs d'arquitectura empresarial.",
-          logoUrl: UNIVERSAL_DATA.logos.ntt,
+          logoUrl: IMAGES.logos.ntt,
           achievements: [
             "2025: SECTOR PÚBLIC (TRANSPORT) - Evolución de arquitectura y sistemas: Análisis de las capacidades actuales a nivel de aplicaciones y tecnología como parte de un importante programa de Transformación Digital, con el objetivo de definir la arquitectura objetivo y formular un plan estratégico de transición, detallando iniciativas concretas para migrar hacia una plataforma tecnológica modernizada.",
             "2025: SECTOR PÚBLIC - Análisis de disposición para la toma de un sistema: Como parte de una Oficina Técnica, alineación estratégica de múltiples líneas de trabajo (Arquitectura de Solución, Interoperabilidad e Integración, DevOps, Seguridad, etc.) para llevar a cabo una evaluación de preparación para la asunción de un sistema crítico. El proyecto incluyó un análisis de riesgos sobre los servicios del proveedor actual, que concluyó con la creación d'un plan de mitigación integral, iniciativas de remediación y una hoja de ruta detallada para la implementación.",
@@ -280,7 +243,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           company: "Accenture España",
           period: "Set. 2022 - Gen. 2025",
           description: "Consultoria de transformació cloud, modernització de sistemes i optimització de procesos IT per a grans clients.",
-          logoUrl: UNIVERSAL_DATA.logos.accenture,
+          logoUrl: IMAGES.logos.accenture,
           achievements: [
             "2024~2025: ASSEGURADORA NACIONAL - Oficina de Transformación Cloud: Acompañamiento de los J2C de las distintas entidades internacionales de la compañía con el objetivo de estandarizar el proceso de adopción de la nube, analizar el parque de aplicaciones actual, definir arquetipos, aceleradores y trackers de migración, planificar las migraciones a alto nivel, definir el nuevo modelo operativo y crear una comunidad cloud en la empresa.",
             "2024: SECTOR PÚBLIC - Plan de Modernización de Sistemas: Evaluación del mapa de aplicaciones en base a criterios técnicos y revisión de arquitectura técnica para el posterior diseño del mapa de aplicaciones futuro, identificación de iniciativas y programas adicionales incluyendo automatización y activos de inteligencia artificial, culminant en la elaboración del plan per als següents 3 anys amb un conjunto de programes e iniciatives que donin resposta a les necessitats tecnològiques avaluades.",
@@ -293,8 +256,8 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           role: "Technology Strategy & Advisory Intern",
           company: "Accenture España",
           period: "Abr. 2021 - Ago. 2022",
-          description: "Inici de carrera professional participant en projectes estratègics per al sector financer.",
-          logoUrl: UNIVERSAL_DATA.logos.accenture,
+          description: "Inici de carrera profesional participant en projectes estratègics per al sector financer.",
+          logoUrl: IMAGES.logos.accenture,
           achievements: [
             "2021~2022: SECTOR BANCARI - Gobierno de negocio: Desarrollo de proyectos de gobierno de negocio para el sector bancario."
           ]
@@ -397,7 +360,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           degree: "Máster en Transformación Digital",
           institution: "ISDI",
           year: "Sept. 2022 - Nov. 2022",
-          logoUrl: VENDOR_LOGOS.isdi,
+          logoUrl: IMAGES.logos.isdi,
           description: "Especialización en Cloud."
         },
         {
@@ -405,7 +368,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           degree: "Grado en Ingeniería Informática",
           institution: "Universitat de Barcelona",
           year: "Sept. 2015 - Jun. 2022",
-          logoUrl: VENDOR_LOGOS.ub,
+          logoUrl: IMAGES.logos.ub,
           description: "Minor en Informática."
         },
         {
@@ -413,7 +376,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           degree: "Grado en Matemáticas",
           institution: "Universitat de Barcelona",
           year: "Sept. 2015 - 2017",
-          logoUrl: VENDOR_LOGOS.ub,
+          logoUrl: IMAGES.logos.ub,
           description: "Dos primeros cursos completos."
         }
       ],
@@ -421,102 +384,102 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
         {
           id: "v_aws",
           name: "Amazon Web Services (AWS)",
-          logoUrl: VENDOR_LOGOS.aws,
+          logoUrl: IMAGES.logos.aws,
           tags: ["Cloud", "AI", "Partner"],
           certifications: [
-            { name: "AWS Certified AI Practitioner", image: BADGES.awsAI, date: "Mayo 2025", credentialUrl: "#" },
-            { name: "AWS Certified Cloud Practitioner", image: BADGES.awsPrac, date: "Dic. 2022", credentialUrl: "#" },
-            { name: "AWS Partner: Accreditation (Technical)", image: BADGES.awsPartnerTech, date: "Nov. 2022", credentialUrl: "#" },
-            { name: "AWS Partner: Sales Accreditation (Business)", image: BADGES.awsPartnerSales, date: "Nov. 2022", credentialUrl: "#" }
+            { name: "AWS Certified AI Practitioner", image: IMAGES.badges.awsAI, date: "Mayo 2025", credentialUrl: LINKS.credentials.default },
+            { name: "AWS Certified Cloud Practitioner", image: IMAGES.badges.awsPrac, date: "Dic. 2022", credentialUrl: LINKS.credentials.default },
+            { name: "AWS Partner: Accreditation (Technical)", image: IMAGES.badges.awsPartnerTech, date: "Nov. 2022", credentialUrl: LINKS.credentials.default },
+            { name: "AWS Partner: Sales Accreditation (Business)", image: IMAGES.badges.awsPartnerSales, date: "Nov. 2022", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_ms",
           name: "Microsoft",
-          logoUrl: VENDOR_LOGOS.azure,
+          logoUrl: IMAGES.logos.azure,
           tags: ["Azure", "Data", "AI", "Power Platform"],
           certifications: [
-            { name: "Microsoft Certified: Azure AI Fundamentals", image: BADGES.azureAI, date: "Jul. 2024", credentialUrl: "#" },
-            { name: "Microsoft Certified: Azure Data Fundamentals", image: BADGES.azureData, date: "Jul. 2024", credentialUrl: "#" },
-            { name: "Microsoft Certified: Azure Fundamentals", image: BADGES.azureFund, date: "Jul. 2024", credentialUrl: "#" },
-            { name: "Microsoft Certified: Power Platform Fundamentals", image: BADGES.powerFund, date: "Mayo 2024", credentialUrl: "#" }
+            { name: "Microsoft Certified: Azure AI Fundamentals", image: IMAGES.badges.azureAI, date: "Jul. 2024", credentialUrl: LINKS.credentials.default },
+            { name: "Microsoft Certified: Azure Data Fundamentals", image: IMAGES.badges.azureData, date: "Jul. 2024", credentialUrl: LINKS.credentials.default },
+            { name: "Microsoft Certified: Azure Fundamentals", image: IMAGES.badges.azureFund, date: "Jul. 2024", credentialUrl: LINKS.credentials.default },
+            { name: "Microsoft Certified: Power Platform Fundamentals", image: IMAGES.badges.powerFund, date: "Mayo 2024", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_togaf",
           name: "The Open Group",
-          logoUrl: VENDOR_LOGOS.togaf,
+          logoUrl: IMAGES.logos.togaf,
           tags: ["Enterprise Architecture", "Framework"],
           certifications: [
-            { name: "TOGAF® Enterprise Architecture Practitioner", image: BADGES.togafP, date: "Junio 2025", credentialUrl: "#" },
-            { name: "TOGAF® Enterprise Architecture Foundation", image: BADGES.togafF, date: "Marzo 2025", credentialUrl: "#" }
+            { name: "TOGAF® Enterprise Architecture Practitioner", image: IMAGES.badges.togafP, date: "Junio 2025", credentialUrl: LINKS.credentials.default },
+            { name: "TOGAF® Enterprise Architecture Foundation", image: IMAGES.badges.togafF, date: "Marzo 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_leanix",
           name: "SAP LeanIX",
-          logoUrl: VENDOR_LOGOS.leanix,
+          logoUrl: IMAGES.logos.leanix,
           tags: ["EA Tooling", "SaaS Management"],
           certifications: [
-            { name: "LeanIX Certified Practitioner (Level 2)", image: BADGES.leanix2, date: "Marzo 2025", credentialUrl: "#" },
-            { name: "LeanIX Certified Practitioner (Level 1)", image: BADGES.leanix1, date: "Feb. 2025", credentialUrl: "#" }
+            { name: "LeanIX Certified Practitioner (Level 2)", image: IMAGES.badges.leanix2, date: "Marzo 2025", credentialUrl: LINKS.credentials.default },
+            { name: "LeanIX Certified Practitioner (Level 1)", image: IMAGES.badges.leanix1, date: "Feb. 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_ardoq",
           name: "Ardoq",
-          logoUrl: VENDOR_LOGOS.ardoq,
+          logoUrl: IMAGES.logos.ardoq,
           tags: ["EA Tooling", "Data Driven"],
           certifications: [
-            { name: "Ardoq Practitioner", image: BADGES.ardoqFund, date: "Oct. 2025", credentialUrl: "#" }
+            { name: "Ardoq Practitioner", image: IMAGES.badges.ardoqFund, date: "Oct. 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_safe",
           name: "Scaled Agile, Inc.",
-          logoUrl: VENDOR_LOGOS.safe,
+          logoUrl: IMAGES.logos.safe,
           tags: ["Agile", "Transformation"],
           certifications: [
-            { name: "Certificación SAFe® Agilist (SA) - Leading SAFe", image: BADGES.safe6, date: "Abr. 2024", credentialUrl: "#" }
+            { name: "Certificación SAFe® Agilist (SA) - Leading SAFe", image: IMAGES.badges.safe6, date: "Abr. 2024", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_google",
           name: "Google Cloud",
-          logoUrl: VENDOR_LOGOS.google,
+          logoUrl: IMAGES.logos.google,
           tags: ["Cloud", "Digital Transformation"],
           certifications: [
-            { name: "Google Cloud Certified Digital Cloud Leader", image: BADGES.googleLead, date: "Dic. 2022", credentialUrl: "#" }
+            { name: "Google Cloud Certified Digital Cloud Leader", image: IMAGES.badges.googleLead, date: "Dic. 2022", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_acc",
           name: "Accenture",
-          logoUrl: VENDOR_LOGOS.accenture,
+          logoUrl: IMAGES.logos.accenture,
           tags: ["Leadership", "Management"],
           certifications: [
-            { name: "People Leadership Credential - Chapter 3: Empower", image: BADGES.accentureLeader, date: "Junio 2024", credentialUrl: "#" },
-            { name: "People Leadership Credential - Chapter 2: Develop", image: BADGES.accentureLeader, date: "Mayo 2024", credentialUrl: "#" },
-            { name: "People Leadership Credential - Chapter 1: Connect", image: BADGES.accentureLeader, date: "Nov. 2023", credentialUrl: "#" }
+            { name: "People Leadership Credential - Chapter 3: Empower", image: IMAGES.badges.accentureLeader, date: "Junio 2024", credentialUrl: LINKS.credentials.default },
+            { name: "People Leadership Credential - Chapter 2: Develop", image: IMAGES.badges.accentureLeader, date: "Mayo 2024", credentialUrl: LINKS.credentials.default },
+            { name: "People Leadership Credential - Chapter 1: Connect", image: IMAGES.badges.accentureLeader, date: "Nov. 2023", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_snow",
           name: "ServiceNow",
-          logoUrl: VENDOR_LOGOS.servicenow,
+          logoUrl: IMAGES.logos.servicenow,
           tags: ["ITSM", "Platform"],
           certifications: [
-            { name: "Micro-Certification - Welcome to ServiceNow", image: BADGES.servicenow, date: "Jul. 2025", credentialUrl: "#" }
+            { name: "Micro-Certification - Welcome to ServiceNow", image: IMAGES.badges.servicenow, date: "Jul. 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_cambridge",
           name: "University of Cambridge",
-          logoUrl: VENDOR_LOGOS.cambridge,
+          logoUrl: IMAGES.logos.cambridge,
           tags: ["Languages", "English"],
           certifications: [
-            { name: "Certificate in Advanced English (CAE)", image: BADGES.togafF, date: "Oct. 2020", credentialUrl: "#" },
-            { name: "First Certificate in English (FCE)", image: BADGES.togafF, date: "Mayo 2012", credentialUrl: "#" }
+            { name: "Certificate in Advanced English (CAE)", image: IMAGES.badges.togafF, date: "Oct. 2020", credentialUrl: LINKS.credentials.default },
+            { name: "First Certificate in English (FCE)", image: IMAGES.badges.togafF, date: "Mayo 2012", credentialUrl: LINKS.credentials.default }
           ]
         }
       ]
@@ -558,7 +521,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           company: "NTT DATA Europe & Latam",
           period: "Ene. 2025 - Actualidad",
           description: "Consultoría estratégica enfocada en evolución de arquitectura, análisis de sistemas críticos y definición de marcos de arquitectura empresarial.",
-          logoUrl: UNIVERSAL_DATA.logos.ntt,
+          logoUrl: IMAGES.logos.ntt,
           achievements: [
             "2025: SECTOR PÚBLICO (TRANSPORTE) - Evolución de arquitectura y sistemas: Análisis de las capacidades actuales a nivel de aplicaciones y tecnología como parte de un importante programa de Transformación Digital, con el objetivo de definir la arquitectura objetivo y formular un plan estratégico de transición, detallando iniciativas concretas para migrar hacia una plataforma tecnológica modernizada.",
             "2025: SECTOR PÚBLICO - Análisis de disposición para la toma de un sistema: Como parte de una Oficina Técnica, alineación estratégica de múltiples líneas de trabajo (Arquitectura de Solución, Interoperabilidad e Integración, DevOps, Seguridad, etc.) para llevar a cabo una evaluación de preparación para la asunción de un sistema crítico. El proyecto incluyó un análisis de riesgos sobre los servicios del proveedor actual, que concluyó con la creación d'un plan de mitigación integral, iniciativas de remediación y una hoja de ruta detallada para la implementación.",
@@ -571,7 +534,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           company: "Accenture España",
           period: "Sept. 2022 - Ene. 2025",
           description: "Consultoría de transformación cloud, modernización de sistemas y optimización de procesos IT para grandes clientes.",
-          logoUrl: UNIVERSAL_DATA.logos.accenture,
+          logoUrl: IMAGES.logos.accenture,
           achievements: [
             "2024~2025: ASEGURADORA NACIONAL - Oficina de Transformación Cloud: Acompañamiento de los J2C de las distintas entidades internacionales de la compañía con el objetivo de estandarizar el proceso de adopción de la nube, analizar el parque de aplicaciones actual, definir arquetipos, aceleradores y trackers de migración, planificar las migraciones a alto nivel, definir el nuevo modelo operativo y crear una comunidad cloud en la empresa.",
             "2024: SECTOR PÚBLICO - Plan de Modernización de Sistemas: Evaluación del mapa de aplicaciones en base a criterios técnicos y revisión de arquitectura técnica para el posterior diseño del mapa de aplicaciones futuro, identificación de iniciativas y programas adicionales incluyendo automatización y activos de inteligencia artificial, culminant en la elaboración del plan para los siguientes 3 años con un conjunto de programas e iniciativas que den respuesta a las necesidades tecnológicas evaluadas.",
@@ -585,7 +548,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           company: "Accenture España",
           period: "Abr. 2021 - Ago. 2022",
           description: "Inicio de carrera profesional participando en proyectos estratégicos para el sector financiero.",
-          logoUrl: UNIVERSAL_DATA.logos.accenture,
+          logoUrl: IMAGES.logos.accenture,
           achievements: [
             "2021~2022: SECTOR BANCARIO - Gobierno de negocio: Desarrollo de proyectos de gobierno de negocio para el sector bancario."
           ]
@@ -688,7 +651,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           degree: "Master in Digital Transformation",
           institution: "ISDI",
           year: "Sept 2022 - Nov 2022",
-          logoUrl: VENDOR_LOGOS.isdi,
+          logoUrl: IMAGES.logos.isdi,
           description: "Cloud Specialization."
         },
         {
@@ -696,7 +659,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           degree: "Bachelor's Degree in Computer Engineering",
           institution: "Universitat de Barcelona",
           year: "Sept 2015 - June 2022",
-          logoUrl: VENDOR_LOGOS.ub,
+          logoUrl: IMAGES.logos.ub,
           description: "Computer Science Minor."
         },
         {
@@ -704,7 +667,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           degree: "Bachelor's Degree in Mathematics",
           institution: "Universitat de Barcelona",
           year: "Sept 2015 - 2017",
-          logoUrl: VENDOR_LOGOS.ub,
+          logoUrl: IMAGES.logos.ub,
           description: "First two years completed."
         }
       ],
@@ -712,102 +675,102 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
         {
           id: "v_aws",
           name: "Amazon Web Services (AWS)",
-          logoUrl: VENDOR_LOGOS.aws,
+          logoUrl: IMAGES.logos.aws,
           tags: ["Cloud", "AI", "Partner"],
           certifications: [
-            { name: "AWS Certified AI Practitioner", image: BADGES.awsAI, date: "May 2025", credentialUrl: "#" },
-            { name: "AWS Certified Cloud Practitioner", image: BADGES.awsPrac, date: "Dec. 2022", credentialUrl: "#" },
-            { name: "AWS Partner: Accreditation (Technical)", image: BADGES.awsPartnerTech, date: "Nov. 2022", credentialUrl: "#" },
-            { name: "AWS Partner: Sales Accreditation (Business)", image: BADGES.awsPartnerSales, date: "Nov. 2022", credentialUrl: "#" }
+            { name: "AWS Certified AI Practitioner", image: IMAGES.badges.awsAI, date: "May 2025", credentialUrl: LINKS.credentials.default },
+            { name: "AWS Certified Cloud Practitioner", image: IMAGES.badges.awsPrac, date: "Dec. 2022", credentialUrl: LINKS.credentials.default },
+            { name: "AWS Partner: Accreditation (Technical)", image: IMAGES.badges.awsPartnerTech, date: "Nov. 2022", credentialUrl: LINKS.credentials.default },
+            { name: "AWS Partner: Sales Accreditation (Business)", image: IMAGES.badges.awsPartnerSales, date: "Nov. 2022", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_ms",
           name: "Microsoft",
-          logoUrl: VENDOR_LOGOS.azure,
+          logoUrl: IMAGES.logos.azure,
           tags: ["Azure", "Data", "AI", "Power Platform"],
           certifications: [
-            { name: "Microsoft Certified: Azure AI Fundamentals", image: BADGES.azureAI, date: "Jul. 2024", credentialUrl: "#" },
-            { name: "Microsoft Certified: Azure Data Fundamentals", image: BADGES.azureData, date: "Jul. 2024", credentialUrl: "#" },
-            { name: "Microsoft Certified: Azure Fundamentals", image: BADGES.azureFund, date: "Jul. 2024", credentialUrl: "#" },
-            { name: "Microsoft Certified: Power Platform Fundamentals", image: BADGES.powerFund, date: "May 2024", credentialUrl: "#" }
+            { name: "Microsoft Certified: Azure AI Fundamentals", image: IMAGES.badges.azureAI, date: "Jul. 2024", credentialUrl: LINKS.credentials.default },
+            { name: "Microsoft Certified: Azure Data Fundamentals", image: IMAGES.badges.azureData, date: "Jul. 2024", credentialUrl: LINKS.credentials.default },
+            { name: "Microsoft Certified: Azure Fundamentals", image: IMAGES.badges.azureFund, date: "Jul. 2024", credentialUrl: LINKS.credentials.default },
+            { name: "Microsoft Certified: Power Platform Fundamentals", image: IMAGES.badges.powerFund, date: "May 2024", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_togaf",
           name: "The Open Group",
-          logoUrl: VENDOR_LOGOS.togaf,
+          logoUrl: IMAGES.logos.togaf,
           tags: ["Enterprise Architecture", "Framework"],
           certifications: [
-            { name: "TOGAF® Enterprise Architecture Practitioner", image: BADGES.togafP, date: "June 2025", credentialUrl: "#" },
-            { name: "TOGAF® Enterprise Architecture Foundation", image: BADGES.togafF, date: "March 2025", credentialUrl: "#" }
+            { name: "TOGAF® Enterprise Architecture Practitioner", image: IMAGES.badges.togafP, date: "June 2025", credentialUrl: LINKS.credentials.default },
+            { name: "TOGAF® Enterprise Architecture Foundation", image: IMAGES.badges.togafF, date: "March 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_leanix",
           name: "SAP LeanIX",
-          logoUrl: VENDOR_LOGOS.leanix,
+          logoUrl: IMAGES.logos.leanix,
           tags: ["EA Tooling", "SaaS Management"],
           certifications: [
-            { name: "LeanIX Certified Practitioner (Level 2)", image: BADGES.leanix2, date: "March 2025", credentialUrl: "#" },
-            { name: "LeanIX Certified Practitioner (Level 1)", image: BADGES.leanix1, date: "Feb. 2025", credentialUrl: "#" }
+            { name: "LeanIX Certified Practitioner (Level 2)", image: IMAGES.badges.leanix2, date: "March 2025", credentialUrl: LINKS.credentials.default },
+            { name: "LeanIX Certified Practitioner (Level 1)", image: IMAGES.badges.leanix1, date: "Feb. 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_ardoq",
           name: "Ardoq",
-          logoUrl: VENDOR_LOGOS.ardoq,
+          logoUrl: IMAGES.logos.ardoq,
           tags: ["EA Tooling", "Data Driven"],
           certifications: [
-            { name: "Ardoq Practitioner", image: BADGES.ardoqFund, date: "Oct. 2025", credentialUrl: "#" }
+            { name: "Ardoq Practitioner", image: IMAGES.badges.ardoqFund, date: "Oct. 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_safe",
           name: "Scaled Agile, Inc.",
-          logoUrl: VENDOR_LOGOS.safe,
+          logoUrl: IMAGES.logos.safe,
           tags: ["Agile", "Transformation"],
           certifications: [
-            { name: "Certificación SAFe® Agilist (SA) - Leading SAFe", image: BADGES.safe6, date: "Apr. 2024", credentialUrl: "#" }
+            { name: "Certificación SAFe® Agilist (SA) - Leading SAFe", image: IMAGES.badges.safe6, date: "Apr. 2024", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_google",
           name: "Google Cloud",
-          logoUrl: VENDOR_LOGOS.google,
+          logoUrl: IMAGES.logos.google,
           tags: ["Cloud", "Digital Transformation"],
           certifications: [
-            { name: "Google Cloud Certified Digital Cloud Leader", image: BADGES.googleLead, date: "Dec. 2022", credentialUrl: "#" }
+            { name: "Google Cloud Certified Digital Cloud Leader", image: IMAGES.badges.googleLead, date: "Dec. 2022", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_acc",
           name: "Accenture",
-          logoUrl: VENDOR_LOGOS.accenture,
+          logoUrl: IMAGES.logos.accenture,
           tags: ["Leadership", "Management"],
           certifications: [
-            { name: "People Leadership Credential - Chapter 3: Empower", image: BADGES.accentureLeader, date: "June 2024", credentialUrl: "#" },
-            { name: "People Leadership Credential - Chapter 2: Develop", image: BADGES.accentureLeader, date: "May 2024", credentialUrl: "#" },
-            { name: "People Leadership Credential - Chapter 1: Connect", image: BADGES.accentureLeader, date: "Nov. 2023", credentialUrl: "#" }
+            { name: "People Leadership Credential - Chapter 3: Empower", image: IMAGES.badges.accentureLeader, date: "June 2024", credentialUrl: LINKS.credentials.default },
+            { name: "People Leadership Credential - Chapter 2: Develop", image: IMAGES.badges.accentureLeader, date: "May 2024", credentialUrl: LINKS.credentials.default },
+            { name: "People Leadership Credential - Chapter 1: Connect", image: IMAGES.badges.accentureLeader, date: "Nov. 2023", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_snow",
           name: "ServiceNow",
-          logoUrl: VENDOR_LOGOS.servicenow,
+          logoUrl: IMAGES.logos.servicenow,
           tags: ["ITSM", "Platform"],
           certifications: [
-            { name: "Micro-Certification - Welcome to ServiceNow", image: BADGES.servicenow, date: "Jul. 2025", credentialUrl: "#" }
+            { name: "Micro-Certification - Welcome to ServiceNow", image: IMAGES.badges.servicenow, date: "Jul. 2025", credentialUrl: LINKS.credentials.default }
           ]
         },
         {
           id: "v_cambridge",
           name: "University of Cambridge",
-          logoUrl: VENDOR_LOGOS.cambridge,
+          logoUrl: IMAGES.logos.cambridge,
           tags: ["Languages", "English"],
           certifications: [
-            { name: "Certificate in Advanced English (CAE)", image: BADGES.togafF, date: "Oct. 2020", credentialUrl: "#" },
-            { name: "First Certificate in English (FCE)", image: BADGES.togafF, date: "May 2012", credentialUrl: "#" }
+            { name: "Certificate in Advanced English (CAE)", image: IMAGES.badges.togafF, date: "Oct. 2020", credentialUrl: LINKS.credentials.default },
+            { name: "First Certificate in English (FCE)", image: IMAGES.badges.togafF, date: "May 2012", credentialUrl: LINKS.credentials.default }
           ]
         }
       ]
@@ -849,7 +812,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           company: "NTT DATA Europe & Latam",
           period: "Jan. 2025 - Present",
           description: "Strategic consulting focused on architecture evolution, critical systems analysis, and definition of enterprise architecture frameworks.",
-          logoUrl: UNIVERSAL_DATA.logos.ntt,
+          logoUrl: IMAGES.logos.ntt,
           achievements: [
             "2025: PUBLIC SECTOR (TRANSPORT) - Architecture and systems evolution: Analysis of current capabilities at the application and technology level as part of a major Digital Transformation program, aiming to define the target architecture and formulate a strategic transition plan, detailing concrete initiatives to migrate towards a modernized technological platform.",
             "2025: PUBLIC SECTOR - System intake readiness analysis: As part of a Technical Office, strategic alignment of multiple workstreams (Solution Architecture, Interoperability and Integration, DevOps, Security, etc.) to conduct a readiness assessment for assuming a critical system. The project included a risk analysis on current provider services, concluding with the creation of a comprehensive mitigation plan, remediation initiatives, and a detailed implementation roadmap.",
@@ -862,7 +825,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           company: "Accenture Spain",
           period: "Sept. 2022 - Jan. 2025",
           description: "Cloud transformation consulting, systems modernization, and IT process optimization for large clients.",
-          logoUrl: UNIVERSAL_DATA.logos.accenture,
+          logoUrl: IMAGES.logos.accenture,
           achievements: [
             "2024~2025: NATIONAL INSURER - Cloud Transformation Office: Accompanying J2C of various international entities of the company with the aim of standardizing the cloud adoption process, analyzing the current application landscape, defining archetypes, accelerators, and migration trackers, planning high-level migrations, defining the new operating model, and creating a cloud community within the company.",
             "2024: PUBLIC SECTOR - Systems Modernization Plan: Evaluation of the application map based on technical criteria and technical architecture review for the subsequent design of the future application map, identification of additional initiatives and programs including automation and artificial intelligence assets, culminating in the development of a 3-year plan with a set of programs and initiatives responding to evaluated technological needs.",
@@ -876,7 +839,7 @@ export const translations: Record<'ca' | 'es' | 'en', TranslationStructure> = {
           company: "Accenture Spain",
           period: "Apr. 2021 - Aug. 2022",
           description: "Start of professional career participating in strategic projects for the financial sector.",
-          logoUrl: UNIVERSAL_DATA.logos.accenture,
+          logoUrl: IMAGES.logos.accenture,
           achievements: [
             "2021~2022: BANKING SECTOR - Business Governance: Development of business governance projects for the banking sector."
           ]

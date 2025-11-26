@@ -1,5 +1,5 @@
 import React from 'react';
-import { UNIVERSAL_DATA, CAREER_START_YEAR } from '../constants';
+import { PROFILE, CAREER_START_YEAR } from '../constants';
 import { useLanguage } from '../context/LanguageContext';
 
 export const About: React.FC = () => {
@@ -23,8 +23,8 @@ export const About: React.FC = () => {
             <div className="absolute -inset-4 bg-gradient-to-r from-brand-500 to-indigo-600 rounded-2xl opacity-30 blur-xl group-hover:opacity-50 transition-opacity"></div>
             <div className="relative rounded-2xl overflow-hidden aspect-[4/5] bg-slate-200 shadow-2xl">
               <img 
-                src={UNIVERSAL_DATA.profileImage}
-                alt={UNIVERSAL_DATA.name} 
+                src={PROFILE.image}
+                alt={PROFILE.name} 
                 className="w-full h-full object-cover object-top transform transition-transform duration-500 group-hover:scale-105"
               />
             </div>

@@ -1,38 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { CERTIFICATION_LOGOS } from '../constants';
 
-const LOGOS = [
-  {
-    name: "AWS",
-    url: "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg"
-  },
-  {
-    name: "Microsoft Azure",
-    url: "https://www.bizstream.com/wp-content/uploads/2022/04/microsoft-azure-logo.png"
-  },
-  {
-    name: "Google Cloud",
-    url: "https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg"
-  },
-  {
-    name: "The Open Group",
-    url: "https://image.makewebeasy.net/makeweb/m_750x0/VC8hKuwUh/PartnerLogos/togaf.png"
-  },
-  {
-    name: "SAFe",
-    url: "https://scrumcraft.com/wp-content/uploads/2024/01/SAI_temp-logo_dteal.png" 
-  },
-  {
-    name: "Ardoq",
-    url: "https://images.credly.com/images/074823c7-1b50-453c-ad9e-d254b1d89237/large_blob.png"
-  },
-  {
-    name: "LeanIX",
-    url: "https://confare.at/wp-content/uploads/Logo_LeanIX-RGB__horizontal_duotone_flat.png"
-  }
-];
-
-const REPEATED_LOGOS = [...LOGOS, ...LOGOS, ...LOGOS, ...LOGOS, ...LOGOS];
+const REPEATED_LOGOS = [...CERTIFICATION_LOGOS, ...CERTIFICATION_LOGOS, ...CERTIFICATION_LOGOS, ...CERTIFICATION_LOGOS, ...CERTIFICATION_LOGOS];
 
 export const Certifications: React.FC = () => {
   const { t } = useLanguage();
