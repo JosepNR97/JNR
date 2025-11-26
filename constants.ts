@@ -1,13 +1,5 @@
 import { MultiLanguageString } from "./types";
 
-export const PROFILE = {
-  name: "Josep Núñez Riba",
-  email: "josepnunez97@gmail.com",
-  linkedin: "https://www.linkedin.com/in/josep-nunez-riba",
-  image: "https://media.licdn.com/dms/image/v2/D4D03AQEuE02DCqQnwg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1668694478777?e=1765411200&v=beta&t=b6KmfkfwYnrPaM_sGYsZmab9cK1GXIiQlErNp4mX45M",
-  location: "Barcelona",
-};
-
 export const CAREER_START_YEAR = 2021;
 
 export const IMAGES = {

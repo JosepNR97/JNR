@@ -1,5 +1,5 @@
 import React from 'react';
-import { PROFILE } from '../constants';
+import { PROFILE_DATA } from '../aboutMe';
 import { useLanguage } from '../context/LanguageContext';
 import { LinkedinIcon, MailIcon, LocationIcon } from './Icons';
 
@@ -22,17 +22,17 @@ export const Contact: React.FC = () => {
         <div className="flex flex-col items-start gap-4 max-w-fit mx-auto">
           
           <a 
-            href={`mailto:${PROFILE.email}`} 
+            href={`mailto:${PROFILE_DATA.email}`} 
             className="flex items-center gap-4 text-slate-300 hover:text-white transition-all group text-left"
           >
             <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-brand-400 group-hover:bg-brand-600 group-hover:text-white transition-colors shrink-0 border border-slate-700">
               <MailIcon className="w-4 h-4" />
             </div>
-            <span className="text-base sm:text-lg font-light tracking-wide">{PROFILE.email}</span>
+            <span className="text-base sm:text-lg font-light tracking-wide">{PROFILE_DATA.email}</span>
           </a>
           
           <a 
-            href={PROFILE.linkedin}
+            href={PROFILE_DATA.linkedin}
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center gap-4 text-slate-300 hover:text-white transition-all group text-left"

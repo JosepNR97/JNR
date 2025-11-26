@@ -12,7 +12,7 @@ export interface ExperienceItem {
   company: string;
   period: string;
   description: string;
-  achievements: AchievementItem[]; // Changed from string[] to structured object
+  achievements: AchievementItem[]; 
   logoUrl: string;
 }
 
@@ -30,7 +30,7 @@ export interface TestimonialItem {
   role: string;
 }
 
-// New Education Structures
+// Education Structures
 export interface AcademicItem {
   id: string;
   degree: string;
@@ -42,7 +42,7 @@ export interface AcademicItem {
 
 export interface CertificationItem {
   name: string;
-  image: string; // URL to badge image
+  image: string; 
   date: string;
   credentialUrl: string;
 }
