@@ -37,11 +37,29 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
     logoUrl: IMAGES.logos.ntt,
     achievements: [
       {
-        year: "2025",
+        year: "2025~2026",
         sector: {
-          ca: "Sector Públic (Transport)",
-          es: "Sector Público (Transporte)",
-          en: "Public Sector (Transport)"
+          ca: "Companyia d'assegurances",
+          es: "Compañía de seguros",
+          en: "Insurance Company"
+        },
+        title: {
+          ca: "Transformació i govern d'arquitectura",
+          es: "Transformación y gobierno de arquitectura",
+          en: "Architecture Transformation and Governance"
+        },
+        description: {
+          ca: "Gestió de programa de transformació de plataforma tecnològica en els camps d'arquitectura event-driven, robustesa d'APIs, solució futura componible i capacitats agèntiques. Suport E2E al disseny proposat i a la implementació d'MVPs sobre diversos casos d'ús per a la validació funcional i tècnica de la solució.",
+          es: "Gestión de programa de transformación de plataforma tecnológica en los campos de arquitectura event-driven, robustez de APIs, solución futura componible y capacidades agénticas. Apoyo E2E al diseño propuesto y a la implementación de MVPs sobre varios casos de uso para la validación funcional y técnica de la solución.",
+          en: "Technological platform transformation program management in the fields of Event-Driven Architecture, API Robustness, Composable Future Solution and Agentic Capabilities. E2E support to the proposed design and implementation of MVPs on various use cases for the functional and technical validation of the solution."
+        }
+      },
+      {
+        year: "2025~2026",
+        sector: {
+          ca: "Sector públic (Espanya - Transport)",
+          es: "Sector público (España - Transporte)",
+          en: "Public Sector (Spain - Transport)"
         },
         title: {
           ca: "Evolució d'arquitectura i sistemes",
@@ -57,9 +75,27 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
       {
         year: "2025",
         sector: {
-          ca: "Sector Públic",
-          es: "Sector Público",
-          en: "Public Sector"
+          ca: "Sector públic (Comunitat Europea)",
+          es: "Sector público (Comunidad Europea)",
+          en: "Public Sector (European Community)"
+        },
+        title: {
+          ca: "Optimització de sistemes i avaluació de proveïdors",
+          es: "Optimización de sistemas y evaluación de proveedores",
+          en: "Systems optimization and vendor evaluation"
+        },
+        description: {
+          ca: "Anàlisi de requisits funcionals i tècnics de sistema crític sota els prismes d'arquitectura de solució, seguretat, infraestructura i costos. Definició i implementació de marc d'avaluació de proveïdors en cerca de l'optimització del sistema complint els requisits aixecats i generació de full de ruta amb les iniciatives de millora i modernització.",
+          es: "Análisis de requisitos funcionales y técnicos de sistema crítico bajo los prismas de arquitectura de solución, seguridad, infraestructura y costes. Definición e implementación de marco de evaluación de proveedores en busca de la optimización del sistema cumpliendo los requisitos levantados y generación de hoja de ruta con las iniciativas de mejora y modernización.",
+          en: "Analysis of functional and technical requirements of critical systems under the prisms of solution architecture, security, infrastructure and costs. Definition and implementation of a vendor evaluation framework in search of the optimization of the system by meeting the requirements raised and generation of a roadmap with improvement and modernization initiatives."
+        }
+      },
+      {
+        year: "2025",
+        sector: {
+          ca: "Sector públic (Comunitat Europea)",
+          es: "Sector público (Comunidad Europea)",
+          en: "Public Sector (European Community)"
         },
         title: {
           ca: "Anàlisi de disposició per a la presa d'un sistema",
@@ -75,8 +111,8 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
       {
         year: "2025",
         sector: {
-          ca: "Companyia d'Assegurances",
-          es: "Compañía de Seguros",
+          ca: "Companyia d'assegurances",
+          es: "Compañía de seguros",
           en: "Insurance Company"
         },
         title: {
@@ -111,9 +147,9 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
       {
         year: "2024~2025",
         sector: {
-          ca: "Asseguradora Nacional",
-          es: "Aseguradora Nacional",
-          en: "National Insurer"
+          ca: "Companyia d'assegurances",
+          es: "Compañía de seguros",
+          en: "Insurance Company"
         },
         title: {
           ca: "Oficina de Transformació Cloud",
@@ -129,9 +165,9 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
       {
         year: "2024",
         sector: {
-          ca: "Sector Públic",
-          es: "Sector Público",
-          en: "Public Sector"
+          ca: "Sector públic (Espanya)",
+          es: "Sector público (España)",
+          en: "Public Sector (Spain)"
         },
         title: {
           ca: "Pla de Modernització de Sistemes",
@@ -147,8 +183,8 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
       {
         year: "2024",
         sector: {
-          ca: "Companyia de Marketplaces Digitals",
-          es: "Compañía de Marketplaces Digitales",
+          ca: "Companyia de marketplaces digitals",
+          es: "Compañía de marketplaces digitales",
           en: "Digital Marketplace Company"
         },
         title: {
@@ -165,9 +201,9 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
       {
         year: "2022~2024",
         sector: {
-          ca: "Entitat Bancària Nacional",
-          es: "Entidad Bancaria Nacional",
-          en: "National Banking Entity"
+          ca: "Entitat bancària",
+          es: "Entidad bancaria",
+          en: "Banking Entity"
         },
         title: {
           ca: "Implantació d'eina de PPM",
@@ -201,9 +237,9 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
       {
         year: "2021~2022",
         sector: {
-          ca: "Sector Bancari",
-          es: "Sector Bancario",
-          en: "Banking Sector"
+          ca: "Entitat bancària",
+          es: "Entidad bancaria",
+          en: "Banking Entity"
         },
         title: {
           ca: "Govern de negoci",

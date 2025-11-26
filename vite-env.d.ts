@@ -1,5 +1,1 @@
-declare namespace NodeJS {
-  interface ProcessEnv {
-    [key: string]: any;
-  }
-}
+/// <reference types="vite/client" />

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { EducationIcon, ChevronDownIcon, ExternalLinkIcon, BriefcaseIcon } from './Icons';
+import { EducationIcon, ChevronDownIcon, ExternalLinkIcon } from './Icons';
 
 export const Education: React.FC = () => {
   const { t } = useLanguage();
@@ -64,39 +65,46 @@ export const Education: React.FC = () => {
             <div className="h-px bg-slate-200 flex-1"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="max-w-5xl mx-auto space-y-6">
             {t.education.academic.map((item) => (
-              <div key={item.id} className="bg-slate-50 rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 rounded-xl bg-white p-2 border border-slate-100 flex items-center justify-center shrink-0">
-                    {item.logoUrl ? (
-                       <img 
-                          src={item.logoUrl} 
-                          alt={item.institution} 
-                          className="w-full h-full object-contain"
-                        />
-                    ) : (
-                       <EducationIcon className="w-6 h-6 text-brand-600" />
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg text-slate-900 leading-tight mb-1">
-                      {item.degree}
-                    </h4>
-                    <p className="text-brand-700 font-medium text-sm mb-2">
-                      {item.institution}
-                    </p>
-                    <div className="flex flex-col gap-2">
-                        <span className="inline-block px-2 py-1 bg-slate-200 text-slate-600 text-xs font-bold rounded w-fit">
-                          {item.year}
-                        </span>
-                        {item.description && (
-                            <p className="text-sm text-slate-500 italic border-l-2 border-brand-200 pl-2">
-                                {item.description}
-                            </p>
-                        )}
+              <div key={item.id} className="bg-slate-50 rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  
+                  {/* Left Column: Logo + Degree + Institution */}
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 text-center sm:text-left flex-1">
+                    <div className="w-24 h-24 shrink-0 rounded-xl bg-white p-2 border border-slate-100 flex items-center justify-center shadow-sm">
+                      {item.logoUrl ? (
+                         <img 
+                            src={item.logoUrl} 
+                            alt={item.institution} 
+                            className="w-full h-full object-contain"
+                          />
+                      ) : (
+                         <EducationIcon className="w-8 h-8 text-brand-600" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-xl text-slate-900 leading-tight mb-2">
+                        {item.degree}
+                      </h4>
+                      <p className="text-brand-700 font-bold text-base uppercase tracking-wide">
+                        {item.institution}
+                      </p>
                     </div>
                   </div>
+
+                  {/* Right Column: Date + Description */}
+                  <div className="flex flex-col items-center sm:items-end text-center sm:text-right shrink-0 md:max-w-xs border-t md:border-t-0 border-slate-200 pt-4 md:pt-0 w-full md:w-auto">
+                    <span className="inline-block px-4 py-1.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-full mb-2">
+                      {item.year}
+                    </span>
+                    {item.description && (
+                        <p className="text-sm text-slate-500 italic">
+                            {item.description}
+                        </p>
+                    )}
+                  </div>
+
                 </div>
               </div>
             ))}
@@ -121,7 +129,7 @@ export const Education: React.FC = () => {
                 <div 
                   id={`education-card-${vendor.id}`}
                   key={vendor.id}
-                  className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden ${
+                  className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden group ${
                     isExpanded 
                       ? 'border-brand-500 shadow-lg ring-1 ring-brand-200' 
                       : 'border-slate-200 hover:border-brand-300 hover:shadow-md'
@@ -162,7 +170,7 @@ export const Education: React.FC = () => {
 
                     {/* Expand Icon */}
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
-                      isExpanded ? 'bg-brand-100 text-brand-600 rotate-180' : 'bg-slate-100 text-slate-400 group-hover:bg-brand-50'
+                      isExpanded ? 'bg-brand-100 text-brand-600 rotate-180' : 'bg-slate-100 text-slate-400 group-hover:bg-brand-600 group-hover:text-white'
                     }`}>
                       <ChevronDownIcon className="w-5 h-5" />
                     </div>
