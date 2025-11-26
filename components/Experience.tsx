@@ -60,7 +60,7 @@ export const Experience: React.FC = () => {
                             <img 
                               src={item.logoUrl} 
                               alt={`Logo ${item.company}`} 
-                              className="h-8 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300"
+                              className="h-8 object-contain"
                             />
                              {/* Removed whitespace-nowrap to prevent clipping on small mobile screens */}
                              <span className="text-xs font-bold tracking-wide text-brand-700 bg-brand-50 border border-brand-100 px-3 py-1 rounded-full text-center">

@@ -1,3 +1,4 @@
+
 import { MultiLanguageString } from "./types";
 
 export const PROFILE_DATA = {
@@ -13,6 +14,7 @@ export const PROFILE_DATA = {
 };
 
 export const NAV_DATA = {
+  home: { ca: "Inici", es: "Inicio", en: "Home" },
   about: { ca: "Sobre mi", es: "Sobre mí", en: "About me" },
   services: { ca: "Serveis", es: "Servicios", en: "Services" },
   education: { ca: "Formació", es: "Formación", en: "Education" },

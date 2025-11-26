@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { MenuIcon, CloseIcon } from './Icons';
 import { useLanguage } from '../context/LanguageContext';
@@ -28,14 +29,19 @@ export const Header: React.FC = () => {
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
-    const element = document.querySelector(targetId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setMobileMenuOpen(false);
+    if (targetId === '#') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      const element = document.querySelector(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
     }
+    setMobileMenuOpen(false);
   };
 
   const navLinks = [
+    { name: t.nav.home, href: '#' },
     { name: t.nav.about, href: '#about' },
     { name: t.nav.services, href: '#services' },
     { name: t.nav.experience, href: '#experience' },
@@ -64,9 +70,13 @@ export const Header: React.FC = () => {
         className={`fixed top-0 w-full transition-all duration-300 z-[50] ${headerBgClass} ${isScrolled ? 'py-3' : 'py-6'}`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className={`font-serif font-bold text-2xl tracking-tight transition-colors duration-300 ${headerTextColorClass}`}>
+          <a 
+            href="#"
+            onClick={(e) => handleNavClick(e, '#')}
+            className={`font-serif font-bold text-2xl tracking-tight transition-colors duration-300 cursor-pointer ${headerTextColorClass}`}
+          >
             JNR<span className="text-brand-500">.</span>
-          </div>
+          </a>
 
           <nav className="hidden lg:flex gap-8 items-center">
             {navLinks.map((link) => (

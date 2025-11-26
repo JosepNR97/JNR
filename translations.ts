@@ -71,6 +71,7 @@ const getExperienceData = (lang: Language) => {
 export const translations: Record<Language, TranslationStructure> = {
   ca: {
     nav: {
+      home: NAV_DATA.home.ca,
       about: NAV_DATA.about.ca,
       services: NAV_DATA.services.ca,
       education: NAV_DATA.education.ca,
@@ -144,6 +145,7 @@ export const translations: Record<Language, TranslationStructure> = {
   },
   es: {
     nav: {
+      home: NAV_DATA.home.es,
       about: NAV_DATA.about.es,
       services: NAV_DATA.services.es,
       education: NAV_DATA.education.es,
@@ -217,6 +219,7 @@ export const translations: Record<Language, TranslationStructure> = {
   },
   en: {
     nav: {
+      home: NAV_DATA.home.en,
       about: NAV_DATA.about.en,
       services: NAV_DATA.services.en,
       education: NAV_DATA.education.en,

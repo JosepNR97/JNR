@@ -70,6 +70,7 @@ export interface CaseStudyItem {
 
 export interface TranslationStructure {
   nav: {
+    home: string;
     about: string;
     services: string;
     education: string;
