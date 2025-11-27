@@ -64,7 +64,7 @@ export const ABOUT_DATA = {
     en: "I combine strategic vision with deep technical knowledge. My focus is on demystifying technology for senior management, enabling informed decisions that drive growth."
   },
   p3: {
-    ca: "He treballat amb grans corporacions i empreses de múltiples sectors (banca, asseguradores, sector públic, transport, organismes internacional, comunicacions, mitjans i tecnología, etc.), adaptant metodologies àgils i arquitectures modernes a les necessitats específiques de cada negoci.",
+    ca: "He treballat amb grans corporacions i empreses de múltiples sectors (banca, asseguradores, sector públic, transport, organismes internacionals, comunicacions, mitjans i tecnología, etc.), adaptant metodologies àgils i arquitectures modernes a les necessitats específiques de cada negoci.",
     es: "He trabajado con grandes corporaciones y empresas de múltiples sectores (banca, seguros, sector público, transporte, organismos internacionales, comunicaciones, medios y tecnología, etc.), adaptando metodologías ágiles y arquitecturas modernas a las necesidades específicas de cada negocio.",
     en: "I have worked with large corporations and companies across multiple sectors (banking, insurance, public sector, transport, international organizations, communication, media & technology, etc.), adapting agile methodologies and modern architectures to the specific needs of each business."
   },
