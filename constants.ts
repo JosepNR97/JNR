@@ -22,6 +22,7 @@ export const IMAGES = {
     togafF: "https://images.credly.com/images/50b366b1-43d9-4b09-847d-761a6268fd5c/image.png",
     togafP: "https://images.credly.com/images/e36934b0-9b77-4bef-bf0c-a479c6c4f660/image.png",
     safe6: "https://images.credly.com/images/3e987079-3013-4359-9ad3-578c0b864e3d/image.png",
+    awsAsoc: "https://images.credly.com/size/680x680/images/0e284c3f-5164-4b21-8660-0d84737941bc/image.png",
     awsPrac: "https://images.credly.com/images/00634f82-b07f-4bbd-a6bb-53de397fc3a6/image.png",
     awsAI: "https://images.credly.com/images/4d4693bb-530e-4bca-9327-de07f3aa2348/image.png",
     awsPartnerTech: "https://images.credly.com/images/8f006312-3154-45bf-a845-4a043641e83c/blob",
@@ -51,6 +52,7 @@ export const LINKS = {
       togafF: "https://www.credly.com/badges/20a1f2a1-a568-450a-a33d-be8222c7175d/public_url",
       togafP: "https://www.credly.com/badges/770c1958-b216-434b-8ab9-8c358ae7e11a/public_url",
       safe6: "https://www.credly.com/badges/18cef1f5-c4d6-4ea9-aec4-2679a72a15b4/public_url",
+      awsAsoc: "https://www.credly.com/badges/2084ae24-a62a-4729-870d-91e6a9e3fd95/public_url",
       awsPrac: "https://www.credly.com/badges/49e13956-350e-4021-b1ae-9cbc84d1703b/public_url",
       awsAI: "https://www.credly.com/badges/7c35f443-446c-4ac5-9ffd-52bc6b546fdf/public_url",
       awsPartnerTech: "https://www.credly.com/badges/0e206dd5-d3b2-4443-ad21-db4398417ee0/public_url",
@@ -142,6 +144,12 @@ export const EDUCATION_DATA = {
       logoUrl: IMAGES.logos.aws,
       tags: ["Digital Transformation", "Cloud", "Data", "AI"],
       certifications: [
+        { 
+          name: "AWS Certified Solutions Architect – Associate", 
+          image: IMAGES.badges.awsAsoc, 
+          date: { ca: "Des. 2025", es: "Dic. 2025", en: "Dec. 2025" }, 
+          credentialUrl: LINKS.credentials.awsAsoc
+        },
         { 
           name: "AWS Certified AI Practitioner", 
           image: IMAGES.badges.awsAI, 

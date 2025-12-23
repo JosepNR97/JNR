@@ -5,7 +5,7 @@ export const PROFILE_DATA = {
   name: "Josep Núñez Riba",
   email: "josepnunez97@gmail.com",
   linkedin: "https://www.linkedin.com/in/josep-nunez-riba",
-  image: "https://media.licdn.com/dms/image/v2/D4D03AQEuE02DCqQnwg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1668694478777?e=1765411200&v=beta&t=b6KmfkfwYnrPaM_sGYsZmab9cK1GXIiQlErNp4mX45M",
+  image: "https://media.licdn.com/dms/image/v2/D4D03AQEuE02DCqQnwg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1668694478777?e=1767830400&v=beta&t=O7Q6xO6TvD5bdDkpU1Wn0ynt6LrTq_miMbpu5iTV-5Y",
   location: {
     ca: "Barcelona",
     es: "Barcelona",
