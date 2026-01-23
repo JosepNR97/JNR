@@ -67,9 +67,9 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
           en: "Architecture and systems evolution"
         },
         description: {
-          ca: "Anàlisi de les capacitats actuals a nivell d'aplicacions i tecnologia com a part d'un important programa de Transformació Digital, amb l'objectiu de definir l'arquitectura objectiu i formular un pla estratègic de transició, detallant iniciatives concretes per migrar cap a una plataforma tecnològica modernitzada.",
-          es: "Análisis de las capacidades actuales a nivel de aplicaciones y tecnología como parte de un importante programa de Transformación Digital, con el objetivo de definir la arquitectura objetivo y formular un plan estratégico de transición, detallando iniciativas concretas para migrar hacia una plataforma tecnológica modernizada.",
-          en: "Analysis of current capabilities at the application and technology level as part of a major Digital Transformation program, aiming to define the target architecture and formulate a strategic transition plan, detailing concrete initiatives to migrate towards a modernized technological platform."
+          ca: "Anàlisi de les capacitats actuals a nivell d'aplicacions i tecnologia com a part d'un important programa de Transformació Digital, amb l'objectiu de definir l'arquitectura objectiu, aixecar els requisits funcionals, realitzar una avaluació de productes de mercat i formular un pla estratègic de transició, detallant iniciatives concretes per migrar cap a una plataforma tecnològica modernitzada.",
+          es: "Análisis de las capacidades actuales a nivel de aplicaciones y tecnología como parte de un importante programa de Transformación Digital, con el objetivo de definir la arquitectura objetivo, levantar los requisitos funcionales, realizar una evaluación de productos de mercado y formular un plan estratégico de transición, detallando iniciativas concretas para migrar hacia una plataforma tecnológica modernizada.",
+          en: "Analysis of current application and technology capabilities as part of a major Digital Transformation program, with the objective of defining the target architecture, gathering functional requirements, conducting a market product evaluation, and formulating a strategic transition plan detailing concrete initiatives to migrate towards a modernized technology platform."
         }
       },
       {
