@@ -11,6 +11,7 @@ export const IMAGES = {
     aws: "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg",
     google: "https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg",
     azure: "https://www.bizstream.com/wp-content/uploads/2022/04/microsoft-azure-logo.png",
+    github: "https://1000logos.net/wp-content/uploads/2021/05/GitHub-logo.png",
     ardoq: "https://images.credly.com/images/074823c7-1b50-453c-ad9e-d254b1d89237/large_blob.png",
     leanix: "https://confare.at/wp-content/uploads/Logo_LeanIX-RGB__horizontal_duotone_flat.png",
     servicenow: "https://cdn-public.softwarereviews.com/production/logos/offerings/4803/large/ServiceNow_logo.png?1745595736",
@@ -32,6 +33,8 @@ export const IMAGES = {
     azureAI: "https://images.credly.com/images/4136ced8-75d5-4afb-8677-40b6236e2672/twitter_thumb_201604_azure-ai-fundamentals-600x600.png",
     azureData: "https://images.credly.com/images/70eb1e3f-d4de-4377-a062-b20fb29594ea/twitter_thumb_201604_azure-data-fundamentals-600x600.png",
     powerFund: "https://images.credly.com/images/2a6251f2-737b-4bf6-9190-d77570cc76fc/twitter_thumb_201604_CERT-Fundamentals-Power-Platform.png",
+    ghAdmin: "https://images.credly.com/images/34880f37-8ec8-4542-a78a-73ba6647208e/image.png",
+    ghActions: "https://images.credly.com/images/89efc3e7-842b-4790-b09b-9ea5efc71ec3/image.png",
     ardoqFund: "https://images.credly.com/images/b7e1d43a-502e-4d5e-9e98-727ca7b0e5fa/image.png",
     leanix1: "https://cc.sj-cdn.net/instructor/26n620binjnso-leanix/course_series/e532arv2dve9/promo-image.1729521839.jpg",
     leanix2: "https://cc.sj-cdn.net/instructor/26n620binjnso-leanix/course_series/a35b0o837ep3/promo-image.1729521851.jpg",
@@ -62,6 +65,8 @@ export const LINKS = {
       azureAI: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/8CC32189E807032C?sharingId=3AB956A14FB38743",
       azureData: "https://learn.microsoft.com/api/credentials/share/es-es/JosepNezRiba-6009/3946170505A0A4AB?sharingId=3AB956A14FB38743",
       powerFund: "https://learn.microsoft.com/api/credentials/share/ca-es/JosepNezRiba-6009/4B086F7F65DA81AE?sharingId=3AB956A14FB38743",
+      ghAdmin: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/C8A98D11F942DD8E?sharingId=3AB956A14FB38743",
+      ghActions: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/820E978A2A19A73C?sharingId=3AB956A14FB38743",
       ardoqFund: "https://www.credly.com/badges/339579ca-08aa-4e35-81aa-9f00b6d9f878/public_url",
       leanix1: "https://verify.skilljar.com/c/x8uvsjxa5ajc",
       leanix2: "https://verify.skilljar.com/c/7nzc9vfuvnmu",
@@ -223,6 +228,26 @@ export const EDUCATION_DATA = {
       ]
     },
     {
+      id: "v_github",
+      name: "GitHub",
+      logoUrl: IMAGES.logos.github,
+      tags: ["Digital Transformation", "DevOps", "CI/CD", "Automation", "Governance", "Git"],
+      certifications: [
+        { 
+          name: "GitHub Actions", 
+          image: IMAGES.badges.ghActions, 
+          date: { ca: "Abr. 2026", es: "Abr. 2026", en: "Apr. 2026" }, 
+          credentialUrl: LINKS.credentials.ghActions           
+        },
+        { 
+          name: "GitHub Administration", 
+          image: IMAGES.badges.ghAdmin, 
+          date: { ca: "Març 2026", es: "Marzo 2026", en: "March 2026" }, 
+          credentialUrl: LINKS.credentials.ghAdmin 
+        }
+      ]
+    },
+    {
       id: "v_togaf",
       name: "The Open Group",
       logoUrl: IMAGES.logos.togaf,
@@ -371,6 +396,7 @@ export const CERTIFICATION_LOGOS = [
   { name: "AWS", url: IMAGES.logos.aws, educationId: "v_aws" },
   { name: "Microsoft Azure", url: IMAGES.logos.azure, educationId: "v_ms" },
   { name: "Google Cloud", url: IMAGES.logos.google, educationId: "v_google" },
+  { name: "GitHub", url: IMAGES.logos.github, educationId: "v_github" },
   { name: "The Open Group", url: IMAGES.logos.togaf, educationId: "v_togaf" },
   { name: "SAFe", url: IMAGES.logos.safe, educationId: "v_safe" },
   { name: "LeanIX", url: IMAGES.logos.leanix, educationId: "v_leanix" },
