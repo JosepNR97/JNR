@@ -35,7 +35,9 @@ export const IMAGES = {
     powerFund: "https://images.credly.com/images/2a6251f2-737b-4bf6-9190-d77570cc76fc/twitter_thumb_201604_CERT-Fundamentals-Power-Platform.png",
     ghAdmin: "https://images.credly.com/images/34880f37-8ec8-4542-a78a-73ba6647208e/image.png",
     ghActions: "https://images.credly.com/images/89efc3e7-842b-4790-b09b-9ea5efc71ec3/image.png",
-    ardoqFund: "https://images.credly.com/images/b7e1d43a-502e-4d5e-9e98-727ca7b0e5fa/image.png",
+    ardoqFund: "https://images.credly.com/images/e2805a93-ac49-4d40-a15e-6773daa69ecd/image.png",
+    ardoqPract: "https://images.credly.com/images/b7e1d43a-502e-4d5e-9e98-727ca7b0e5fa/image.png",
+    ardoqProf: "https://images.credly.com/images/e2d9e34f-446e-4267-9189-a9d6a470c1a9/image.png",
     leanix1: "https://cc.sj-cdn.net/instructor/26n620binjnso-leanix/course_series/e532arv2dve9/promo-image.1729521839.jpg",
     leanix2: "https://cc.sj-cdn.net/instructor/26n620binjnso-leanix/course_series/a35b0o837ep3/promo-image.1729521851.jpg",
     leanix3: "https://cc.sj-cdn.net/instructor/26n620binjnso-leanix/courses/1uejnwchn1tkj/promo-image.1729521767.jpg",
@@ -67,7 +69,9 @@ export const LINKS = {
       powerFund: "https://learn.microsoft.com/api/credentials/share/ca-es/JosepNezRiba-6009/4B086F7F65DA81AE?sharingId=3AB956A14FB38743",
       ghAdmin: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/C8A98D11F942DD8E?sharingId=3AB956A14FB38743",
       ghActions: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/820E978A2A19A73C?sharingId=3AB956A14FB38743",
-      ardoqFund: "https://www.credly.com/badges/339579ca-08aa-4e35-81aa-9f00b6d9f878/public_url",
+      ardoqFund: "https://www.credly.com/badges/a095b292-1ef9-4156-9ddf-cc9acfe89a11/public_url",
+      ardoqPract: "https://www.credly.com/badges/900e1d8a-e09a-4aac-ba33-ab0c79f8573b/public_url",
+      ardoqProf: "https://www.credly.com/badges/d51f4e18-dd28-4f69-a6d1-acdb1ac1589e/public_url",
       leanix1: "https://verify.skilljar.com/c/x8uvsjxa5ajc",
       leanix2: "https://verify.skilljar.com/c/7nzc9vfuvnmu",
       leanix3: "https://verify.skilljar.com/c/zdi9kefsr5tx",
@@ -314,9 +318,21 @@ export const EDUCATION_DATA = {
       tags: ["Digital Transformation", "Strategy", "Enterprise Architecture", "EA Management Tool", "Data-Driven", "Application Portfolio Management"],
       certifications: [
         { 
+          name: "Ardoq Professional", 
+          image: IMAGES.badges.ardoqProf, 
+          date: { ca: "Jul. 2026", es: "Jul. 2026", en: "Jul. 2026" }, 
+          credentialUrl: LINKS.credentials.ardoqProf 
+        },
+        { 
           name: "Ardoq Practitioner", 
-          image: IMAGES.badges.ardoqFund, 
+          image: IMAGES.badges.ardoqPract, 
           date: { ca: "Oct. 2025", es: "Oct. 2025", en: "Oct. 2025" }, 
+          credentialUrl: LINKS.credentials.ardoqPract 
+        },
+        { 
+          name: "Ardoq Foundations", 
+          image: IMAGES.badges.ardoqFund, 
+          date: { ca: "Jul. 2026", es: "Jul. 2026", en: "Jul. 2026" },  
           credentialUrl: LINKS.credentials.ardoqFund 
         }
       ]
