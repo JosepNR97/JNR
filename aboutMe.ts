@@ -30,9 +30,9 @@ export const HERO_DATA = {
     en: "Strategy • Technology • Innovation"
   },
   title: {
-    ca: "Consultor d'estratègia tecnològica | Enginyer informàtic",
-    es: "Consultor de estrategia tecnológica | Ingeniero informático",
-    en: "Technology Strategy Consultant | Computer Engineer"
+    ca: "Gerent d'estratègia tecnològica",
+    es: "Gerente de estrategia tecnológica",
+    en: "Technology Strategy Manager"
   },
   tagline: {
     ca: "Impulsant l'eficiència operativa i el creixement a través de la transformació digital i la intel·ligència artificial.",

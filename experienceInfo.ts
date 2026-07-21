@@ -22,12 +22,12 @@ interface StructuredExperienceItem {
 export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
   {
     id: "1",
-    role: "Technology Strategy & Transformation Senior Consultant",
+    role: "Technology Strategy & Transformation Manager",
     company: "NTT DATA Europe & Latam",
     period: {
-      ca: "Gen. 2025 - Actualitat",
-      es: "Ene. 2025 - Actualidad",
-      en: "Jan. 2025 - Present"
+      ca: "Jul. 2026 - Actualitat",
+      es: "Jul. 2026 - Actualidad",
+      en: "Jul. 2026 - Present"
     },
     description: {
       ca: "Consultoria estratègica enfocada en evolució d'arquitectura, anàlisi de sistemes crítics i definició de marcs d'arquitectura empresarial.",
@@ -130,6 +130,114 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
   },
   {
     id: "2",
+    role: "Technology Strategy & Transformation Senior Consultant",
+    company: "NTT DATA Europe & Latam",
+    period: {
+      ca: "Gen. 2025 - Jul. 2026",
+      es: "Ene. 2025 - Jul. 2026",
+      en: "Jan. 2025 - Jul. 2026"
+    },
+    description: {
+      ca: "Consultoria estratègica enfocada en evolució d'arquitectura, anàlisi de sistemes crítics i definició de marcs d'arquitectura empresarial.",
+      es: "Consultoría estratégica enfocada en evolución de arquitectura, análisis de sistemas críticos y definición de marcos de arquitectura empresarial.",
+      en: "Strategic consulting focused on architecture evolution, critical systems analysis, and definition of enterprise architecture frameworks."
+    },
+    logoUrl: IMAGES.logos.ntt,
+    achievements: [
+      {
+        year: "2025~2026",
+        sector: {
+          ca: "Companyia d'assegurances",
+          es: "Compañía de seguros",
+          en: "Insurance Company"
+        },
+        title: {
+          ca: "Transformació i govern d'arquitectura",
+          es: "Transformación y gobierno de arquitectura",
+          en: "Architecture Transformation and Governance"
+        },
+        description: {
+          ca: "Gestió de programa de transformació de plataforma tecnològica en els camps d'arquitectura event-driven, robustesa d'APIs, solució futura componible i capacitats agèntiques. Suport E2E al disseny proposat i a la implementació d'MVPs sobre diversos casos d'ús per a la validació funcional i tècnica de la solució.",
+          es: "Gestión de programa de transformación de plataforma tecnológica en los campos de arquitectura event-driven, robustez de APIs, solución futura componible y capacidades agénticas. Apoyo E2E al diseño propuesto y a la implementación de MVPs sobre varios casos de uso para la validación funcional y técnica de la solución.",
+          en: "Technological platform transformation program management in the fields of Event-Driven Architecture, API Robustness, Composable Future Solution and Agentic Capabilities. E2E support to the proposed design and implementation of MVPs on various use cases for the functional and technical validation of the solution."
+        }
+      },
+      {
+        year: "2025~2026",
+        sector: {
+          ca: "Sector públic (Espanya - Transport)",
+          es: "Sector público (España - Transporte)",
+          en: "Public Sector (Spain - Transport)"
+        },
+        title: {
+          ca: "Evolució d'arquitectura i sistemes",
+          es: "Evolución de arquitectura y sistemas",
+          en: "Architecture and systems evolution"
+        },
+        description: {
+          ca: "Anàlisi de les capacitats actuals a nivell d'aplicacions i tecnologia com a part d'un important programa de Transformació Digital, amb l'objectiu de definir l'arquitectura objectiu, aixecar els requisits funcionals, realitzar una avaluació de productes de mercat i formular un pla estratègic de transició, detallant iniciatives concretes per migrar cap a una plataforma tecnològica modernitzada.",
+          es: "Análisis de las capacidades actuales a nivel de aplicaciones y tecnología como parte de un importante programa de Transformación Digital, con el objetivo de definir la arquitectura objetivo, levantar los requisitos funcionales, realizar una evaluación de productos de mercado y formular un plan estratégico de transición, detallando iniciativas concretas para migrar hacia una plataforma tecnológica modernizada.",
+          en: "Analysis of current application and technology capabilities as part of a major Digital Transformation program, with the objective of defining the target architecture, gathering functional requirements, conducting a market product evaluation, and formulating a strategic transition plan detailing concrete initiatives to migrate towards a modernized technology platform."
+        }
+      },
+      {
+        year: "2025",
+        sector: {
+          ca: "Sector públic (Comunitat Europea)",
+          es: "Sector público (Comunidad Europea)",
+          en: "Public Sector (European Community)"
+        },
+        title: {
+          ca: "Optimització de sistemes i avaluació de proveïdors",
+          es: "Optimización de sistemas y evaluación de proveedores",
+          en: "Systems optimization and vendor evaluation"
+        },
+        description: {
+          ca: "Anàlisi de requisits funcionals i tècnics de sistema crític sota els prismes d'arquitectura de solució, seguretat, infraestructura i costos. Definició i implementació de marc d'avaluació de proveïdors en cerca de l'optimització del sistema complint els requisits aixecats i generació de full de ruta amb les iniciatives de millora i modernització.",
+          es: "Análisis de requisitos funcionales y técnicos de sistema crítico bajo los prismas de arquitectura de solución, seguridad, infraestructura y costes. Definición e implementación de marco de evaluación de proveedores en busca de la optimización del sistema cumpliendo los requisitos levantados y generación de hoja de ruta con las iniciativas de mejora y modernización.",
+          en: "Analysis of functional and technical requirements of critical systems under the prisms of solution architecture, security, infrastructure and costs. Definition and implementation of a vendor evaluation framework in search of the optimization of the system by meeting the requirements raised and generation of a roadmap with improvement and modernization initiatives."
+        }
+      },
+      {
+        year: "2025",
+        sector: {
+          ca: "Sector públic (Comunitat Europea)",
+          es: "Sector público (Comunidad Europea)",
+          en: "Public Sector (European Community)"
+        },
+        title: {
+          ca: "Anàlisi de disposició per a la presa d'un sistema",
+          es: "Análisis de disposición para la toma de un sistema",
+          en: "System intake readiness analysis"
+        },
+        description: {
+          ca: "Com a part d'una Oficina Tècnica, alineació estratègica de múltiples línies de treball (Arquitectura de Solució, Interoperabilitat e Integració, DevOps, Seguretat, etc.) per dur a terme una avaluació de preparació per a l'assumpció d'un sistema crític. El projecte va incloure un anàlisi de riscos sobre els serveis del proveïdor actual, que va concloure amb la creació d'un pla de mitigació integral, iniciatives de remediació i un full de ruta detallat per a la implementació.",
+          es: "Como parte de una Oficina Técnica, alineación estratégica de múltiples líneas de trabajo (Arquitectura de Solución, Interoperabilidad e Integración, DevOps, Seguridad, etc.) para llevar a cabo una evaluación de preparación para la asunción de un sistema crítico. El proyecto incluyó un análisis de riesgos sobre los servicios del proveedor actual, que concluyó con la creación de un plan de mitigación integral, iniciativas de remediación y una hoja de ruta detallada para la implementación.",
+          en: "As part of a Technical Office, strategic alignment of multiple workstreams (Solution Architecture, Interoperability and Integration, DevOps, Security, etc.) to conduct a readiness assessment for assuming a critical system. The project included a risk analysis on current provider services, concluding with the creation of a comprehensive mitigation plan, remediation initiatives, and a detailed implementation roadmap."
+        }
+      },
+      {
+        year: "2025",
+        sector: {
+          ca: "Companyia d'assegurances",
+          es: "Compañía de seguros",
+          en: "Insurance Company"
+        },
+        title: {
+          ca: "Visió i anàlisi d'arquitectura",
+          es: "Visión y análisis de arquitectura",
+          en: "Architecture vision and analysis"
+        },
+        description: {
+          ca: "Avaluació de les capacitats actuals de la funció d'arquitectura empresarial per analitzar el seu grau de maduresa i generació de principis directors per al futur de l'arquitectura de la companyia, acompanyada de la descripció d'iniciatives a executar per assolir els objectius proposats en termes de definició del marc d'arquitectura i evolució tecnològica.",
+          es: "Evaluación de las capacidades actuales de la función de arquitectura empresarial para analizar su grado de madurez y generación de principios directores para el futuro de la arquitectura de la compañía, acompañada de la descripción de iniciativas a ejecutar para alcanzar los objetivos propuestos en términos de definición del marco de arquitectura y evolución tecnológica.",
+          en: "Assessment of current enterprise architecture function capabilities to analyze maturity levels and generation of guiding principles for the company's future architecture, accompanied by a description of initiatives to execute to achieve proposed objectives in terms of architecture framework definition and technological evolution."
+        }
+      }
+    ]
+  },
+  {
+    id: "3",
     role: "Technology Strategy & Advisory Analyst",
     company: "Accenture España",
     period: {
@@ -219,7 +327,7 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
     ]
   },
   {
-    id: "3",
+    id: "4",
     role: "Technology Strategy & Advisory Intern",
     company: "Accenture España",
     period: {
