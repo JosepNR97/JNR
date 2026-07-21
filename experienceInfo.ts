@@ -154,7 +154,7 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
         title: {
           ca: "Evolució d'arquitectura i sistemes",
           es: "Evolución de arquitectura y sistemas",
-          en: "Architecture and systems evolution"
+          en: "Architecture and Systems Evolution"
         },
         description: {
           ca: "Anàlisi de les capacitats actuals a nivell d'aplicacions i tecnologia com a part d'un important programa de Transformació Digital, amb l'objectiu de definir l'arquitectura objectiu, aixecar els requisits funcionals, realitzar una avaluació de productes de mercat i formular un pla estratègic de transició, detallant iniciatives concretes per migrar cap a una plataforma tecnològica modernitzada.",
@@ -172,7 +172,7 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
         title: {
           ca: "Optimització de sistemes i avaluació de proveïdors",
           es: "Optimización de sistemas y evaluación de proveedores",
-          en: "Systems optimization and vendor evaluation"
+          en: "Systems Optimization and Vendor Evaluation"
         },
         description: {
           ca: "Anàlisi de requisits funcionals i tècnics de sistema crític sota els prismes d'arquitectura de solució, seguretat, infraestructura i costos. Definició i implementació de marc d'avaluació de proveïdors en cerca de l'optimització del sistema complint els requisits aixecats i generació de full de ruta amb les iniciatives de millora i modernització.",
@@ -190,7 +190,7 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
         title: {
           ca: "Anàlisi de disposició per a la presa d'un sistema",
           es: "Análisis de disposición para la toma de un sistema",
-          en: "System intake readiness analysis"
+          en: "System Intake Readiness Analysis"
         },
         description: {
           ca: "Com a part d'una Oficina Tècnica, alineació estratègica de múltiples línies de treball (Arquitectura de Solució, Interoperabilitat e Integració, DevOps, Seguretat, etc.) per dur a terme una avaluació de preparació per a l'assumpció d'un sistema crític. El projecte va incloure un anàlisi de riscos sobre els serveis del proveïdor actual, que va concloure amb la creació d'un pla de mitigació integral, iniciatives de remediació i un full de ruta detallat per a la implementació.",
@@ -208,7 +208,7 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
         title: {
           ca: "Visió i anàlisi d'arquitectura",
           es: "Visión y análisis de arquitectura",
-          en: "Architecture vision and analysis"
+          en: "Architecture Vision and Analysis"
         },
         description: {
           ca: "Avaluació de les capacitats actuals de la funció d'arquitectura empresarial per analitzar el seu grau de maduresa i generació de principis directors per al futur de l'arquitectura de la companyia, acompanyada de la descripció d'iniciatives a executar per assolir els objectius proposats en termes de definició del marc d'arquitectura i evolució tecnològica.",
