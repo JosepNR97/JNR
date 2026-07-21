@@ -39,9 +39,9 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
       {
         year: "2026",
         sector: {
-          ca: "Aerolínia internacional",
-          es: "Aerolínea internacional",
-          en: "International Airline"
+          ca: "Grup de companyies aèries",
+          es: "Grupo de compañías aéreas",
+          en: "Airline Companies Group"
         },
         title: {
           ca: "Anàlisi de sobirania de TI",
