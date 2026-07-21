@@ -46,7 +46,7 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
         title: {
           ca: "Anàlisi de sobirania de TI",
           es: "Análisis de soberanía de TI",
-          en: "IT Sovreignty Assessment"
+          en: "IT Sovereignty Assessment"
         },
         description: {
           ca: "Descripció.",
