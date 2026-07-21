@@ -6,7 +6,7 @@ export const Services: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <section id="services" className="py-20 bg-slate-50">
+    <section id="services" className="scroll-mt-20 bg-slate-50 py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-slate-900 mb-4">
@@ -21,9 +21,9 @@ export const Services: React.FC = () => {
           {t.services.items.map((service) => (
             <div 
               key={service.id}
-              className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 group border border-slate-100 hover:border-brand-200 hover:-translate-y-1"
+              className="group rounded-lg border border-slate-100 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-xl"
             >
-              <div className="w-14 h-14 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-600 mb-6 group-hover:bg-brand-600 group-hover:text-white transition-colors duration-300">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-brand-50 text-brand-600 transition-colors duration-300 group-hover:bg-brand-600 group-hover:text-white">
                 {getServiceIcon(service.iconName, "w-7 h-7")}
               </div>
               <h3 className="font-semibold text-xl text-slate-900 mb-3">

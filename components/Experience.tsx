@@ -1,148 +1,169 @@
-
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { ChevronDownIcon, BriefcaseIcon } from './Icons';
+import { scrollToElementAfterLayout } from '../scrollToElement';
+import { BriefcaseIcon, ChevronDownIcon } from './Icons';
 
-export const Experience: React.FC = () => {
+export const Experience = () => {
   const { t } = useLanguage();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const toggleExpand = (id: string) => {
-    const isExpanding = expandedId !== id;
-    setExpandedId(isExpanding ? id : null);
-
-    if (isExpanding) {
-      // Esperamos un momento a que el navegador procese el cambio de estado y la animación empiece
-      setTimeout(() => {
-        const element = document.getElementById(`experience-item-${id}`);
-        if (element) {
-          const headerOffset = 100; // Ajuste para el header fijo
-          const elementPosition = element.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: 'smooth'
-          });
-        }
-      }, 300);
-    }
+  const handleToggle = (itemId: string) => {
+    const shouldExpand = expandedId !== itemId;
+    setExpandedId(shouldExpand ? itemId : null);
+    if (shouldExpand) scrollToElementAfterLayout(`experience-item-${itemId}`);
   };
 
   return (
-    <section id="experience" className="py-20 bg-white">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+    <section id="experience" className="scroll-mt-20 bg-white py-20">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-16 text-center">
+          <h2 className="mb-4 font-serif text-3xl font-bold text-slate-900 md:text-4xl">
             {t.experience.title}
           </h2>
-          <p className="text-slate-500 text-sm">
-            {t.experience.subtitle}
-          </p>
+          <p className="text-sm text-slate-500">{t.experience.subtitle}</p>
         </div>
 
         <div className="relative">
-          {/* Vertical Line - Adjusted positioning for mobile */}
-          <div className="absolute left-4 md:left-0 top-2 bottom-0 w-0.5 bg-slate-200 md:ml-4"></div>
+          <div className="absolute bottom-0 left-4 top-2 w-0.5 bg-slate-200 md:left-4" aria-hidden="true" />
 
           <div className="space-y-8 md:space-y-12">
             {t.experience.items.map((item) => {
               const isExpanded = expandedId === item.id;
-              
+              const triggerId = `experience-trigger-${item.id}`;
+              const panelId = `experience-panel-${item.id}`;
+
               return (
-                <div key={item.id} id={`experience-item-${item.id}`} className="relative pl-12 md:pl-24"> {/* Reduced padding-left from pl-20 to pl-12 for mobile */}
-                  
-                  {/* Timeline Dot - Adjusted left position from left-6 to left-4 */}
-                  <div className={`absolute left-4 md:left-0 md:ml-4 -translate-x-1/2 top-0 flex items-center justify-center w-10 h-10 rounded-full border-4 border-white shadow z-10 transition-colors duration-300 ${isExpanded ? 'bg-brand-600' : 'bg-slate-300 group-hover:bg-brand-400'}`}>
-                    <BriefcaseIcon className={`w-4 h-4 ${isExpanded ? 'text-white' : 'text-slate-600'}`} />
-                  </div>
-                  
-                  <div 
-                    onClick={() => toggleExpand(item.id)}
-                    className={`w-full bg-white rounded-xl border transition-all duration-300 cursor-pointer overflow-hidden group
-                      ${isExpanded 
-                        ? 'border-brand-500 shadow-lg ring-1 ring-brand-200' 
-                        : 'border-slate-200 hover:border-brand-300 hover:shadow-lg hover:-translate-y-1'
-                      }`}
+                <article
+                  key={item.id}
+                  id={`experience-item-${item.id}`}
+                  className="group relative scroll-mt-24 pl-12 md:pl-24"
+                >
+                  <div
+                    className={`absolute left-4 top-0 z-10 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full border-4 border-white shadow transition-colors duration-300 ${
+                      isExpanded ? 'bg-brand-600' : 'bg-slate-300 group-hover:bg-brand-500'
+                    }`}
+                    aria-hidden="true"
                   >
-                    <div className="p-6 md:p-8">
-                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-2">
-                         <div className="flex-1">
-                            <h3 className={`font-bold text-xl md:text-2xl transition-colors duration-300 ${isExpanded ? 'text-brand-700' : 'text-slate-900 group-hover:text-brand-700'}`}>
-                              {item.role}
-                            </h3>
-                            <div className="text-lg font-medium text-slate-600 mt-1">{item.company}</div>
-                         </div>
+                    <BriefcaseIcon
+                      className={`h-4 w-4 transition-colors duration-300 ${
+                        isExpanded ? 'text-white' : 'text-slate-700 group-hover:text-white'
+                      }`}
+                    />
+                  </div>
 
-                         <div className="flex flex-row-reverse md:flex-col items-center md:items-end justify-between md:justify-start gap-3 md:gap-2 shrink-0">
-                            <img 
-                              src={item.logoUrl} 
-                              alt={`Logo ${item.company}`} 
-                              className="h-8 object-contain"
-                            />
-                             {/* Removed whitespace-nowrap to prevent clipping on small mobile screens */}
-                             <span className="text-xs font-bold tracking-wide text-brand-700 bg-brand-50 border border-brand-100 px-3 py-1 rounded-full text-center">
-                              {item.period}
-                            </span>
-                         </div>
-                      </div>
+                  <div
+                    className={`overflow-hidden rounded-xl border bg-white transition-all duration-300 ${
+                      isExpanded
+                        ? 'border-brand-500 shadow-lg ring-1 ring-brand-200'
+                        : 'border-slate-200 group-hover:-translate-y-1 group-hover:border-brand-300 group-hover:shadow-lg'
+                    }`}
+                  >
+                    <button
+                      id={triggerId}
+                      type="button"
+                      aria-expanded={isExpanded}
+                      aria-controls={panelId}
+                      onClick={() => handleToggle(item.id)}
+                      className="w-full p-6 text-left md:p-8"
+                    >
+                      <span className="mb-2 flex flex-col justify-between gap-4 md:flex-row md:items-start">
+                        <span className="flex-1">
+                          <span
+                            className={`block text-xl font-bold transition-colors md:text-2xl ${
+                              isExpanded ? 'text-brand-700' : 'text-slate-900 group-hover:text-brand-700'
+                            }`}
+                          >
+                            {item.role}
+                          </span>
+                          <span className="mt-1 block text-lg font-medium text-slate-600">{item.company}</span>
+                        </span>
 
-                       <p className="text-slate-600 text-sm md:text-base mt-4 leading-relaxed max-w-3xl">
+                        <span className="flex shrink-0 flex-row-reverse items-center justify-between gap-3 md:flex-col md:items-end md:justify-start">
+                          <img
+                            src={item.logoUrl}
+                            alt={`Logo ${item.company}`}
+                            width="140"
+                            height="40"
+                            loading="lazy"
+                            decoding="async"
+                            className="h-8 max-w-36 object-contain"
+                          />
+                          <span className="rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-center text-xs font-bold text-brand-700">
+                            {item.period}
+                          </span>
+                        </span>
+                      </span>
+
+                      <span className="mt-4 block max-w-3xl text-sm leading-relaxed text-slate-600 md:text-base">
                         {item.description}
-                      </p>
+                      </span>
 
-                      <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-100 group-hover:border-brand-100 transition-colors">
-                        <span className={`text-sm font-semibold transition-colors ${isExpanded ? 'text-brand-600' : 'text-slate-400 group-hover:text-brand-600'}`}>
+                      <span className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 transition-colors group-hover:border-brand-100">
+                        <span
+                          className={`text-sm font-semibold transition-colors ${
+                            isExpanded ? 'text-brand-700' : 'text-slate-400 group-hover:text-brand-700'
+                          }`}
+                        >
                           {isExpanded ? t.experience.collapse : t.experience.expand}
                         </span>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isExpanded ? 'bg-brand-100 text-brand-600 rotate-180' : 'bg-slate-100 text-slate-400 group-hover:bg-brand-600 group-hover:text-white'}`}>
-                          <ChevronDownIcon className="w-5 h-5" />
-                        </div>
-                      </div>
-                    </div>
+                        <span
+                          className={`grid h-8 w-8 place-items-center rounded-full transition-colors ${
+                            isExpanded
+                              ? 'bg-brand-100 text-brand-700'
+                              : 'bg-slate-100 text-slate-500 group-hover:bg-brand-600 group-hover:text-white'
+                          }`}
+                          aria-hidden="true"
+                        >
+                          <ChevronDownIcon
+                            className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                          />
+                        </span>
+                      </span>
+                    </button>
 
-                    <div 
-                      className={`grid transition-[grid-template-rows] duration-500 ease-in-out bg-slate-50 ${isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
-                    >
-                      <div className="overflow-hidden">
-                        <div className="px-6 md:px-8 pb-8 pt-2 border-t border-slate-200">
-                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 mt-4">{t.experience.detailTitle}</h4>
-                          <ul className="space-y-6">
-                            {item.achievements.map((achievement, i) => (
-                                <li key={i} className="flex items-start text-sm text-slate-700 group/item relative pl-4 border-l-2 border-slate-200 hover:border-brand-500 transition-colors duration-300">
-                                  <div className="flex flex-col gap-1 w-full">
-                                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                                        {achievement.year && (
-                                            <span className="font-mono font-bold text-white bg-slate-800 px-2 py-0.5 rounded text-xs">
-                                              {achievement.year}
-                                            </span>
-                                        )}
-                                        {achievement.sector && (
-                                          <span className="text-brand-600 font-bold uppercase tracking-wide text-[11px]">
-                                            {achievement.sector}
-                                          </span>
-                                        )}
-                                    </div>
-                                    
-                                    {achievement.title ? (
-                                      <strong className="block text-slate-900 text-base font-bold leading-snug">
-                                        {achievement.title}
-                                      </strong>
-                                    ) : null}
-                                    
-                                    <span className="text-slate-600 leading-relaxed text-sm md:text-base mt-1">
-                                      {achievement.description}
-                                    </span>
-                                  </div>
-                                </li>
-                            ))}
-                          </ul>
-                        </div>
+                    {isExpanded ? (
+                      <div
+                        id={panelId}
+                        role="region"
+                        aria-labelledby={triggerId}
+                        className="border-t border-slate-200 bg-slate-50 px-6 pb-8 pt-6 md:px-8"
+                      >
+                        <h3 className="mb-6 text-xs font-bold uppercase tracking-widest text-slate-500">
+                          {t.experience.detailTitle}
+                        </h3>
+                        <ul className="space-y-6">
+                          {item.achievements.map((achievement) => (
+                            <li
+                              key={`${achievement.year}-${achievement.title}`}
+                              className="border-l-2 border-slate-300 pl-4 transition-colors hover:border-brand-500"
+                            >
+                              <div className="mb-2 flex flex-wrap items-center gap-2">
+                                {achievement.year ? (
+                                  <span className="rounded bg-slate-800 px-2 py-0.5 font-mono text-xs font-bold text-white">
+                                    {achievement.year}
+                                  </span>
+                                ) : null}
+                                {achievement.sector ? (
+                                  <span className="text-xs font-bold uppercase text-brand-700">
+                                    {achievement.sector}
+                                  </span>
+                                ) : null}
+                              </div>
+                              {achievement.title ? (
+                                <strong className="block text-base leading-snug text-slate-900">
+                                  {achievement.title}
+                                </strong>
+                              ) : null}
+                              <p className="mt-1 text-sm leading-relaxed text-slate-600 md:text-base">
+                                {achievement.description}
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                    </div>
-
+                    ) : null}
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>

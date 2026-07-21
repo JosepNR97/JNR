@@ -18,16 +18,23 @@ export const About: React.FC = () => {
   }, 0) || 0;
 
   return (
-    <section id="about" className="py-20 bg-white">
+    <section id="about" className="scroll-mt-20 bg-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
           <div className="relative group max-w-md mx-auto lg:mx-0 w-full">
-            <div className="absolute -inset-4 bg-gradient-to-r from-brand-500 to-indigo-600 rounded-2xl opacity-30 blur-xl group-hover:opacity-50 transition-opacity"></div>
-            <div className="relative rounded-2xl overflow-hidden aspect-[4/5] bg-slate-200 shadow-2xl">
+            <div
+              className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-brand-500 to-indigo-600 opacity-30 blur-xl transition-opacity group-hover:opacity-50"
+              aria-hidden="true"
+            />
+            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-slate-200 shadow-2xl">
               <img 
                 src={PROFILE_DATA.image}
                 alt={PROFILE_DATA.name} 
+                width="1132"
+                height="877"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover object-top transform transition-transform duration-500 group-hover:scale-105"
               />
             </div>

@@ -1,3 +1,6 @@
+export type Language = 'ca' | 'es' | 'en';
+
+export type MultiLanguageString = Record<Language, string>;
 
 export interface AchievementItem {
   year: string;
@@ -12,7 +15,7 @@ export interface ExperienceItem {
   company: string;
   period: string;
   description: string;
-  achievements: AchievementItem[]; 
+  achievements: AchievementItem[];
   logoUrl: string;
 }
 
@@ -23,14 +26,6 @@ export interface ServiceItem {
   iconName: 'Strategy' | 'Architecture' | 'Cloud' | 'Agile' | 'AI';
 }
 
-export interface TestimonialItem {
-  id: string;
-  quote: string;
-  author: string;
-  role: string;
-}
-
-// Education Structures
 export interface AcademicItem {
   id: string;
   degree: string;
@@ -42,7 +37,7 @@ export interface AcademicItem {
 
 export interface CertificationItem {
   name: string;
-  image: string; 
+  image: string;
   date: string;
   credentialUrl: string;
 }
@@ -55,26 +50,12 @@ export interface VendorItem {
   certifications: CertificationItem[];
 }
 
-export interface CaseStudyItem {
-  id: string;
-  title: string;
-  client: string;
-  challengeTitle: string;
-  challenge: string;
-  approachTitle: string;
-  approach: string;
-  resultsTitle: string;
-  results: string[];
-  cta: string;
-}
-
 export interface TranslationStructure {
   nav: {
     home: string;
     about: string;
     services: string;
     education: string;
-    testimonials: string;
     experience: string;
     contact: string;
   };
@@ -110,11 +91,6 @@ export interface TranslationStructure {
     academic: AcademicItem[];
     professional: VendorItem[];
   };
-  testimonials: {
-    title: string;
-    subtitle: string;
-    items: TestimonialItem[];
-  };
   experience: {
     title: string;
     subtitle: string;
@@ -125,12 +101,7 @@ export interface TranslationStructure {
   };
   certifications: {
     title: string;
-  };
-  caseStudies: {
-    badge: string;
-    title: string;
-    subtitle: string;
-    items: CaseStudyItem[];
+    openVendor: string;
   };
   contact: {
     title: string;
@@ -139,6 +110,3 @@ export interface TranslationStructure {
     rights: string;
   };
 }
-
-export type Language = 'ca' | 'es' | 'en';
-export type MultiLanguageString = Record<Language, string>;

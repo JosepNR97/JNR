@@ -1,94 +1,83 @@
+# Josep Núñez Riba | Portfolio de estrategia tecnológica
 
-# 🚀 Josep Núñez Riba | Tech Strategy Portfolio
+Portfolio profesional desarrollado con React, TypeScript, Tailwind CSS y Vite. Presenta experiencia, áreas de especialización, formación y certificaciones en catalán, castellano e inglés.
 
-<div align="center">
-  
-  ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-  ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-  ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-  
-  <p align="center">
-    <b>Professional portfolio representing expertise in Digital Transformation, Enterprise Architecture, and Cloud Strategy.</b>
-  </p>
-</div>
+## Funcionalidades
 
----
+- Interfaz responsive y accesible mediante teclado.
+- Selector de idioma con detección del navegador y persistencia local.
+- Trayectoria profesional y certificaciones desplegables.
+- Carrusel de organizaciones acreditadoras compatible con movimiento reducido.
+- Metadatos SEO, Open Graph y datos estructurados de tipo `Person`.
+- Google Analytics inicializado automáticamente al cargar la web.
+- Despliegue automatizado en GitHub Pages.
 
-## 📋 Overview
+## Stack
 
-This project is a modern, high-performance personal portfolio website designed to showcase professional experience, certifications, and strategic projects. It is built with a focus on **clean architecture**, **accessibility**, and **user experience**.
+- React 18 y TypeScript estricto.
+- Vite 5.
+- Tailwind CSS compilado mediante PostCSS.
+- Lucide React para iconografía.
+- Vitest y Testing Library para pruebas.
+- ESLint y Prettier para calidad de código.
 
-The site serves as a central hub for professional branding, featuring a multi-language interface (CA/ES/EN) and an interactive timeline of achievements.
+## Estructura
 
-## ✨ Key Features
-
-*   **🌍 Multi-language Support:** robust i18n implementation using React Context, supporting Catalan, Spanish, and English seamlessly.
-*   **📱 Fully Responsive:** "Mobile-first" design approach using Tailwind CSS, ensuring perfect rendering on all devices.
-*   **🎨 Modern UI/UX:**
-    *   Glassmorphism effects and smooth gradients.
-    *   Interactive "Infinite Scroll" for certifications.
-    *   Smart auto-scroll navigation for better usability.
-*   **⚡ Performance Optimized:** Built with Vite for lightning-fast HMR and optimized production builds.
-*   **🧩 Modular Architecture:** Strict separation between UI Components (`/components`) and Content Data (`aboutMe.ts`, `experienceInfo.ts`), making updates easy without touching the code.
-
-## 🛠️ Tech Stack
-
-*   **Core:** React 18, TypeScript
-*   **Build Tool:** Vite
-*   **Styling:** Tailwind CSS
-*   **Icons:** Lucide React
-*   **Deployment:** GitHub Pages (via GitHub Actions)
-*   **Fonts:** Inter (Sans) & Playfair Display (Serif)
-
-## 📂 Project Structure
-
-```bash
-src/
-├── components/      # UI Components (Hero, Experience, Education...)
-├── context/         # React Context (Language State)
-├── data/            # (Conceptual) Data files separated from logic
-│   ├── aboutMe.ts
-│   ├── experienceInfo.ts
-│   ├── constants.ts
-│   └── translations.ts
-├── types.ts         # TypeScript Interfaces
-└── main.tsx         # Entry point
+```text
+.
+├── components/              Componentes de interfaz
+├── context/                 Estado y persistencia de idioma
+├── public/
+│   ├── assets/              Imágenes organizadas por categoría
+│   ├── robots.txt
+│   └── sitemap.xml
+├── test/                    Configuración de pruebas
+├── aboutMe.ts               Contenido personal y textos base
+├── constants.ts             Formación, certificaciones, imágenes y enlaces
+├── experienceInfo.ts        Trayectoria profesional
+├── translations.ts          Construcción de traducciones
+├── types.ts                 Contratos TypeScript
+├── styles.css               Estilos globales y directivas Tailwind
+└── index.tsx                Punto de entrada
 ```
 
-## 🚀 Getting Started
+## Desarrollo local
 
-To run this project locally:
+```bash
+npm ci
+npm run dev
+```
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/JosepNR97/JNR.git
-    cd JNR
-    ```
+La aplicación queda disponible en la URL que indique Vite, normalmente `http://localhost:5173`.
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+## Controles de calidad
 
-3.  **Run development server:**
-    ```bash
-    npm run dev
-    ```
+```bash
+npm run lint
+npm run test
+npm run build
+npm run check
+```
 
-4.  **Build for production:**
-    ```bash
-    npm run build
-    ```
+`npm run check` ejecuta lint, pruebas y build. Es el mismo control utilizado antes del despliegue en GitHub Actions.
 
-## 📝 Content Management
+## Gestión de imágenes
 
-Updating the portfolio content does not require modifying React components. All data is centralized:
+Las imágenes locales se almacenan en `public/assets/` según su función:
 
-*   **Personal Info & Nav:** `src/aboutMe.ts`
-*   **Work History:** `src/experienceInfo.ts`
-*   **Images & Links:** `src/constants.ts`
+- `people/`: fotografías personales.
+- `credential-issuers/`: organizaciones acreditadoras.
+- `education/`: universidades y centros de formación.
+- `employers/`: empresas y organizaciones profesionales.
+- `certifications/`: insignias y certificados.
+- `brand/`: recursos de marca y Open Graph.
 
-## 📄 License
+Las imágenes externas que siguen siendo estables pueden mantenerse por URL. Cuando una URL deje de ser fiable, el archivo debe incorporarse en la categoría correspondiente y referenciarse mediante `assetPath()`.
 
-© 2025 Josep Núñez Riba. All rights reserved.
+## Despliegue
+
+Los cambios enviados a `main` activan el workflow de GitHub Pages. La instalación usa `npm ci`, por lo que `package-lock.json` debe mantenerse versionado y actualizado.
+
+## Licencia
+
+© 2026 Josep Núñez Riba. Todos los derechos reservados.

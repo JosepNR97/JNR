@@ -1,135 +1,150 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useEffect, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { CERTIFICATION_LOGOS } from '../constants';
+import { useLanguage } from '../context/LanguageContext';
 
-const REPEATED_LOGOS = [...CERTIFICATION_LOGOS, ...CERTIFICATION_LOGOS, ...CERTIFICATION_LOGOS, ...CERTIFICATION_LOGOS, ...CERTIFICATION_LOGOS];
+interface CertificationsProps {
+  onSelectVendor: (vendorId: string) => void;
+}
 
-export const Certifications: React.FC = () => {
+const AUTO_SCROLL_SPEED = 0.45;
+const DRAG_THRESHOLD = 6;
+
+export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
   const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
+  const requestRef = useRef(0);
+  const pauseRef = useRef(false);
+  const reducedMotionRef = useRef(false);
+  const pointerRef = useRef({ active: false, startX: 0, startScroll: 0, moved: false });
   const [isDragging, setIsDragging] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const requestRef = useRef<number>(0);
-  const positionRef = useRef<number>(0);
-  const speedRef = useRef<number>(0.5);
-
-  const animate = useCallback(() => {
-    if (!containerRef.current) return;
-    
-    if (!isDragging && !isHovering) {
-      positionRef.current += speedRef.current;
-    }
-
-    const container = containerRef.current;
-    const maxScroll = container.scrollWidth / 2;
-
-    if (positionRef.current >= maxScroll) {
-      positionRef.current = 0;
-    } else if (positionRef.current < 0) {
-      positionRef.current = maxScroll - 1;
-    }
-
-    container.scrollLeft = positionRef.current;
-    requestRef.current = requestAnimationFrame(animate);
-  }, [isDragging, isHovering]);
 
   useEffect(() => {
-    requestRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(requestRef.current);
-  }, [animate]);
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotionPreference = () => {
+      reducedMotionRef.current = mediaQuery.matches;
+    };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+    updateMotionPreference();
+    mediaQuery.addEventListener('change', updateMotionPreference);
+
+    const animate = () => {
+      const container = containerRef.current;
+      if (container && !pauseRef.current && !reducedMotionRef.current) {
+        const midpoint = container.scrollWidth / 2;
+        container.scrollLeft += AUTO_SCROLL_SPEED;
+        if (container.scrollLeft >= midpoint) container.scrollLeft -= midpoint;
+      }
+      requestRef.current = window.requestAnimationFrame(animate);
+    };
+
+    requestRef.current = window.requestAnimationFrame(animate);
+    return () => {
+      mediaQuery.removeEventListener('change', updateMotionPreference);
+      window.cancelAnimationFrame(requestRef.current);
+    };
+  }, []);
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    pointerRef.current = {
+      active: true,
+      startX: event.clientX,
+      startScroll: container.scrollLeft,
+      moved: false,
+    };
+    pauseRef.current = true;
     setIsDragging(true);
-    setStartX(e.pageX - (containerRef.current?.offsetLeft || 0));
-    setScrollLeft(positionRef.current);
   };
 
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-    setIsHovering(false);
-  };
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const container = containerRef.current;
+    const pointer = pointerRef.current;
+    if (!container || !pointer.active) return;
 
-  const handleMouseEnter = () => {
-    setIsHovering(true);
-  };
-
-  const handleMouseUp = () => {
-    // Delay setting isDragging to false slightly to allow click handler to check logic if needed, 
-    // but here we just set it false. The click handler will likely fire after mouseup.
-    // However, to distinguish drag from click, we usually check if we moved.
-    // For simplicity, we'll let click fire, and assume short drags might register as clicks which is acceptable here.
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.pageX - (containerRef.current?.offsetLeft || 0);
-    const walk = (x - startX) * 2;
-    positionRef.current = scrollLeft - walk;
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setIsDragging(true);
-    setStartX(e.touches[0].pageX - (containerRef.current?.offsetLeft || 0));
-    setScrollLeft(positionRef.current);
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    const x = e.touches[0].pageX - (containerRef.current?.offsetLeft || 0);
-    const walk = (x - startX) * 2;
-    positionRef.current = scrollLeft - walk;
-  };
-
-  const handleLogoClick = (educationId?: string) => {
-    // Basic heuristic: if dragging was active, maybe ignore? 
-    // React events propogation is tricky with manual DOM manipulation.
-    // We'll trust that isDragging is false on click.
-    if (!isDragging && educationId) {
-      const event = new CustomEvent('open-vendor-card', { detail: educationId });
-      window.dispatchEvent(event);
+    const distance = event.clientX - pointer.startX;
+    if (Math.abs(distance) > DRAG_THRESHOLD && !pointer.moved) {
+      pointer.moved = true;
+      container.setPointerCapture?.(event.pointerId);
     }
+    container.scrollLeft = pointer.startScroll - distance;
+  };
+
+  const handlePointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const container = containerRef.current;
+    pointerRef.current.active = false;
+    setIsDragging(false);
+    pauseRef.current = container?.matches(':hover, :focus-within') ?? false;
+    if (container?.hasPointerCapture?.(event.pointerId)) {
+      container.releasePointerCapture?.(event.pointerId);
+    }
+  };
+
+  const handleLogoClick = (vendorId: string) => {
+    if (pointerRef.current.moved) {
+      pointerRef.current.moved = false;
+      return;
+    }
+    onSelectVendor(vendorId);
   };
 
   return (
-    <section className="py-12 bg-slate-50 border-y border-slate-200 w-full overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 mb-8 text-center">
-        <h3 className="text-xs font-bold tracking-widest text-slate-400 uppercase">
+    <section className="w-full overflow-hidden border-y border-slate-200 bg-slate-50 py-12">
+      <div className="mx-auto mb-8 max-w-7xl px-4 text-center">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">
           {t.certifications.title}
-        </h3>
+        </h2>
       </div>
-      
-      <div 
-        className={`w-full overflow-x-hidden select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+
+      <div
         ref={containerRef}
-        onMouseDown={handleMouseDown}
-        onMouseLeave={handleMouseLeave}
-        onMouseEnter={handleMouseEnter}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onTouchMove={handleTouchMove}
+        className={`scrollbar-none w-full touch-pan-y select-none overflow-x-auto ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onMouseEnter={() => {
+          pauseRef.current = true;
+        }}
+        onMouseLeave={() => {
+          if (!pointerRef.current.active) pauseRef.current = false;
+        }}
+        onFocus={() => {
+          pauseRef.current = true;
+        }}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) pauseRef.current = false;
+        }}
       >
-        <div className="inline-flex items-center gap-16 px-4 min-w-max py-4">
-          {REPEATED_LOGOS.map((logo, index) => (
-            <div 
-              key={`${logo.name}-${index}`} 
-              className="flex-shrink-0 group transition-transform duration-300 hover:scale-110 relative z-10 cursor-pointer"
-              onClick={() => handleLogoClick(logo.educationId)}
+        <div className="inline-flex min-w-max items-center py-4">
+          {[0, 1].map((copyIndex) => (
+            <div
+              key={copyIndex}
+              className="inline-flex items-center gap-16 px-8"
+              aria-hidden={copyIndex === 1}
             >
-              <img 
-                src={logo.url} 
-                alt={logo.name} 
-                className="h-12 md:h-14 w-auto object-contain opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none mix-blend-multiply"
-              />
+              {CERTIFICATION_LOGOS.map((logo) => (
+                <button
+                  key={`${copyIndex}-${logo.name}`}
+                  type="button"
+                  tabIndex={copyIndex === 1 ? -1 : 0}
+                  aria-label={`${t.certifications.openVendor} ${logo.name}`}
+                  onClick={() => handleLogoClick(logo.educationId)}
+                  className="group grid h-20 w-40 shrink-0 place-items-center p-2 transition-transform duration-300 hover:scale-110 focus-visible:scale-110"
+                >
+                  <img
+                    src={logo.url}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                    className="max-h-14 max-w-full object-contain opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
+                  />
+                </button>
+              ))}
             </div>
           ))}
         </div>

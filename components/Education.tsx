@@ -1,259 +1,209 @@
-
-import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { EducationIcon, ChevronDownIcon, ExternalLinkIcon } from './Icons';
+import { ChevronDownIcon, EducationIcon, ExternalLinkIcon } from './Icons';
 
-export const Education: React.FC = () => {
+interface EducationProps {
+  expandedVendorId: string | null;
+  onVendorToggle: (vendorId: string) => void;
+}
+
+export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) => {
   const { t } = useLanguage();
-  const [expandedVendorId, setExpandedVendorId] = useState<string | null>(null);
-
-  const toggleVendor = (id: string) => {
-    setExpandedVendorId(expandedVendorId === id ? null : id);
-  };
-
-  useEffect(() => {
-    const handleOpenVendorCard = (event: CustomEvent) => {
-      const targetVendorId = event.detail;
-      
-      // Si ya está abierta la misma, no hacemos nada o podríamos scrollear a ella.
-      if (expandedVendorId === targetVendorId) return;
-
-      const performOpenAndScroll = () => {
-        setExpandedVendorId(targetVendorId);
-        
-        // Esperamos un instante a que React renderice la tarjeta abierta para calcular la altura correcta
-        setTimeout(() => {
-          const element = document.getElementById(`education-card-${targetVendorId}`);
-          if (element) {
-            const headerOffset = 100; // Ajuste para el header fijo + margen visual
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-        
-            window.scrollTo({
-              top: offsetPosition,
-              behavior: "smooth"
-            });
-          }
-        }, 100);
-      };
-
-      if (expandedVendorId) {
-        // 1. Si hay otra tarjeta abierta, la cerramos primero
-        setExpandedVendorId(null);
-        
-        // 2. Esperamos a que termine la transición CSS (duration-300 = 300ms)
-        // Damos un pequeño margen extra (350ms) para que el layout se estabilice
-        setTimeout(() => {
-          performOpenAndScroll();
-        }, 350);
-      } else {
-        // 3. Si no hay nada abierto, abrimos directamente
-        performOpenAndScroll();
-      }
-    };
-
-    window.addEventListener('open-vendor-card', handleOpenVendorCard as EventListener);
-    return () => {
-      window.removeEventListener('open-vendor-card', handleOpenVendorCard as EventListener);
-    };
-  }, [expandedVendorId]); // Añadimos expandedVendorId a la dependencia para tener el valor actualizado
 
   return (
-    <section id="education" className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <span className="text-brand-600 font-semibold tracking-wider uppercase text-sm">
+    <section id="education" className="scroll-mt-20 bg-white py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-16 text-center">
+          <span className="text-sm font-semibold uppercase tracking-wider text-brand-600">
             {t.education.badge}
           </span>
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4">
+          <h2 className="mb-4 mt-2 font-serif text-3xl font-bold text-slate-900 md:text-4xl">
             {t.education.title}
           </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto">
-            {t.education.subtitle}
-          </p>
+          <p className="mx-auto max-w-2xl text-slate-600">{t.education.subtitle}</p>
         </div>
 
-        {/* Academic Section */}
         <div className="mb-20">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="h-px bg-slate-200 flex-1"></div>
-            <h3 className="text-xl font-bold text-slate-800 uppercase tracking-wide">
+          <div className="mb-8 flex items-center gap-4">
+            <div className="h-px flex-1 bg-slate-200" />
+            <h3 className="text-center text-lg font-bold uppercase text-slate-800 sm:text-xl">
               {t.education.academicTitle}
             </h3>
-            <div className="h-px bg-slate-200 flex-1"></div>
+            <div className="h-px flex-1 bg-slate-200" />
           </div>
 
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="mx-auto max-w-4xl space-y-6">
             {t.education.academic.map((item) => (
-              <div key={item.id} className="bg-slate-50 rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6 items-center">
-                  
-                  {/* Left Column: Logo + Title + Institution */}
-                  <div className="flex items-center gap-6 text-left">
-                    <div className="w-20 h-20 shrink-0 rounded-xl bg-white p-2 border border-slate-100 flex items-center justify-center shadow-sm">
+              <article
+                key={item.id}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm transition-shadow hover:shadow-md sm:p-8"
+              >
+                <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[2fr_1fr]">
+                  <div className="flex items-center gap-5 text-left sm:gap-6">
+                    <div className="grid h-20 w-20 shrink-0 place-items-center rounded-lg border border-slate-100 bg-white p-2 shadow-sm">
                       {item.logoUrl ? (
-                         <img 
-                            src={item.logoUrl} 
-                            alt={item.institution} 
-                            className="w-full h-full object-contain"
-                          />
+                        <img
+                          src={item.logoUrl}
+                          alt={`Logo ${item.institution}`}
+                          width="160"
+                          height="160"
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-contain"
+                        />
                       ) : (
-                         <EducationIcon className="w-8 h-8 text-brand-600" />
+                        <EducationIcon className="h-8 w-8 text-brand-600" />
                       )}
                     </div>
                     <div>
-                      <h4 className="font-bold text-xl text-slate-900 leading-tight mb-2">
+                      <h4 className="mb-2 text-xl font-bold leading-tight text-slate-900">
                         {item.degree}
                       </h4>
-                      <p className="text-brand-700 font-bold text-sm uppercase tracking-wide">
-                        {item.institution}
-                      </p>
+                      <p className="text-sm font-bold uppercase text-brand-700">{item.institution}</p>
                     </div>
                   </div>
 
-                  {/* Right Column: Date + Description */}
-                  <div className="flex flex-col md:items-end text-left md:text-right border-t md:border-t-0 border-slate-200 pt-4 md:pt-0">
-                    <span className="inline-block px-4 py-1.5 bg-slate-200 text-slate-700 text-xs font-bold rounded-full mb-2 w-fit">
+                  <div className="flex flex-col border-t border-slate-200 pt-4 text-left md:items-end md:border-t-0 md:pt-0 md:text-right">
+                    <span className="mb-2 inline-block w-fit rounded-full bg-slate-200 px-4 py-1.5 text-xs font-bold text-slate-700">
                       {item.year}
                     </span>
-                    {item.description && (
-                        <p className="text-sm text-slate-500 italic max-w-xs">
-                            {item.description}
-                        </p>
-                    )}
+                    {item.description ? (
+                      <p className="max-w-xs text-sm italic text-slate-500">{item.description}</p>
+                    ) : null}
                   </div>
-
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>
 
-        {/* Professional Certifications Section */}
         <div>
-           <div className="flex items-center gap-4 mb-8">
-            <div className="h-px bg-slate-200 flex-1"></div>
-            <h3 className="text-xl font-bold text-slate-800 uppercase tracking-wide">
+          <div className="mb-8 flex items-center gap-4">
+            <div className="h-px flex-1 bg-slate-200" />
+            <h3 className="text-center text-lg font-bold uppercase text-slate-800 sm:text-xl">
               {t.education.professionalTitle}
             </h3>
-            <div className="h-px bg-slate-200 flex-1"></div>
+            <div className="h-px flex-1 bg-slate-200" />
           </div>
 
-          <div className="space-y-4 max-w-4xl mx-auto">
+          <div className="mx-auto max-w-4xl space-y-4">
             {t.education.professional.map((vendor) => {
               const isExpanded = expandedVendorId === vendor.id;
-              
+              const triggerId = `education-trigger-${vendor.id}`;
+              const panelId = `education-panel-${vendor.id}`;
+
               return (
-                <div 
+                <article
                   id={`education-card-${vendor.id}`}
                   key={vendor.id}
-                  className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden group ${
-                    isExpanded 
-                      ? 'border-brand-500 shadow-lg ring-1 ring-brand-200' 
+                  className={`group scroll-mt-24 overflow-hidden rounded-xl border bg-white transition-all duration-300 ${
+                    isExpanded
+                      ? 'border-brand-500 shadow-lg ring-1 ring-brand-200'
                       : 'border-slate-200 hover:border-brand-300 hover:shadow-md'
                   }`}
                 >
-                  {/* Vendor Header (Clickable) */}
-                  <div 
-                    onClick={() => toggleVendor(vendor.id)}
-                    className="p-6 cursor-pointer flex items-center justify-between gap-4"
+                  <button
+                    id={triggerId}
+                    type="button"
+                    aria-expanded={isExpanded}
+                    aria-controls={panelId}
+                    onClick={() => onVendorToggle(vendor.id)}
+                    className="flex w-full items-center justify-between gap-4 p-5 text-left sm:p-6"
                   >
-                    <div className="flex items-center gap-4 sm:gap-6 flex-1">
-                      {/* Vendor Logo */}
-                      <div className="w-20 h-20 shrink-0 bg-white rounded-lg p-2 border border-slate-100 flex items-center justify-center">
-                        <img 
-                          src={vendor.logoUrl} 
-                          alt={vendor.name} 
-                          className="max-w-full max-h-full object-contain"
+                    <span className="flex min-w-0 flex-1 items-center gap-4 sm:gap-6">
+                      <span className="grid h-16 w-20 shrink-0 place-items-center rounded-lg border border-slate-100 bg-white p-2 sm:h-20">
+                        <img
+                          src={vendor.logoUrl}
+                          alt={`Logo ${vendor.name}`}
+                          width="160"
+                          height="100"
+                          loading="lazy"
+                          decoding="async"
+                          className="max-h-full max-w-full object-contain"
                         />
-                      </div>
-                      
-                      {/* Vendor Info */}
-                      <div>
-                        <h4 className="text-lg sm:text-xl font-bold text-slate-900">
+                      </span>
+
+                      <span className="min-w-0">
+                        <span className="block text-lg font-bold text-slate-900 sm:text-xl">
                           {vendor.name}
-                        </h4>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {vendor.tags.map((tag, idx) => (
-                            <span 
-                              key={idx}
-                              className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200"
+                        </span>
+                        <span className="mt-2 flex flex-wrap gap-2" aria-label="Tags">
+                          {vendor.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
                             >
                               {tag}
                             </span>
                           ))}
-                        </div>
-                      </div>
-                    </div>
+                        </span>
+                      </span>
+                    </span>
 
-                    {/* Expand Icon */}
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
-                      isExpanded 
-                        ? 'bg-brand-100 text-brand-600 rotate-180' 
-                        : 'bg-slate-100 text-slate-400 group-hover:bg-brand-600 group-hover:text-white'
-                    }`}>
-                      <ChevronDownIcon className="w-5 h-5" />
-                    </div>
-                  </div>
+                    <span
+                      className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition-colors ${
+                        isExpanded
+                          ? 'bg-brand-100 text-brand-700'
+                          : 'bg-slate-100 text-slate-500 group-hover:bg-brand-600 group-hover:text-white'
+                      }`}
+                      aria-hidden="true"
+                    >
+                      <ChevronDownIcon
+                        className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                      />
+                    </span>
+                  </button>
 
-                  {/* Certifications Grid (Expandable) */}
-                  <div 
-                    className={`grid transition-[grid-template-rows] duration-300 ease-in-out bg-slate-50/50 ${
-                      isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                    }`}
-                  >
-                    <div className="overflow-hidden">
-                      <div className="p-6 pt-0 border-t border-slate-100">
-                        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {vendor.certifications.map((cert, idx) => (
-                            <div 
-                              key={idx}
-                              className="bg-white p-4 rounded-xl border border-slate-200 flex items-start gap-4 hover:border-brand-200 transition-colors"
-                            >
-                              {/* Certification Badge */}
-                              <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-white border border-slate-100">
-                                <img 
-                                  src={cert.image} 
-                                  alt={cert.name} 
-                                  className="w-full h-full object-contain p-1"
-                                />
-                              </div>
-                              
-                              <div className="flex-1 min-w-0">
-                                <h5 className="font-bold text-slate-900 text-sm leading-tight mb-1 truncate whitespace-normal">
-                                  {cert.name}
-                                </h5>
-                                <p className="text-xs text-slate-500 mb-3">
-                                  {cert.date}
-                                </p>
-                                
-                                {cert.credentialUrl && cert.credentialUrl !== '#' && (
-                                  <a 
-                                    href={cert.credentialUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 hover:underline"
-                                  >
-                                    {t.education.viewCredential}
-                                    <ExternalLinkIcon className="w-3 h-3" />
-                                  </a>
-                                )}
-                              </div>
+                  {isExpanded ? (
+                    <div
+                      id={panelId}
+                      role="region"
+                      aria-labelledby={triggerId}
+                      className="border-t border-slate-100 bg-slate-50/50 p-5 sm:p-6"
+                    >
+                      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {vendor.certifications.map((certification) => (
+                          <li
+                            key={certification.name}
+                            className="flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-brand-200"
+                          >
+                            <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-100 bg-white p-1">
+                              <img
+                                src={certification.image}
+                                alt=""
+                                width="64"
+                                height="64"
+                                loading="lazy"
+                                decoding="async"
+                                className="h-full w-full object-contain"
+                              />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <h5 className="text-sm font-bold leading-tight text-slate-900">
+                                {certification.name}
+                              </h5>
+                              <p className="mb-2 mt-1 text-xs text-slate-500">{certification.date}</p>
+                              {certification.credentialUrl && certification.credentialUrl !== '#' ? (
+                                <a
+                                  href={certification.credentialUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex min-h-8 items-center gap-1.5 text-xs font-semibold text-brand-700 hover:underline"
+                                >
+                                  {t.education.viewCredential}
+                                  <ExternalLinkIcon className="h-3 w-3" />
+                                </a>
+                              ) : null}
                             </div>
-                          ))}
-                        </div>
-                      </div>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </div>
-
-                </div>
+                  ) : null}
+                </article>
               );
             })}
           </div>
         </div>
-
       </div>
     </section>
   );

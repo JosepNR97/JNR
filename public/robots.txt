@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://josepnr97.github.io/JNR/sitemap.xml

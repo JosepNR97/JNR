@@ -7,7 +7,7 @@ export const Contact: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <section id="contact" className="py-12 bg-slate-900 text-white">
+    <section id="contact" className="scroll-mt-20 bg-slate-900 py-12 text-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         
         {/* Header Compacto */}

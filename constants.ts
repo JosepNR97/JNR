@@ -1,4 +1,4 @@
-import { MultiLanguageString } from "./types";
+import { assetPath } from './assetPath';
 
 export const CAREER_START_YEAR = 2021;
 
@@ -16,7 +16,7 @@ export const IMAGES = {
     leanix: "https://confare.at/wp-content/uploads/Logo_LeanIX-RGB__horizontal_duotone_flat.png",
     servicenow: "https://cdn-public.softwarereviews.com/production/logos/offerings/4803/large/ServiceNow_logo.png?1745595736",
     isdi: "https://fad.es/wp-content/uploads/2019/06/logo-isdi-e1561372639174.png",
-    ub: "https://upload.wikimedia.org/wikipedia/ca/thumb/2/2c/Logotip_UB.svg/2560px-Logotip_UB.svg.png",
+    ub: assetPath('education/universitat-de-barcelona.webp'),
     cambridge: "https://www.cam.ac.uk/sites/default/files/secondary-logo-stacked.png"
   },
   badges: {

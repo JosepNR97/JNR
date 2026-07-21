@@ -1,60 +1,49 @@
-import React from 'react';
-import { 
-  Brain, 
-  Cloud, 
-  Code2, 
-  Rocket, 
-  Linkedin, 
-  Mail, 
-  MapPin, 
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-  MessageSquare,
-  X,
-  Send,
-  Menu,
-  LayoutTemplate, // For Enterprise Architecture
+import {
   Bot,
-  Quote,
+  Brain,
   Briefcase,
-  GraduationCap,
-  BarChart3,
+  ChevronDown,
+  ChevronRight,
+  Cloud,
   ExternalLink,
-  Globe
+  Globe,
+  GraduationCap,
+  LayoutTemplate,
+  Linkedin,
+  Mail,
+  MapPin,
+  Menu,
+  Rocket,
+  X,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { ServiceItem } from '../types';
 
-export const StrategyIcon = ({ className }: { className?: string }) => <Brain className={className} />;
-export const ArchitectureIcon = ({ className }: { className?: string }) => <LayoutTemplate className={className} />;
-export const CloudIcon = ({ className }: { className?: string }) => <Cloud className={className} />;
-export const AgileIcon = ({ className }: { className?: string }) => <Rocket className={className} />;
-export const AIIcon = ({ className }: { className?: string }) => <Bot className={className} />;
+interface IconProps {
+  className?: string;
+}
 
-export const LinkedinIcon = ({ className }: { className?: string }) => <Linkedin className={className} />;
-export const MailIcon = ({ className }: { className?: string }) => <Mail className={className} />;
-export const LocationIcon = ({ className }: { className?: string }) => <MapPin className={className} />;
-export const ArrowRightIcon = ({ className }: { className?: string }) => <ChevronRight className={className} />;
-export const ChevronDownIcon = ({ className }: { className?: string }) => <ChevronDown className={className} />;
-export const ChevronUpIcon = ({ className }: { className?: string }) => <ChevronUp className={className} />;
-export const ChatIcon = ({ className }: { className?: string }) => <MessageSquare className={className} />;
-export const CloseIcon = ({ className }: { className?: string }) => <X className={className} />;
-export const SendIcon = ({ className }: { className?: string }) => <Send className={className} />;
-export const MenuIcon = ({ className }: { className?: string }) => <Menu className={className} />;
-export const CodeIcon = ({ className }: { className?: string }) => <Code2 className={className} />;
-export const QuoteIcon = ({ className }: { className?: string }) => <Quote className={className} />;
-export const EducationIcon = ({ className }: { className?: string }) => <GraduationCap className={className} />;
-export const BriefcaseIcon = ({ className }: { className?: string }) => <Briefcase className={className} />;
-export const ChartIcon = ({ className }: { className?: string }) => <BarChart3 className={className} />;
-export const ExternalLinkIcon = ({ className }: { className?: string }) => <ExternalLink className={className} />;
-export const GlobeIcon = ({ className }: { className?: string }) => <Globe className={className} />;
-
-export const getServiceIcon = (iconName: string, className?: string) => {
-  switch (iconName) {
-    case 'Strategy': return <StrategyIcon className={className} />;
-    case 'Architecture': return <ArchitectureIcon className={className} />;
-    case 'Cloud': return <CloudIcon className={className} />;
-    case 'Agile': return <AgileIcon className={className} />;
-    case 'AI': return <AIIcon className={className} />;
-    default: return <CodeIcon className={className} />;
-  }
+const serviceIcons: Record<ServiceItem['iconName'], LucideIcon> = {
+  Strategy: Brain,
+  Architecture: LayoutTemplate,
+  Cloud,
+  Agile: Rocket,
+  AI: Bot,
 };
+
+export const getServiceIcon = (iconName: ServiceItem['iconName'], className?: string) => {
+  const Icon = serviceIcons[iconName];
+  return <Icon className={className} aria-hidden="true" />;
+};
+
+export const LinkedinIcon = ({ className }: IconProps) => <Linkedin className={className} aria-hidden="true" />;
+export const MailIcon = ({ className }: IconProps) => <Mail className={className} aria-hidden="true" />;
+export const LocationIcon = ({ className }: IconProps) => <MapPin className={className} aria-hidden="true" />;
+export const ArrowRightIcon = ({ className }: IconProps) => <ChevronRight className={className} aria-hidden="true" />;
+export const ChevronDownIcon = ({ className }: IconProps) => <ChevronDown className={className} aria-hidden="true" />;
+export const CloseIcon = ({ className }: IconProps) => <X className={className} aria-hidden="true" />;
+export const MenuIcon = ({ className }: IconProps) => <Menu className={className} aria-hidden="true" />;
+export const EducationIcon = ({ className }: IconProps) => <GraduationCap className={className} aria-hidden="true" />;
+export const BriefcaseIcon = ({ className }: IconProps) => <Briefcase className={className} aria-hidden="true" />;
+export const ExternalLinkIcon = ({ className }: IconProps) => <ExternalLink className={className} aria-hidden="true" />;
+export const GlobeIcon = ({ className }: IconProps) => <Globe className={className} aria-hidden="true" />;

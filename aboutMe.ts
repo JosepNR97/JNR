@@ -1,11 +1,12 @@
 
-import { MultiLanguageString } from "./types";
+import { assetPath } from './assetPath';
+import type { MultiLanguageString, ServiceItem } from './types';
 
 export const PROFILE_DATA = {
   name: "Josep Núñez Riba",
   email: "josepnunez97@gmail.com",
   linkedin: "https://www.linkedin.com/in/josep-nunez-riba",
-  image: "https://media.licdn.com/dms/image/v2/D4D03AQEuE02DCqQnwg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1668694478777?e=1767830400&v=beta&t=O7Q6xO6TvD5bdDkpU1Wn0ynt6LrTq_miMbpu5iTV-5Y",
+  image: assetPath('people/josep-nunez-riba.webp'),
   location: {
     ca: "Barcelona",
     es: "Barcelona",
@@ -18,7 +19,6 @@ export const NAV_DATA = {
   about: { ca: "Sobre mi", es: "Sobre mí", en: "About me" },
   services: { ca: "Especialització", es: "Especialización", en: "Expertise" },
   education: { ca: "Formació", es: "Formación", en: "Education" },
-  testimonials: { ca: "Testimonis", es: "Testimonios", en: "Testimonials" },
   experience: { ca: "Experiència", es: "Experiencia", en: "Experience" },
   contact: { ca: "Contactar", es: "Contactar", en: "Contact" }
 };
@@ -128,48 +128,12 @@ export const SERVICES_DATA = {
       },
       iconName: "AI"
     }
-  ]
-};
-
-export const TESTIMONIALS_DATA = {
-  title: { ca: "El que diuen els meus clients", es: "Lo que dicen mis clientes", en: "What My Clients Say" },
-  subtitle: {
-    ca: "L'impacte real es mesura en la satisfacció del client i els resultats tangibles del negoci.",
-    es: "El impacto real se mide en la satisfacción del cliente y los resultados tangibles del negocio.",
-    en: "Real impact is measured in customer satisfaction and tangible business results."
-  },
-  items: [
-    {
-      id: "t1",
-      quote: {
-        ca: "La claredat estratègica del Josep i la seva visió de futur van transformar la nostra infraestructura heretada en una avantatge competitiu modern i àgil.",
-        es: "La claridad estratégica de Josep y su visión de futuro transformaron nuestra infraestructura heredada en una ventaja competitiva moderna y ágil.",
-        en: "Josep's strategic clarity and vision for the future transformed our legacy infrastructure into a modern and agile competitive advantage."
-      },
-      author: "Carlos M.",
-      role: { ca: "CEO, Sector Retail", es: "CEO, Sector Retail", en: "CEO, Retail Sector" }
-    },
-    {
-      id: "t2",
-      quote: {
-        ca: "La seva capacitat per executar implementacions complexes d'IA i automatització sense interrompre les nostres operacions crítiques diàries va ser impressionant.",
-        es: "Su capacidad para ejecutar implementaciones complejas de IA y automatización sin interrumpir nuestras operaciones críticas diarias fue impresionante.",
-        en: "His ability to execute complex AI and automation implementations without disrupting our critical daily operations was impressive."
-      },
-      author: "Laura G.",
-      role: { ca: "Directora de TI, Finances", es: "Directora de TI, Finanzas", en: "IT Director, Finance" }
-    },
-    {
-      id: "t3",
-      quote: {
-        ca: "El Josep no només va implementar nova tecnologia, sinó que va instaurar una cultura d'eficiència que va impactar positivament en la nostra rendibilitat des del primer trimestre.",
-        es: "Josep no solo implementó nueva tecnología, sinó que instauró una cultura de eficiencia que impactó positivamente en nuestra rentabilidad desde el primer trimestre.",
-        en: "Josep not only implemented new technology but also instilled a culture of efficiency that positively impacted our profitability from the first quarter."
-      },
-      author: "Marc R.",
-      role: { ca: "Líder de Projecte, Logística", es: "Líder de Proyecto, Logística", en: "Project Leader, Logistics" }
-    }
-  ]
+  ] satisfies Array<{
+    id: string;
+    title: MultiLanguageString;
+    description: MultiLanguageString;
+    iconName: ServiceItem['iconName'];
+  }>
 };
 
 export const CERTIFICATIONS_SECTION_DATA = {
@@ -178,41 +142,6 @@ export const CERTIFICATIONS_SECTION_DATA = {
     es: "Certificaciones y tecnologías",
     en: "Certifications and Technologies"
   }
-};
-
-export const CASE_STUDIES_DATA = {
-  badge: { ca: "Casos d'Èxit", es: "Casos de Éxito", en: "Success Stories" },
-  title: { ca: "Projectes amb Impacte", es: "Proyectos con Impacto", en: "Impactful Projects" },
-  subtitle: {
-    ca: "Resultats tangibles a través de l'estratègia i la tecnologia.",
-    es: "Resultados tangibles a través de la estrategia y la tecnología.",
-    en: "Tangible results through strategy and technology."
-  },
-  items: [
-    {
-      id: "cs1",
-      title: { ca: "Modernització de Plataforma Bancària", es: "Modernización de Plataforma Bancaria", en: "Banking Platform Modernization" },
-      client: { ca: "Banc Nacional Top 3", es: "Banco Nacional Top 3", en: "Top 3 National Bank" },
-      challengeTitle: { ca: "El Repte", es: "El Reto", en: "The Challenge" },
-      challenge: {
-        ca: "Sistemes 'legacy' monolíticos que frenaban el time-to-market de nuevos productos financieros.",
-        es: "Sistemas 'legacy' monolíticos que frenaban el time-to-market de nuevos productos financieros.",
-        en: "Monolithic legacy systems hindering time-to-market for new financial products."
-      },
-      approachTitle: { ca: "L'Enfocament", es: "El Enfoque", en: "The Approach" },
-      approach: {
-        ca: "Disseny de arquitectura orientada a esdeveniments i migració gradual al núvol.",
-        es: "Diseño de arquitectura orientada a eventos y migración gradual a la nube.",
-        en: "Design of event-driven architecture and gradual migration to the cloud."
-      },
-      resultsTitle: { ca: "Resultats", es: "Resultados", en: "Results" },
-      results: [
-        { ca: "Reducció del 40% en costos d'infraestructura", es: "Reducción del 40% en costes de infraestructura", en: "40% reduction in infrastructure costs" },
-        { ca: "Desplegament de features en dies en lloc de mesos", es: "Despliegue de features en días en lugar de meses", en: "Feature deployment in days instead of months" }
-      ],
-      cta: { ca: "Veure detalls", es: "Ver detalles", en: "View details" }
-    }
-  ]
 };
 
 export const CONTACT_DATA = {

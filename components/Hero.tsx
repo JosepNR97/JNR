@@ -1,78 +1,54 @@
-import React, { useEffect, useState } from 'react';
 import { PROFILE_DATA } from '../aboutMe';
 import { useLanguage } from '../context/LanguageContext';
 import { ArrowRightIcon } from './Icons';
 
-export const Hero: React.FC = () => {
+export const Hero = () => {
   const { t } = useLanguage();
-  const [scrollY, setScrollY] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleScrollToPortfolio = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    const element = document.getElementById('about');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-slate-900">
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <div 
-          className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600 rounded-full blur-[120px] transition-transform duration-100 ease-out"
-          style={{ transform: `translateY(${scrollY * 0.5}px)` }}
-        ></div>
-        <div 
-          className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600 rounded-full blur-[120px] transition-transform duration-100 ease-out"
-          style={{ transform: `translateY(${scrollY * 0.2}px)` }}
-        ></div>
+    <section
+      id="top"
+      className="relative flex min-h-screen min-h-[100svh] scroll-mt-20 items-center justify-center overflow-hidden bg-slate-900"
+    >
+      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-20" aria-hidden="true">
+        <div className="absolute -left-[10%] -top-[10%] h-1/2 w-1/2 rounded-full bg-blue-600 blur-[120px]" />
+        <div className="absolute -bottom-[10%] -right-[10%] h-1/2 w-1/2 rounded-full bg-indigo-600 blur-[120px]" />
       </div>
-      
-      <div 
-        className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none"
-        style={{ transform: `translateY(${scrollY * 0.1}px)` }}
-      ></div>
+      <div
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px]"
+        aria-hidden="true"
+      />
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
-        <span className="inline-block py-1 px-3 rounded-full bg-white/10 border border-white/20 text-white text-xs font-semibold tracking-wider uppercase mb-6 backdrop-blur-sm shadow-sm">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 pt-16 text-center">
+        <span className="mb-6 inline-block rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white shadow-sm backdrop-blur-sm">
           {t.hero.badge}
         </span>
-        
-        <h1 className="font-serif text-5xl md:text-7xl font-bold text-white leading-tight mb-6 drop-shadow-lg">
+
+        <h1 className="mb-6 font-serif text-5xl font-bold leading-tight text-white drop-shadow-lg md:text-7xl">
           {PROFILE_DATA.name}
         </h1>
-        
-        <p className="text-xl md:text-2xl text-slate-200 font-light mb-8 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
+
+        <p className="mx-auto mb-8 max-w-2xl text-xl font-light leading-relaxed text-slate-100 drop-shadow-md md:text-2xl">
           {t.hero.title}
         </p>
 
-        <p className="text-lg text-slate-300 mb-12 max-w-xl mx-auto leading-relaxed">
+        <p className="mx-auto mb-12 max-w-xl text-lg leading-relaxed text-slate-300">
           {t.hero.tagline}
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <a 
+        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <a
             href={PROFILE_DATA.linkedin}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-8 py-4 bg-brand-600 text-white rounded-full font-medium hover:bg-brand-500 transition-all shadow-lg hover:shadow-brand-500/30 flex items-center gap-2 group"
+            className="group inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-600 px-8 py-4 font-medium text-white shadow-lg transition-all hover:bg-brand-500 hover:shadow-brand-500/30"
           >
             {t.hero.connect}
-            <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </a>
-          <a 
+          <a
             href="#about"
-            onClick={handleScrollToPortfolio}
-            className="px-8 py-4 bg-transparent border border-white/30 text-white rounded-full font-medium hover:bg-white/10 hover:border-white transition-all cursor-pointer backdrop-blur-sm"
+            className="inline-flex min-h-12 items-center rounded-full border border-white/30 bg-transparent px-8 py-4 font-medium text-white backdrop-blur-sm transition-all hover:border-white hover:bg-white/10"
           >
             {t.hero.portfolio}
           </a>

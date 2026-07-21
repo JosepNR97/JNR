@@ -1,110 +1,150 @@
-
-import React, { useState, useEffect } from 'react';
-import { MenuIcon, CloseIcon } from './Icons';
+import { useEffect, useState } from 'react';
+import type { Language } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import { CloseIcon, MenuIcon } from './Icons';
 
-export const Header: React.FC = () => {
+const LANGUAGES: Array<{ code: Language; label: string }> = [
+  { code: 'ca', label: 'Català' },
+  { code: 'es', label: 'Español' },
+  { code: 'en', label: 'English' },
+];
+
+const MENU_LABELS: Record<Language, { open: string; close: string; navigation: string }> = {
+  ca: { open: 'Obrir menú', close: 'Tancar menú', navigation: 'Navegació principal' },
+  es: { open: 'Abrir menú', close: 'Cerrar menú', navigation: 'Navegación principal' },
+  en: { open: 'Open menu', close: 'Close menu', navigation: 'Main navigation' },
+};
+
+interface LanguageSelectorProps {
+  language: Language;
+  onChange: (language: Language) => void;
+  mobile?: boolean;
+  inactiveClassName: string;
+}
+
+const LanguageSelector = ({
+  language,
+  onChange,
+  mobile = false,
+  inactiveClassName,
+}: LanguageSelectorProps) => (
+  <div
+    className={mobile ? 'flex items-center gap-3' : 'flex items-center gap-1 border-l border-current/20 pl-4'}
+    aria-label="Language"
+    role="group"
+  >
+    {LANGUAGES.map(({ code, label }) => (
+      <button
+        key={code}
+        type="button"
+        lang={code}
+        aria-label={label}
+        aria-pressed={language === code}
+        onClick={() => onChange(code)}
+        className={`min-h-10 min-w-10 px-2 text-xs font-bold transition-colors ${
+          language === code ? (mobile ? 'text-brand-300' : 'text-brand-500') : inactiveClassName
+        }`}
+      >
+        {code.toUpperCase()}
+      </button>
+    ))}
+  </div>
+);
+
+export const Header = () => {
   const { language, setLanguage, t } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const labels = MENU_LABELS[language];
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+    let animationFrame = 0;
+
+    const updateScrollState = () => {
+      if (animationFrame) return;
+      animationFrame = window.requestAnimationFrame(() => {
+        setIsScrolled(window.scrollY > 50);
+        animationFrame = 0;
+      });
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    updateScrollState();
+    window.addEventListener('scroll', updateScrollState, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', updateScrollState);
+      window.cancelAnimationFrame(animationFrame);
+    };
   }, []);
 
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    if (!mobileMenuOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileMenuOpen(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [mobileMenuOpen]);
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
-    e.preventDefault();
-    if (targetId === '#') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      const element = document.querySelector(targetId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-    setMobileMenuOpen(false);
-  };
-
   const navLinks = [
-    { name: t.nav.home, href: '#' },
+    { name: t.nav.home, href: '#top' },
     { name: t.nav.about, href: '#about' },
     { name: t.nav.services, href: '#services' },
     { name: t.nav.experience, href: '#experience' },
     { name: t.nav.education, href: '#education' },
-    // Testimonials removed as requested
   ];
 
-  const headerBgClass = mobileMenuOpen 
-    ? 'bg-transparent' 
-    : isScrolled 
-      ? 'bg-white/90 backdrop-blur-md shadow-sm' 
-      : 'bg-transparent';
-
-  const headerTextColorClass = mobileMenuOpen 
-    ? 'text-white' 
-    : isScrolled 
-      ? 'text-brand-900' 
-      : 'text-white';
-      
-  const navLinkColorClass = isScrolled ? 'text-slate-600' : 'text-slate-200';
-  const hamburgerColorClass = mobileMenuOpen ? 'text-white' : (isScrolled ? 'text-slate-900' : 'text-white');
+  const scrolledHeader = isScrolled && !mobileMenuOpen;
+  const navLinkClass = scrolledHeader ? 'text-slate-600' : 'text-slate-200';
 
   return (
     <>
-      <header 
-        className={`fixed top-0 w-full transition-all duration-300 z-[50] ${headerBgClass} ${isScrolled ? 'py-3' : 'py-6'}`}
+      <header
+        className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+          scrolledHeader ? 'bg-white/95 py-3 shadow-sm backdrop-blur-md' : 'bg-transparent py-6'
+        }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <a 
-            href="#"
-            onClick={(e) => handleNavClick(e, '#')}
-            className={`font-serif font-bold text-2xl tracking-tight transition-colors duration-300 cursor-pointer ${headerTextColorClass}`}
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <a
+            href="#top"
+            onClick={() => setMobileMenuOpen(false)}
+            className={`font-serif text-2xl font-bold transition-colors ${
+              scrolledHeader ? 'text-brand-900' : 'text-white'
+            }`}
+            aria-label={`${t.nav.home} - JNR`}
           >
             JNR<span className="text-brand-500">.</span>
           </a>
 
-          <nav className="hidden lg:flex gap-8 items-center">
+          <nav className="hidden items-center gap-7 lg:flex" aria-label={labels.navigation}>
             {navLinks.map((link) => (
-              <a 
+              <a
                 key={link.href}
                 href={link.href}
-                onClick={(e) => handleNavClick(e, link.href)}
-                className={`text-sm font-medium hover:text-brand-500 transition-colors cursor-pointer ${navLinkColorClass}`}
+                className={`text-sm font-medium transition-colors hover:text-brand-500 ${navLinkClass}`}
               >
                 {link.name}
               </a>
             ))}
-            
-            {/* Language Selector Desktop */}
-            <div className="flex items-center gap-2 ml-2 border-l border-white/20 pl-4">
-               <button onClick={() => setLanguage('ca')} className={`text-xs font-bold ${language === 'ca' ? 'text-brand-500' : navLinkColorClass}`}>CA</button>
-               <span className="text-slate-400 text-xs">|</span>
-               <button onClick={() => setLanguage('es')} className={`text-xs font-bold ${language === 'es' ? 'text-brand-500' : navLinkColorClass}`}>ES</button>
-               <span className="text-slate-400 text-xs">|</span>
-               <button onClick={() => setLanguage('en')} className={`text-xs font-bold ${language === 'en' ? 'text-brand-500' : navLinkColorClass}`}>EN</button>
-            </div>
 
-            <a 
+            <LanguageSelector
+              language={language}
+              onChange={setLanguage}
+              inactiveClassName={navLinkClass}
+            />
+
+            <a
               href="#contact"
-              onClick={(e) => handleNavClick(e, '#contact')}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${
-                isScrolled 
-                  ? 'bg-brand-900 text-white hover:bg-brand-800' 
+              className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
+                scrolledHeader
+                  ? 'bg-brand-900 text-white hover:bg-brand-800'
                   : 'bg-white text-brand-900 hover:bg-slate-100'
               }`}
             >
@@ -112,48 +152,55 @@ export const Header: React.FC = () => {
             </a>
           </nav>
 
-          <button 
-            className="lg:hidden p-2 focus:outline-none"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+          <button
+            type="button"
+            className="grid h-11 w-11 place-items-center lg:hidden"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? labels.close : labels.open}
+            aria-controls="mobile-navigation"
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? (
-               <CloseIcon className="w-8 h-8 text-white" />
+              <CloseIcon className="h-7 w-7 text-white" />
             ) : (
-               <MenuIcon className={`w-6 h-6 ${hamburgerColorClass}`} />
+              <MenuIcon className={`h-6 w-6 ${isScrolled ? 'text-slate-900' : 'text-white'}`} />
             )}
           </button>
         </div>
       </header>
 
-      <div 
-        className={`fixed inset-0 bg-brand-900 z-[40] transition-transform duration-300 flex flex-col justify-center items-center ${
-          mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+      <div
+        id="mobile-navigation"
+        aria-hidden={!mobileMenuOpen}
+        className={`fixed inset-0 z-40 flex items-center justify-center bg-brand-950 transition-all duration-300 lg:hidden ${
+          mobileMenuOpen
+            ? 'visible translate-x-0 opacity-100'
+            : 'invisible translate-x-full opacity-0'
         }`}
       >
-        <nav className="flex flex-col gap-8 text-center items-center w-full px-6">
+        <nav className="flex w-full flex-col items-center gap-6 px-6 text-center" aria-label={labels.navigation}>
           {navLinks.map((link) => (
-            <a 
+            <a
               key={link.href}
               href={link.href}
-              onClick={(e) => handleNavClick(e, link.href)}
-              className="text-2xl font-serif text-white hover:text-brand-400 transition-colors cursor-pointer"
+              onClick={() => setMobileMenuOpen(false)}
+              className="font-serif text-2xl text-white transition-colors hover:text-brand-300"
             >
               {link.name}
             </a>
           ))}
 
-           {/* Language Selector Mobile */}
-           <div className="flex items-center gap-6 my-4">
-               <button onClick={() => setLanguage('ca')} className={`text-lg font-bold ${language === 'ca' ? 'text-brand-400' : 'text-white/60'}`}>CA</button>
-               <button onClick={() => setLanguage('es')} className={`text-lg font-bold ${language === 'es' ? 'text-brand-400' : 'text-white/60'}`}>ES</button>
-               <button onClick={() => setLanguage('en')} className={`text-lg font-bold ${language === 'en' ? 'text-brand-400' : 'text-white/60'}`}>EN</button>
-            </div>
+          <LanguageSelector
+            language={language}
+            onChange={setLanguage}
+            mobile
+            inactiveClassName="text-white/60"
+          />
 
-          <a 
+          <a
             href="#contact"
-            onClick={(e) => handleNavClick(e, '#contact')}
-            className="mt-4 px-8 py-3 rounded-full border-2 border-white text-white font-medium text-lg hover:bg-white hover:text-brand-900 transition-all cursor-pointer"
+            onClick={() => setMobileMenuOpen(false)}
+            className="mt-2 rounded-full border-2 border-white px-8 py-3 text-lg font-medium text-white transition-colors hover:bg-white hover:text-brand-900"
           >
             {t.nav.contact}
           </a>
