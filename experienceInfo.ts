@@ -121,9 +121,9 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
           en: "Analysis and Design of System Modernization"
         },
         description: {
-          ca: "Gestió de programa de transformació de plataforma tecnològica en els camps d'arquitectura event-driven, robustesa d'APIs, solució futura componible i capacitats agèntiques. Suport E2E al disseny proposat i a la implementació d'MVPs sobre diversos casos d'ús per a la validació funcional i tècnica de la solució.",
-          es: "Gestión de programa de transformación de plataforma tecnológica en los campos de arquitectura event-driven, robustez de APIs, solución futura componible y capacidades agénticas. Apoyo E2E al diseño propuesto y a la implementación de MVPs sobre varios casos de uso para la validación funcional y técnica de la solución.",
-          en: "Technological platform transformation program management in the fields of Event-Driven Architecture, API Robustness, Composable Future Solution and Agentic Capabilities. E2E support to the proposed design and implementation of MVPs on various use cases for the functional and technical validation of the solution."
+         ca: "Descripció.",
+          es: "Descripción.",
+          en: "Description."
         }
       },
       {
