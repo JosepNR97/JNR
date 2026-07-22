@@ -45,7 +45,7 @@ export const IMAGES = {
     accentureLeader2: assetPath('certifications/accenture-people-leadership-develop.png'),
     accentureLeader3: assetPath('certifications/accenture-people-leadership-connect.png'),
     servicenow: assetPath('certifications/servicenow-welcome.png'),
-    servicenow2: assetPath('certifications/servicenow-enterprise-architecture.svg'),
+    servicenow2: assetPath('certifications/servicenow-enterprise-architecture.png'),
     cae: assetPath('certifications/cambridge-cae.png'),
     fce: assetPath('certifications/cambridge-fce.png'),
   }
