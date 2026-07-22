@@ -30,9 +30,9 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
       en: "Jul. 2026 - Present"
     },
     description: {
-      ca: "Desenvolupament comercial i direcció de projectes i equips en consultoria d'estratègia tecnològica, modernització i transformació digital.",
-      es: "Desarrollo comercial y gestión de proyectos y equipos en consultoría de estrategia tecnológica, modernización y transformación digital.",
-      en: "Commercial development and project and team management in technology strategy, modernization, and digital transformation consulting."
+      ca: "Direcció de projectes i equips i desenvolupament comercial en consultoria d'estratègia tecnològica, modernització i transformació digital.",
+      es: "Dirección de proyectos y equipos y desarrollo comercial en consultoría de estrategia tecnológica, modernización y transformación digital.",
+      en: "Project and team management and commercial development in technology strategy, modernization, and digital transformation consulting."
     },
     logoUrl: IMAGES.logos.ntt,
     achievements: [
