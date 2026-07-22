@@ -1,56 +1,67 @@
-# Josep Núñez Riba | Portfolio de estrategia tecnológica
+# 🚀 Josep Núñez Riba | Portfolio de estrategia tecnológica
 
-Portfolio profesional desarrollado con React, TypeScript, Tailwind CSS y Vite. Presenta experiencia, áreas de especialización, formación y certificaciones en catalán, castellano e inglés.
+Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e **innovación**. Presenta mi trayectoria, áreas de especialización, formación académica y certificaciones profesionales.
 
-## Funcionalidades
+## 🌐 Portfolio publicado
 
-- Interfaz responsive y accesible mediante teclado.
-- Selector de idioma con detección del navegador y persistencia local.
-- Trayectoria profesional y certificaciones desplegables.
-- Carrusel de organizaciones acreditadoras compatible con movimiento reducido.
-- Metadatos SEO, Open Graph y datos estructurados de tipo `Person`.
-- Google Analytics inicializado automáticamente al cargar la web.
-- Despliegue automatizado en GitHub Pages.
+🔗 **[https://josepnr97.github.io/JNR/](https://josepnr97.github.io/JNR/)**
 
-## Stack
+## ✨ Funcionalidades
 
-- React 18 y TypeScript estricto.
-- Vite 5.
-- Tailwind CSS compilado mediante PostCSS.
-- Lucide React para iconografía.
-- Vitest y Testing Library para pruebas.
-- ESLint y Prettier para calidad de código.
+- 🌍 Contenido disponible en catalán, castellano e inglés.
+- 📱 Interfaz responsive y accesible mediante teclado.
+- 💼 Trayectoria profesional con proyectos desplegables.
+- 🎓 Formación académica y certificaciones agrupadas por proveedor.
+- 🏅 Carrusel interactivo de organizaciones acreditadoras.
+- 🖼️ Recursos visuales servidos localmente, sin depender de URLs de imágenes externas.
+- 🔎 Metadatos SEO, Open Graph y datos estructurados de tipo `Person`.
+- 📊 Google Analytics inicializado al cargar la web.
+- ⚙️ Despliegue automatizado mediante GitHub Actions y GitHub Pages.
 
-## Estructura
+## 🧰 Stack tecnológico
+
+- **React 18** y **TypeScript** en modo estricto.
+- **Vite 8** para desarrollo y build.
+- **Tailwind CSS** compilado mediante PostCSS.
+- **Lucide React** para la iconografía de interfaz.
+- **Vitest** y **Testing Library** para pruebas.
+- **ESLint** y **Prettier** para mantener la calidad del código.
+
+## 🗂️ Estructura del proyecto
 
 ```text
 .
 ├── components/              Componentes de interfaz
 ├── context/                 Estado y persistencia de idioma
 ├── public/
-│   ├── assets/              Imágenes organizadas por categoría
+│   ├── assets/
+│   │   ├── certifications/  Insignias y certificados
+│   │   ├── credential-issuers/ Logos de acreditadores
+│   │   ├── education/       Universidades y centros formativos
+│   │   ├── employers/       Empresas y organizaciones
+│   │   └── people/          Fotografías personales
 │   ├── robots.txt
 │   └── sitemap.xml
 ├── test/                    Configuración de pruebas
 ├── aboutMe.ts               Contenido personal y textos base
-├── constants.ts             Formación, certificaciones, imágenes y enlaces
+├── constants.ts             Formación, certificaciones y enlaces
 ├── experienceInfo.ts        Trayectoria profesional
 ├── translations.ts          Construcción de traducciones
 ├── types.ts                 Contratos TypeScript
-├── styles.css               Estilos globales y directivas Tailwind
+├── styles.css               Estilos globales y Tailwind
 └── index.tsx                Punto de entrada
 ```
 
-## Desarrollo local
+## ▶️ Desarrollo local
 
 ```bash
 npm ci
 npm run dev
 ```
 
-La aplicación queda disponible en la URL que indique Vite, normalmente `http://localhost:5173`.
+Vite mostrará la URL local, normalmente `http://localhost:5173`.
 
-## Controles de calidad
+## ✅ Controles de calidad
 
 ```bash
 npm run lint
@@ -61,23 +72,16 @@ npm run check
 
 `npm run check` ejecuta lint, pruebas y build. Es el mismo control utilizado antes del despliegue en GitHub Actions.
 
-## Gestión de imágenes
+## 🖼️ Gestión de imágenes
 
-Las imágenes locales se almacenan en `public/assets/` según su función:
+Todos los recursos visuales utilizados por la interfaz están almacenados en `public/assets/` y se referencian mediante `assetPath()`. Esto evita que logos o insignias desaparezcan por cambios, bloqueos o caducidad de servidores externos.
 
-- `people/`: fotografías personales.
-- `credential-issuers/`: organizaciones acreditadoras.
-- `education/`: universidades y centros de formación.
-- `employers/`: empresas y organizaciones profesionales.
-- `certifications/`: insignias y certificados.
-- `brand/`: recursos de marca y Open Graph.
+Los enlaces de credenciales, LinkedIn, Analytics y metadatos permanecen como URLs porque son destinos de navegación o servicios, no recursos gráficos de la interfaz.
 
-Las imágenes externas que siguen siendo estables pueden mantenerse por URL. Cuando una URL deje de ser fiable, el archivo debe incorporarse en la categoría correspondiente y referenciarse mediante `assetPath()`.
-
-## Despliegue
+## 🚢 Despliegue
 
 Los cambios enviados a `main` activan el workflow de GitHub Pages. La instalación usa `npm ci`, por lo que `package-lock.json` debe mantenerse versionado y actualizado.
 
-## Licencia
+## ©️ Licencia
 
 © 2026 Josep Núñez Riba. Todos los derechos reservados.
