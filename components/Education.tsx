@@ -199,7 +199,7 @@ export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) 
                                 height="64"
                                 loading="eager"
                                 decoding="sync"
-                                className="max-h-full max-w-full object-contain"
+                                className="h-full w-full object-contain"
                               />
                             </span>
                             <div className="min-w-0 flex-1">

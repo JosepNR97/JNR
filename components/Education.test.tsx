@@ -20,6 +20,6 @@ describe('Education', () => {
     const badge = panel.querySelector('img[src*="azure-ai-fundamentals"]');
     expect(badge).toHaveAttribute('loading', 'eager');
     expect(badge).toHaveAttribute('decoding', 'sync');
-    expect(badge).toHaveClass('max-h-full', 'max-w-full', 'object-contain');
+    expect(badge).toHaveClass('h-full', 'w-full', 'object-contain');
   });
 });
