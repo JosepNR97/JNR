@@ -16,5 +16,10 @@ describe('Education', () => {
     const panel = screen.getByRole('region', { name: /Microsoft Azure/i });
     expect(within(panel).getAllByRole('listitem')).toHaveLength(4);
     expect(panel.querySelector('ul')).toHaveClass('sm:grid-cols-2');
+
+    const badge = panel.querySelector('img[src*="azure-ai-fundamentals"]');
+    expect(badge).toHaveAttribute('loading', 'eager');
+    expect(badge).toHaveAttribute('decoding', 'sync');
+    expect(badge).toHaveClass('max-h-full', 'max-w-full', 'object-contain');
   });
 });

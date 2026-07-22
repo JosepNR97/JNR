@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { ChevronDownIcon, EducationIcon, ExternalLinkIcon } from './Icons';
 
@@ -6,8 +7,32 @@ interface EducationProps {
   onVendorToggle: (vendorId: string) => void;
 }
 
+const preloadedCertificationImages = new Map<string, HTMLImageElement>();
+
+const preloadCertificationImage = (src: string) => {
+  if (preloadedCertificationImages.has(src)) return;
+
+  const image = new Image();
+  image.decoding = 'async';
+  image.fetchPriority = 'low';
+  image.src = src;
+  preloadedCertificationImages.set(src, image);
+
+  if (typeof image.decode === 'function') {
+    void image.decode().catch(() => undefined);
+  }
+};
+
 export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) => {
   const { t } = useLanguage();
+
+  useEffect(() => {
+    t.education.professional.forEach((vendor) => {
+      vendor.certifications.forEach((certification) => {
+        preloadCertificationImage(certification.image);
+      });
+    });
+  }, [t.education.professional]);
 
   return (
     <section id="education" className="scroll-mt-20 bg-white py-20">
@@ -172,9 +197,9 @@ export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) 
                                 alt=""
                                 width="64"
                                 height="64"
-                                loading="lazy"
-                                decoding="async"
-                                className="h-full w-full object-contain"
+                                loading="eager"
+                                decoding="sync"
+                                className="max-h-full max-w-full object-contain"
                               />
                             </span>
                             <div className="min-w-0 flex-1">
