@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronRight,
   Cloud,
+  Download,
   ExternalLink,
   Globe,
   GraduationCap,
@@ -47,3 +48,4 @@ export const EducationIcon = ({ className }: IconProps) => <GraduationCap classN
 export const BriefcaseIcon = ({ className }: IconProps) => <Briefcase className={className} aria-hidden="true" />;
 export const ExternalLinkIcon = ({ className }: IconProps) => <ExternalLink className={className} aria-hidden="true" />;
 export const GlobeIcon = ({ className }: IconProps) => <Globe className={className} aria-hidden="true" />;
+export const DownloadIcon = ({ className }: IconProps) => <Download className={className} aria-hidden="true" />;

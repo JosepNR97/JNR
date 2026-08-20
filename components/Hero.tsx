@@ -1,9 +1,10 @@
 import { PROFILE_DATA } from '../aboutMe';
+import { CV_FILENAMES, CV_FILES } from '../cvConfig';
 import { useLanguage } from '../context/LanguageContext';
-import { ArrowRightIcon } from './Icons';
+import { ArrowRightIcon, DownloadIcon } from './Icons';
 
 export const Hero = () => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <section
@@ -36,7 +37,7 @@ export const Hero = () => {
           {t.hero.tagline}
         </p>
 
-        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+        <div className="flex flex-col flex-wrap items-center justify-center gap-4 md:flex-row">
           <a
             href={PROFILE_DATA.linkedin}
             target="_blank"
@@ -51,6 +52,14 @@ export const Hero = () => {
             className="inline-flex min-h-12 items-center rounded-full border border-white/30 bg-transparent px-8 py-4 font-medium text-white backdrop-blur-sm transition-all hover:border-white hover:bg-white/10"
           >
             {t.hero.portfolio}
+          </a>
+          <a
+            href={CV_FILES[language]}
+            download={CV_FILENAMES[language]}
+            className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-8 py-4 font-medium text-brand-900 shadow-lg transition-all hover:bg-slate-100 hover:shadow-white/20"
+          >
+            {t.hero.downloadCv}
+            <DownloadIcon className="h-4 w-4" />
           </a>
         </div>
       </div>

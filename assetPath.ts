@@ -1,1 +1,3 @@
-export const assetPath = (path: string) => `${import.meta.env.BASE_URL}assets/${path}`;
+const baseUrl = import.meta.env?.BASE_URL ?? './';
+
+export const assetPath = (path: string) => `${baseUrl}assets/${path}`;

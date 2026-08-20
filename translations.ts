@@ -87,6 +87,7 @@ const createTranslation = (language: Language): TranslationStructure => ({
     tagline: HERO_DATA.tagline[language],
     connect: HERO_DATA.connect[language],
     portfolio: HERO_DATA.portfolio[language],
+    downloadCv: HERO_DATA.downloadCv[language],
   },
   about: {
     title: ABOUT_DATA.title[language],
