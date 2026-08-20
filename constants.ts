@@ -11,6 +11,7 @@ export const IMAGES = {
     aws: assetPath('credential-issuers/aws.svg'),
     google: assetPath('credential-issuers/google-cloud.svg'),
     azure: assetPath('credential-issuers/microsoft-azure.png'),
+    openAI: assetPath('credential-issuers/openAI.png'),
     github: assetPath('credential-issuers/github.png'),
     ardoq: assetPath('credential-issuers/ardoq.png'),
     leanix: assetPath('credential-issuers/sap-leanix.png'),
@@ -33,6 +34,9 @@ export const IMAGES = {
     azureAI: assetPath('certifications/azure-ai-fundamentals.png'),
     azureData: assetPath('certifications/azure-data-fundamentals.png'),
     powerFund: assetPath('certifications/power-platform-fundamentals.png'),
+    openAIFoundation: assetPath('certifications/openAI-foundational-knowledge.png'),
+    openAITechPract: assetPath('certifications/openAI-technical-practitioner.png'),
+    openAIConsultSolPract: assetPath('certifications/openAI-consultative-solutions-practitioner.png'),
     ghAdmin: assetPath('certifications/github-administration.png'),
     ghActions: assetPath('certifications/github-actions.png'),
     ardoqFund: assetPath('certifications/ardoq-foundations.png'),
@@ -67,6 +71,9 @@ export const LINKS = {
       azureAI: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/8CC32189E807032C?sharingId=3AB956A14FB38743",
       azureData: "https://learn.microsoft.com/api/credentials/share/es-es/JosepNezRiba-6009/3946170505A0A4AB?sharingId=3AB956A14FB38743",
       powerFund: "https://learn.microsoft.com/api/credentials/share/ca-es/JosepNezRiba-6009/4B086F7F65DA81AE?sharingId=3AB956A14FB38743",
+      openAIFoundation: "https://i.ibb.co/Kzh4dy12/Open-AI-Foundational-Knowledge.png",
+      openAITechPract: "https://i.ibb.co/DHSh76pn/Open-AI-Technical-Practitioner.png",
+      openAIConsultSolPract: "https://i.ibb.co/9Xnc322/Open-AI-Consultative-Solutions-Practitioner.png",
       ghAdmin: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/C8A98D11F942DD8E?sharingId=3AB956A14FB38743",
       ghActions: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/820E978A2A19A73C?sharingId=3AB956A14FB38743",
       ardoqFund: "https://www.credly.com/badges/a095b292-1ef9-4156-9ddf-cc9acfe89a11/public_url",
@@ -228,6 +235,32 @@ export const EDUCATION_DATA = {
           image: IMAGES.badges.googleLead, 
           date: { ca: "Des. 2022", es: "Dic. 2022", en: "Dec. 2022" }, 
           credentialUrl: LINKS.credentials.googleLead 
+        }
+      ]
+    },
+    {
+      id: "v_openAI",
+      name: "OpenAI",
+      logoUrl: IMAGES.logos.openAI,
+      tags: ["Artificial Intelligence", "Generative AI", "Agents", "ChatGPT", "LLMs"],
+      certifications: [
+        { 
+          name: "OpenAI Foundational Knowledge", 
+          image: IMAGES.badges.openAIFoundation, 
+          date: { ca: "Ago. 2026", es: "Ago. 2026", en: "Aug. 2026" }, 
+          credentialUrl: LINKS.credentials.openAIFoundation 
+        },
+        { 
+          name: "OpenAI Technical Practitioner", 
+          image: IMAGES.badges.openAITechPract, 
+          date: { ca: "Jul. 2026", es: "Jul. 2026", en: "Jul. 2026" }, 
+          credentialUrl: LINKS.credentials.openAITechPract 
+        },
+        { 
+          name: "OpenAI Consultant and Solution Practitioner", 
+          image: IMAGES.badges.openAIConsultSolPract, 
+          date: { ca: "Jul. 2026", es: "Jul. 2026", en: "Jul. 2026" }, 
+          credentialUrl: LINKS.credentials.openAIConsultSolPract 
         }
       ]
     },
@@ -412,6 +445,7 @@ export const CERTIFICATION_LOGOS = [
   { name: "AWS", url: IMAGES.logos.aws, educationId: "v_aws" },
   { name: "Microsoft Azure", url: IMAGES.logos.azure, educationId: "v_ms" },
   { name: "Google Cloud", url: IMAGES.logos.google, educationId: "v_google" },
+  { name: "OpenAI", url: IMAGES.logos.openAI, educationId: "v_openAI" },
   { name: "GitHub", url: IMAGES.logos.github, educationId: "v_github" },
   { name: "The Open Group", url: IMAGES.logos.togaf, educationId: "v_togaf" },
   { name: "SAFe", url: IMAGES.logos.safe, educationId: "v_safe" },
