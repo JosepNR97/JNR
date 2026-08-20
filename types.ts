@@ -65,6 +65,7 @@ export interface TranslationStructure {
     tagline: string;
     connect: string;
     portfolio: string;
+    downloadCv: string;
   };
   about: {
     title: string;

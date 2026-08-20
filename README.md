@@ -14,6 +14,7 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 - 🎓 Formación académica y certificaciones agrupadas por proveedor.
 - 🏅 Carrusel interactivo de organizaciones acreditadoras.
 - 🖼️ Recursos visuales servidos localmente, sin depender de URLs de imágenes externas.
+- 📄 CV descargable en el idioma activo, generado automáticamente desde los datos del portfolio.
 - 🔎 Metadatos SEO, Open Graph y datos estructurados de tipo `Person`.
 - 📊 Google Analytics inicializado al cargar la web.
 - ⚙️ Despliegue automatizado mediante GitHub Actions y GitHub Pages.
@@ -24,6 +25,7 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 - **Vite 8** para desarrollo y build.
 - **Tailwind CSS** compilado mediante PostCSS.
 - **Lucide React** para la iconografía de interfaz.
+- **React PDF** para generar los CV en catalán, castellano e inglés.
 - **Vitest** y **Testing Library** para pruebas.
 - **ESLint** y **Prettier** para mantener la calidad del código.
 
@@ -39,10 +41,12 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 │   │   ├── credential-issuers/ Logos de acreditadores
 │   │   ├── education/       Universidades y centros formativos
 │   │   ├── employers/       Empresas y organizaciones
+│   │   ├── documents/       CV generados durante dev y build
 │   │   └── people/          Fotografías personales
 │   ├── robots.txt
 │   └── sitemap.xml
 ├── test/                    Configuración de pruebas
+├── scripts/                 Modelo, generador y pruebas de los CV
 ├── aboutMe.ts               Contenido personal y textos base
 ├── constants.ts             Formación, certificaciones y enlaces
 ├── experienceInfo.ts        Trayectoria profesional
@@ -60,6 +64,8 @@ npm run dev
 ```
 
 Vite mostrará la URL local, normalmente `http://localhost:5173`.
+
+Antes de iniciar Vite se generan los tres CV. También pueden regenerarse manualmente con `npm run generate:cv`; los PDF de `public/assets/documents/` se ignoran en Git y se recrean antes de cada build.
 
 ## ✅ Controles de calidad
 
