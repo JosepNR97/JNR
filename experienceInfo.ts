@@ -49,9 +49,9 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
           en: "IT Sovereignty Assessment"
         },
         description: {
-          ca: "Descripció.",
-          es: "Descripción.",
-          en: "Description."
+          ca: "Avaluació de la postura de sobirania de TI, analitzant aplicacions crítiques, plataformes cloud, proveïdors, contractes, dades i IA per identificar dependències, riscos de concentració i exposició jurisdiccional. Definició d'opcions inicials de mitigació, quick wins i recomanacions executives per prioritzar els següents passos i donar suport a la presa de decisions a nivell de direcció.",
+          es: "Evaluación de la postura de soberanía de TI, analizando aplicaciones críticas, plataformas cloud, proveedores, contratos, datos e IA para identificar dependencias, riesgos de concentración y exposición jurisdiccional. Definición de opciones iniciales de mitigación, quick wins y recomendaciones ejecutivas para priorizar próximos pasos y apoyar la toma de decisiones a nivel de dirección.",
+          en: "Assessment of the IT sovereignty posture, analyzing critical applications, cloud platforms, suppliers, contracts, data and AI to identify dependencies, concentration risks and jurisdictional exposure. Definition of initial mitigation options, quick wins and executive recommendations to prioritize next steps and support management decision-making."
         }
       },
       {
@@ -62,14 +62,14 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
           en: "Public Sector (Spain - Transport)"
         },
         title: {
-          ca: "CdUs CGOs",
-          es: "CdUs CGOs",
-          en: "CdUs CGOs"
+          ca: "Disseny de casos d'ús de transformació",
+          es: "Diseño de casos de uso de transformación",
+          en: "Transformation Use Case Design"
         },
         description: {
-          ca: "Descripció.",
-          es: "Descripción.",
-          en: "Description."
+          ca: "Definició funcional i tècnica i planificació de casos d'ús prioritaris per a la transformació, cobrint disseny de models funcionals, regles de negoci, prototips i criteris d'acceptació, juntament amb el model E2E d'intercanvi d'informació i governança.",
+          es: "Definición funcional y técnica y planificación de casos de uso prioritarios para la transformación, cubriendo diseño de modelos funcionales, reglas de negocio, prototipos y criterios de aceptación, junto con el modelo E2E de intercambio de información y gobierno.",
+          en: "Functional and technical definition and planning of priority use cases for transformation, covering functional model design, business rules, prototypes, and acceptance criteria, along with the E2E information exchange and governance model."
         }
       },
       {
@@ -80,14 +80,14 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
           en: "Public Sector (Spain - Transport)"
         },
         title: {
-          ca: "Fase 2",
-          es: "Fase 2",
-          en: "Phase 2"
+          ca: "Evolució de plataforma tecnològica d'explotació",
+          es: "Evolución de plataforma tecnológica de explotación",
+          en: "Evolution of Technology Platform for Operations"
         },
         description: {
-          ca: "Descripció.",
-          es: "Descripción.",
-          en: "Description."
+          ca: "Extensió de les capacitats i requisits de la plataforma d'explotació, avaluant solucions de mercat mitjançant un benchmark detallat amb proveïdors, comparant escenaris d'evolució a mida, basats en producte o mixtos (i els seus models d'arquitectura) i definició del pla de programa per a la seva implantació, incloent iniciatives prioritzades, estimació econòmica, planificació temporal i dedicacions necessàries.",
+          es: "Extensión de las capacidades y requisitos de la plataforma de explotación, evaluando soluciones de mercado mediante un benchmark detallado con proveedores, comparando escenarios de evolución a medida, basados en producto o mixtos (y sus modelos de arquitectura) y definición del plan de programa para su implantación, incluyendo iniciativas priorizadas, estimación económica, planificación temporal y dedicaciones necesarias.",
+          en: "Extension of the capabilities and requirements of the operations platform, evaluating market solutions through a detailed benchmark with providers, comparing custom evolution scenarios, product-based or mixed (and their architecture models) and defining the program implementation plan, including prioritized initiatives, economic estimation, timeline planning and necessary allocations."
         }
       }
     ]
@@ -121,9 +121,9 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
           en: "Analysis and Design of System Modernization"
         },
         description: {
-         ca: "Descripció.",
-          es: "Descripción.",
-          en: "Description."
+          ca: "Avaluació tècnica i de producte per analitzar la viabilitat d'escalar una plataforma interna de comunicació en un entorn multipaís, analitzant els dominis d'arquitectura, infraestructura i cloud, escalabilitat, resiliència, seguretat, CI/CD, observabilitat i model de proveïdor, i definint la visió futura, possibles llacunes, riscos i full de ruta prioritzat amb estimació d'esforç i cost per a la seva adopció.",
+          es: "Evaluación técnica y de producto para analizar la viabilidad de escalar una plataforma interna de comunicación en un entorno multipaís, analizando los dominios de arquitectura, infraestructura y cloud, escalabilidad, resiliencia, seguridad, CI/CD, observabilidad y modelo de proveedor, y definiendo la visión futura, posibles brechas, riesgos y hoja de ruta priorizada con estimación de esfuerzo y coste para su adopción.",
+          en: "Technical and product evaluation to analyze the feasibility of scaling an internal communication platform in a multi-country environment, analyzing the domains of architecture, infrastructure and cloud, scalability, resilience, security, CI/CD, observability and vendor model, and defining the future vision, possible gaps, risks and prioritized roadmap with effort and cost estimation for its adoption."
         }
       },
       {
