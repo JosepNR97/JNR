@@ -3,7 +3,7 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { PDFDict, PDFDocument, PDFHexString, PDFName, PDFString } from 'pdf-lib';
+import { PDFBool, PDFDict, PDFDocument, PDFHexString, PDFName, PDFString } from 'pdf-lib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CV_FILENAMES } from '../cvConfig';
 import type { Language } from '../types';
@@ -51,7 +51,7 @@ describe('CV generator', () => {
     );
     expect(annotationCount).toBe(validCredentialLinks + 3);
 
-    const annotationUrls = pdf.getPages().flatMap((page) => {
+    const annotationLinks = pdf.getPages().flatMap((page) => {
       const annotations = page.node.Annots();
       if (!annotations) return [];
 
@@ -59,7 +59,11 @@ describe('CV generator', () => {
         const annotation = pdf.context.lookup(annotations.get(index), PDFDict);
         const action = annotation.lookup(PDFName.of('A'), PDFDict);
         const uri = action.lookup(PDFName.of('URI'));
-        return uri instanceof PDFString || uri instanceof PDFHexString ? uri.decodeText() : '';
+        const newWindow = action.lookup(PDFName.of('NewWindow'), PDFBool);
+        return {
+          url: uri instanceof PDFString || uri instanceof PDFHexString ? uri.decodeText() : '',
+          opensInNewWindow: newWindow.asBoolean(),
+        };
       });
     });
     const expectedUrls = [
@@ -72,7 +76,8 @@ describe('CV generator', () => {
         ),
       ),
     ];
-    expect(annotationUrls.sort()).toEqual(expectedUrls.sort());
+    expect(annotationLinks.map((link) => link.url).sort()).toEqual(expectedUrls.sort());
+    expect(annotationLinks.every((link) => link.opensInNewWindow)).toBe(true);
 
     pdf.getPages().forEach((page) => {
       const resources = page.node.Resources();

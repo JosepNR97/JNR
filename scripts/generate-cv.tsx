@@ -10,7 +10,8 @@ import {
   View,
   renderToFile,
 } from '@react-pdf/renderer';
-import { mkdir, readFile } from 'node:fs/promises';
+import { PDFBool, PDFDict, PDFDocument, PDFName } from 'pdf-lib';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CV_FILENAMES } from '../cvConfig';
@@ -109,22 +110,22 @@ const styles = StyleSheet.create({
     width: 104,
     height: 104,
     borderRadius: 52,
-    borderWidth: 3,
-    borderColor: colors.plum,
-    overflow: 'hidden',
+    backgroundColor: colors.plum,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 17,
-    backgroundColor: colors.paper,
   },
   portrait: {
     width: 98,
     height: 98,
+    borderRadius: 49,
     objectFit: 'cover',
   },
   sidebarName: {
     fontFamily: 'Playfair Display',
     fontWeight: 700,
-    fontSize: 18,
-    lineHeight: 1.08,
+    fontSize: 14,
+    lineHeight: 1,
     color: colors.plumDark,
     textAlign: 'center',
     marginBottom: 6,
@@ -175,9 +176,10 @@ const styles = StyleSheet.create({
     borderRadius: 9,
     fontSize: 6.9,
     fontWeight: 700,
-    paddingTop: 3,
+    lineHeight: 1,
+    paddingTop: 4,
     paddingRight: 7,
-    paddingBottom: 3,
+    paddingBottom: 2.5,
     paddingLeft: 7,
     marginTop: 2,
     marginBottom: 4,
@@ -192,9 +194,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     fontSize: 6.9,
     fontWeight: 600,
-    paddingTop: 3,
+    lineHeight: 1.18,
+    paddingTop: 3.8,
     paddingRight: 6,
-    paddingBottom: 3,
+    paddingBottom: 2.6,
     paddingLeft: 6,
     marginBottom: 4,
   },
@@ -457,9 +460,10 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     fontSize: 5.8,
     fontWeight: 700,
-    paddingTop: 2,
+    lineHeight: 1,
+    paddingTop: 2.8,
     paddingRight: 5,
-    paddingBottom: 2,
+    paddingBottom: 1.7,
     paddingLeft: 5,
     textDecoration: 'none',
   },
@@ -494,7 +498,7 @@ const Sidebar = ({ model }: { model: CvModel }) => (
     <View style={styles.portraitFrame}>
       <Image src={model.profile.imagePath} style={styles.portrait} />
     </View>
-    <Text style={styles.sidebarName}>{model.profile.name}</Text>
+    <Text style={styles.sidebarName}>{model.profile.name.replaceAll(' ', '\u00A0')}</Text>
     <Text style={styles.sidebarRole}>{model.profile.title}</Text>
 
     <View style={styles.sidebarSection}>
@@ -711,10 +715,31 @@ export const generateCvDocuments = async (outputDirectory = generatedDocumentsDi
     const model = buildCvModel(language);
     model.profile.imagePath = portraitDataUri;
     await renderToFile(<CvDocument model={model} />, outputPath);
+    await markExternalLinksForNewWindow(outputPath);
     generatedFiles.push(outputPath);
   }
 
   return generatedFiles;
+};
+
+const markExternalLinksForNewWindow = async (pdfPath: string) => {
+  const pdf = await PDFDocument.load(await readFile(pdfPath));
+
+  pdf.getPages().forEach((page) => {
+    const annotations = page.node.Annots();
+    if (!annotations) return;
+
+    for (let index = 0; index < annotations.size(); index += 1) {
+      const annotation = pdf.context.lookup(annotations.get(index), PDFDict);
+      const action = annotation.lookup(PDFName.of('A'), PDFDict);
+      const actionType = action.get(PDFName.of('S'));
+      if (actionType?.toString() === '/URI') {
+        action.set(PDFName.of('NewWindow'), PDFBool.True);
+      }
+    }
+  });
+
+  await writeFile(pdfPath, await pdf.save());
 };
 
 const isExecutedDirectly = process.argv[1]
