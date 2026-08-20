@@ -11,7 +11,7 @@ export const IMAGES = {
     aws: assetPath('credential-issuers/aws.svg'),
     google: assetPath('credential-issuers/google-cloud.svg'),
     azure: assetPath('credential-issuers/microsoft-azure.png'),
-    openAI: assetPath('credential-issuers/openAI.png'),
+    openAI: assetPath('credential-issuers/openAI.svg'),
     github: assetPath('credential-issuers/github.png'),
     ardoq: assetPath('credential-issuers/ardoq.png'),
     leanix: assetPath('credential-issuers/sap-leanix.png'),
