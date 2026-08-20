@@ -242,7 +242,7 @@ export const EDUCATION_DATA = {
       id: "v_openAI",
       name: "OpenAI",
       logoUrl: IMAGES.logos.openAI,
-      tags: ["Digital Transformation", "Artificial Intelligence", "Generative AI", "Agents", "ChatGPT", "LLMs"],
+      tags: ["Digital Transformation", "AI", "Generative AI", "Agents", "ChatGPT", "LLMs"],
       certifications: [
         { 
           name: "OpenAI Foundational Knowledge", 
