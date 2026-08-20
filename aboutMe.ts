@@ -6,6 +6,7 @@ export const PROFILE_DATA = {
   name: "Josep Núñez Riba",
   email: "josepnunez97@gmail.com",
   linkedin: "https://www.linkedin.com/in/josep-nunez-riba",
+  website: "https://josepnr97.github.io/JNR/",
   image: assetPath('people/josep-nunez-riba.webp'),
   location: {
     ca: "Barcelona",
@@ -48,6 +49,11 @@ export const HERO_DATA = {
     ca: "Veure portafoli",
     es: "Ver portafolio",
     en: "View Portfolio"
+  },
+  downloadCv: {
+    ca: "Descarregar CV",
+    es: "Descargar CV",
+    en: "Download CV"
   }
 };
 
