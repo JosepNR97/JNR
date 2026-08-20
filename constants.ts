@@ -257,7 +257,7 @@ export const EDUCATION_DATA = {
           credentialUrl: LINKS.credentials.openAITechPract 
         },
         { 
-          name: "OpenAI Consultant and Solution Practitioner", 
+          name: "OpenAI Consultative Solutions Practitioner", 
           image: IMAGES.badges.openAIConsultSolPract, 
           date: { ca: "Jul. 2026", es: "Jul. 2026", en: "Jul. 2026" }, 
           credentialUrl: LINKS.credentials.openAIConsultSolPract 
