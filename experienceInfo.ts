@@ -337,9 +337,9 @@ export const EXPERIENCE_DATA: StructuredExperienceItem[] = [
           en: "Business Governance"
         },
         description: {
-          ca: "Desenvolupament de projectes de govern de negoci per al sector bancari.",
-          es: "Desarrollo de proyectos de gobierno de negocio para el sector bancario.",
-          en: "Development of business governance projects for the banking sector."
+          ca: "Desenvolupament de projectes de govern i intel·ligència de negoci per al sector bancari.",
+          es: "Desarrollo de proyectos de gobierno e inteligencia de negocio para el sector bancario.",
+          en: "Development of business governance and intelligence projects for the banking sector."
         }
       }
     ]
