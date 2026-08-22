@@ -21,6 +21,16 @@
   .reveal.is-visible {
     @apply translate-y-0 opacity-100;
   }
+
+  .expandable-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 300ms ease-out;
+  }
+
+  .expandable-panel.is-expanded {
+    grid-template-rows: 1fr;
+  }
 }
 
 @layer base {
@@ -56,6 +66,10 @@
   .reveal.is-visible {
     opacity: 1 !important;
     transform: none !important;
+    transition: none !important;
+  }
+
+  .expandable-panel {
     transition: none !important;
   }
 }

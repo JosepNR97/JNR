@@ -20,13 +20,17 @@ describe('Experience', () => {
     );
 
     const trigger = screen.getByRole('button', { name: /Senior Consultant/i });
+    const panelId = trigger.getAttribute('aria-controls');
+    const panel = panelId ? document.getElementById(panelId) : null;
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(panel).toHaveAttribute('aria-hidden', 'true');
 
     await act(async () => {
       await user.click(trigger);
     });
 
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(panel).not.toHaveAttribute('aria-hidden');
     expect(screen.getByRole('region', { name: /Senior Consultant/i })).toBeVisible();
     await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
     requestAnimationFrame.mockRestore();

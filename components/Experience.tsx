@@ -122,47 +122,50 @@ export const Experience = () => {
                       </span>
                     </button>
 
-                    {isExpanded ? (
-                      <div
-                        id={panelId}
-                        role="region"
-                        aria-labelledby={triggerId}
-                        className="border-t border-slate-200 bg-slate-50 px-6 pb-8 pt-6 md:px-8"
-                      >
-                        <h3 className="mb-6 text-xs font-bold uppercase tracking-widest text-slate-500">
-                          {t.experience.detailTitle}
-                        </h3>
-                        <ul className="space-y-6">
-                          {item.achievements.map((achievement) => (
-                            <li
-                              key={`${achievement.year}-${achievement.title}`}
-                              className="border-l-2 border-slate-300 pl-4 transition-colors hover:border-brand-500"
-                            >
-                              <div className="mb-2 flex flex-wrap items-center gap-2">
-                                {achievement.year ? (
-                                  <span className="rounded bg-slate-800 px-2 py-0.5 font-mono text-xs font-bold text-white">
-                                    {achievement.year}
-                                  </span>
+                    <div className={`expandable-panel ${isExpanded ? 'is-expanded' : ''}`}>
+                      <div className="min-h-0 overflow-hidden">
+                        <div
+                          id={panelId}
+                          role="region"
+                          aria-labelledby={triggerId}
+                          aria-hidden={isExpanded ? undefined : true}
+                          className="border-t border-slate-200 bg-slate-50 px-6 pb-8 pt-6 md:px-8"
+                        >
+                          <h3 className="mb-6 text-xs font-bold uppercase tracking-widest text-slate-500">
+                            {t.experience.detailTitle}
+                          </h3>
+                          <ul className="space-y-6">
+                            {item.achievements.map((achievement) => (
+                              <li
+                                key={`${achievement.year}-${achievement.title}`}
+                                className="border-l-2 border-slate-300 pl-4 transition-colors hover:border-brand-500"
+                              >
+                                <div className="mb-2 flex flex-wrap items-center gap-2">
+                                  {achievement.year ? (
+                                    <span className="rounded bg-slate-800 px-2 py-0.5 font-mono text-xs font-bold text-white">
+                                      {achievement.year}
+                                    </span>
+                                  ) : null}
+                                  {achievement.sector ? (
+                                    <span className="text-xs font-bold uppercase text-brand-700">
+                                      {achievement.sector}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                {achievement.title ? (
+                                  <strong className="block text-base leading-snug text-slate-900">
+                                    {achievement.title}
+                                  </strong>
                                 ) : null}
-                                {achievement.sector ? (
-                                  <span className="text-xs font-bold uppercase text-brand-700">
-                                    {achievement.sector}
-                                  </span>
-                                ) : null}
-                              </div>
-                              {achievement.title ? (
-                                <strong className="block text-base leading-snug text-slate-900">
-                                  {achievement.title}
-                                </strong>
-                              ) : null}
-                              <p className="mt-1 text-sm leading-relaxed text-slate-600 md:text-base">
-                                {achievement.description}
-                              </p>
-                            </li>
-                          ))}
-                        </ul>
+                                <p className="mt-1 text-sm leading-relaxed text-slate-600 md:text-base">
+                                  {achievement.description}
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
-                    ) : null}
+                    </div>
                   </div>
                 </RevealArticle>
               );

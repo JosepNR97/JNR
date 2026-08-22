@@ -179,52 +179,58 @@ export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) 
                     </span>
                   </button>
 
-                  {isExpanded ? (
-                    <div
-                      id={panelId}
-                      role="region"
-                      aria-labelledby={triggerId}
-                      className="border-t border-slate-100 bg-slate-50/50 p-5 sm:p-6"
-                    >
-                      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {vendor.certifications.map((certification) => (
-                          <li
-                            key={certification.name}
-                            className="flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-brand-200"
-                          >
-                            <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-100 bg-white p-1">
-                              <img
-                                src={certification.image}
-                                alt=""
-                                width="64"
-                                height="64"
-                                loading="eager"
-                                decoding="sync"
-                                className="h-12 w-12 object-contain"
-                              />
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <h5 className="text-sm font-bold leading-tight text-slate-900">
-                                {certification.name}
-                              </h5>
-                              <p className="mb-2 mt-1 text-xs text-slate-500">{certification.date}</p>
-                              {certification.credentialUrl && certification.credentialUrl !== '#' ? (
-                                <a
-                                  href={certification.credentialUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex min-h-8 items-center gap-1.5 text-xs font-semibold text-brand-700 hover:underline"
-                                >
-                                  {t.education.viewCredential}
-                                  <ExternalLinkIcon className="h-3 w-3" />
-                                </a>
-                              ) : null}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
+                  <div className={`expandable-panel ${isExpanded ? 'is-expanded' : ''}`}>
+                    <div className="min-h-0 overflow-hidden">
+                      <div
+                        id={panelId}
+                        role="region"
+                        aria-labelledby={triggerId}
+                        aria-hidden={isExpanded ? undefined : true}
+                        className="border-t border-slate-100 bg-slate-50/50 p-5 sm:p-6"
+                      >
+                        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          {vendor.certifications.map((certification) => (
+                            <li
+                              key={certification.name}
+                              className="flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-brand-200"
+                            >
+                              <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-100 bg-white p-1">
+                                <img
+                                  src={certification.image}
+                                  alt=""
+                                  width="64"
+                                  height="64"
+                                  loading="eager"
+                                  decoding="sync"
+                                  className="h-12 w-12 object-contain"
+                                />
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <h5 className="text-sm font-bold leading-tight text-slate-900">
+                                  {certification.name}
+                                </h5>
+                                <p className="mb-2 mt-1 text-xs text-slate-500">
+                                  {certification.date}
+                                </p>
+                                {certification.credentialUrl && certification.credentialUrl !== '#' ? (
+                                  <a
+                                    href={certification.credentialUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    tabIndex={isExpanded ? undefined : -1}
+                                    className="inline-flex min-h-8 items-center gap-1.5 text-xs font-semibold text-brand-700 hover:underline"
+                                  >
+                                    {t.education.viewCredential}
+                                    <ExternalLinkIcon className="h-3 w-3" />
+                                  </a>
+                                ) : null}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                  ) : null}
+                  </div>
                 </RevealArticle>
               );
             })}
