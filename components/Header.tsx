@@ -9,9 +9,20 @@ const LANGUAGES: Array<{ code: Language; label: string }> = [
   { code: 'en', label: 'English' },
 ];
 
-const MENU_LABELS: Record<Language, { open: string; close: string; navigation: string }> = {
-  ca: { open: 'Obrir menú', close: 'Tancar menú', navigation: 'Navegació principal' },
-  es: { open: 'Abrir menú', close: 'Cerrar menú', navigation: 'Navegación principal' },
+const MENU_LABELS: Record<
+  Language,
+  { open: string; close: string; navigation: string }
+> = {
+  ca: {
+    open: 'Obrir menú',
+    close: 'Tancar menú',
+    navigation: 'Navegació principal',
+  },
+  es: {
+    open: 'Abrir menú',
+    close: 'Cerrar menú',
+    navigation: 'Navegación principal',
+  },
   en: { open: 'Open menu', close: 'Close menu', navigation: 'Main navigation' },
 };
 
@@ -29,7 +40,11 @@ const LanguageSelector = ({
   inactiveClassName,
 }: LanguageSelectorProps) => (
   <div
-    className={mobile ? 'flex items-center gap-3' : 'flex items-center gap-1 border-l border-current/20 pl-4'}
+    className={
+      mobile
+        ? 'flex items-center gap-3'
+        : 'flex items-center gap-1 border-l border-current/20 pl-4'
+    }
     aria-label="Language"
     role="group"
   >
@@ -42,7 +57,11 @@ const LanguageSelector = ({
         aria-pressed={language === code}
         onClick={() => onChange(code)}
         className={`min-h-10 min-w-10 px-2 text-xs font-bold transition-colors ${
-          language === code ? (mobile ? 'text-brand-300' : 'text-brand-500') : inactiveClassName
+          language === code
+            ? mobile
+              ? 'text-brand-300'
+              : 'text-brand-500'
+            : inactiveClassName
         }`}
       >
         {code.toUpperCase()}
@@ -54,6 +73,7 @@ const LanguageSelector = ({
 export const Header = () => {
   const { language, setLanguage, t } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const labels = MENU_LABELS[language];
 
@@ -63,7 +83,12 @@ export const Header = () => {
     const updateScrollState = () => {
       if (animationFrame) return;
       animationFrame = window.requestAnimationFrame(() => {
+        const scrollableHeight =
+          document.documentElement.scrollHeight - window.innerHeight;
+        const progress =
+          scrollableHeight > 0 ? window.scrollY / scrollableHeight : 0;
         setIsScrolled(window.scrollY > 50);
+        setScrollProgress(Math.max(0, Math.min(1, progress)));
         animationFrame = 0;
       });
     };
@@ -108,7 +133,9 @@ export const Header = () => {
     <>
       <header
         className={`fixed top-0 z-50 w-full transition-all duration-300 ${
-          scrolledHeader ? 'bg-white/95 py-3 shadow-sm backdrop-blur-md' : 'bg-transparent py-6'
+          scrolledHeader
+            ? 'bg-white/95 py-3 shadow-sm backdrop-blur-md'
+            : 'bg-transparent py-6'
         }`}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -123,7 +150,10 @@ export const Header = () => {
             JNR<span className="text-brand-500">.</span>
           </a>
 
-          <nav className="hidden items-center gap-7 lg:flex" aria-label={labels.navigation}>
+          <nav
+            className="hidden items-center gap-7 lg:flex"
+            aria-label={labels.navigation}
+          >
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -163,10 +193,17 @@ export const Header = () => {
             {mobileMenuOpen ? (
               <CloseIcon className="h-7 w-7 text-white" />
             ) : (
-              <MenuIcon className={`h-6 w-6 ${isScrolled ? 'text-slate-900' : 'text-white'}`} />
+              <MenuIcon
+                className={`h-6 w-6 ${isScrolled ? 'text-slate-900' : 'text-white'}`}
+              />
             )}
           </button>
         </div>
+        <div
+          className="absolute bottom-0 left-0 h-[3px] bg-brand-500 shadow-[0_0_6px_rgba(14,165,233,0.45)] transition-[width] duration-150 ease-out"
+          style={{ width: `${scrollProgress * 100}%` }}
+          aria-hidden="true"
+        />
       </header>
 
       <div
@@ -178,7 +215,10 @@ export const Header = () => {
             : 'invisible translate-x-full opacity-0'
         }`}
       >
-        <nav className="flex w-full flex-col items-center gap-6 px-6 text-center" aria-label={labels.navigation}>
+        <nav
+          className="flex w-full flex-col items-center gap-6 px-6 text-center"
+          aria-label={labels.navigation}
+        >
           {navLinks.map((link) => (
             <a
               key={link.href}

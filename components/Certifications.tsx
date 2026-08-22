@@ -9,6 +9,26 @@ interface CertificationsProps {
 
 const AUTO_SCROLL_SPEED = 0.45;
 const DRAG_THRESHOLD = 6;
+const CAROUSEL_COPIES = 3;
+
+const getSegmentWidth = (container: HTMLDivElement) =>
+  container.scrollWidth / CAROUSEL_COPIES;
+
+const normalizeScrollPosition = (
+  container: HTMLDivElement,
+  pointer?: { startScroll: number },
+) => {
+  const segmentWidth = getSegmentWidth(container);
+  if (!segmentWidth) return;
+
+  if (container.scrollLeft >= segmentWidth * 2) {
+    container.scrollLeft -= segmentWidth;
+    if (pointer) pointer.startScroll -= segmentWidth;
+  } else if (container.scrollLeft <= 0) {
+    container.scrollLeft += segmentWidth;
+    if (pointer) pointer.startScroll += segmentWidth;
+  }
+};
 
 export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
   const { t } = useLanguage();
@@ -16,7 +36,12 @@ export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
   const requestRef = useRef(0);
   const pauseRef = useRef(false);
   const reducedMotionRef = useRef(false);
-  const pointerRef = useRef({ active: false, startX: 0, startScroll: 0, moved: false });
+  const pointerRef = useRef({
+    active: false,
+    startX: 0,
+    startScroll: 0,
+    moved: false,
+  });
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
@@ -26,14 +51,15 @@ export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
     };
 
     updateMotionPreference();
+    const container = containerRef.current;
+    if (container) container.scrollLeft = getSegmentWidth(container);
     mediaQuery.addEventListener('change', updateMotionPreference);
 
     const animate = () => {
-      const container = containerRef.current;
-      if (container && !pauseRef.current && !reducedMotionRef.current) {
-        const midpoint = container.scrollWidth / 2;
-        container.scrollLeft += AUTO_SCROLL_SPEED;
-        if (container.scrollLeft >= midpoint) container.scrollLeft -= midpoint;
+      const currentContainer = containerRef.current;
+      if (currentContainer && !pauseRef.current && !reducedMotionRef.current) {
+        currentContainer.scrollLeft += AUTO_SCROLL_SPEED;
+        normalizeScrollPosition(currentContainer);
       }
       requestRef.current = window.requestAnimationFrame(animate);
     };
@@ -71,6 +97,7 @@ export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
       container.setPointerCapture?.(event.pointerId);
     }
     container.scrollLeft = pointer.startScroll - distance;
+    normalizeScrollPosition(container, pointer);
   };
 
   const handlePointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -116,21 +143,22 @@ export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
           pauseRef.current = true;
         }}
         onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) pauseRef.current = false;
+          if (!event.currentTarget.contains(event.relatedTarget))
+            pauseRef.current = false;
         }}
       >
         <div className="inline-flex min-w-max items-center py-4">
-          {[0, 1].map((copyIndex) => (
+          {Array.from({ length: CAROUSEL_COPIES }, (_, copyIndex) => (
             <div
               key={copyIndex}
               className="inline-flex items-center gap-16 px-8"
-              aria-hidden={copyIndex === 1}
+              aria-hidden={copyIndex !== 1}
             >
               {CERTIFICATION_LOGOS.map((logo) => (
                 <button
                   key={`${copyIndex}-${logo.name}`}
                   type="button"
-                  tabIndex={copyIndex === 1 ? -1 : 0}
+                  tabIndex={copyIndex === 1 ? 0 : -1}
                   aria-label={`${t.certifications.openVendor} ${logo.name}`}
                   onClick={() => handleLogoClick(logo.educationId)}
                   className="group grid h-20 w-40 shrink-0 place-items-center p-2 transition-transform duration-300 hover:scale-110 focus-visible:scale-110"
