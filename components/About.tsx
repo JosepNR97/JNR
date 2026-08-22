@@ -4,6 +4,7 @@ import { CAREER_START_YEAR } from '../constants';
 import { PROFILE_DATA } from '../aboutMe';
 import { useLanguage } from '../context/LanguageContext';
 import { GlobeIcon } from './Icons';
+import { Reveal } from './Reveal';
 
 export const About: React.FC = () => {
   const { t } = useLanguage();
@@ -22,7 +23,7 @@ export const About: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
-          <div className="relative group max-w-md mx-auto lg:mx-0 w-full">
+          <Reveal className="relative group max-w-md mx-auto lg:mx-0 w-full">
             <div
               className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-brand-500 to-indigo-600 opacity-30 blur-xl transition-opacity group-hover:opacity-50"
               aria-hidden="true"
@@ -38,9 +39,9 @@ export const About: React.FC = () => {
                 className="w-full h-full object-cover object-top transform transition-transform duration-500 group-hover:scale-105"
               />
             </div>
-          </div>
+          </Reveal>
 
-          <div>
+          <Reveal>
             <h2 className="font-serif text-3xl md:text-4xl font-bold text-slate-900 mb-6">
               {t.about.title}
             </h2>
@@ -81,7 +82,7 @@ export const About: React.FC = () => {
                 <p className="text-sm text-slate-500">{t.about.projectsLabel}</p>
               </div>
             </div>
-          </div>
+          </Reveal>
 
         </div>
       </div>

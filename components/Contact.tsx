@@ -2,13 +2,14 @@ import React from 'react';
 import { PROFILE_DATA } from '../aboutMe';
 import { useLanguage } from '../context/LanguageContext';
 import { LinkedinIcon, MailIcon, LocationIcon } from './Icons';
+import { Reveal } from './Reveal';
 
 export const Contact: React.FC = () => {
   const { t } = useLanguage();
 
   return (
     <section id="contact" className="scroll-mt-20 bg-slate-900 py-12 text-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         
         {/* Header Compacto */}
         <h2 className="font-serif text-2xl md:text-3xl font-bold mb-3">
@@ -52,7 +53,7 @@ export const Contact: React.FC = () => {
 
         </div>
 
-      </div>
+      </Reveal>
     </section>
   );
 };

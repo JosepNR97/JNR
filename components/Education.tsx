@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { ChevronDownIcon, EducationIcon, ExternalLinkIcon } from './Icons';
+import { Reveal, RevealArticle } from './Reveal';
 
 interface EducationProps {
   expandedVendorId: string | null;
@@ -37,7 +38,7 @@ export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) 
   return (
     <section id="education" className="scroll-mt-20 bg-white py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-16 text-center">
+        <Reveal className="mb-16 text-center">
           <span className="text-sm font-semibold uppercase tracking-wider text-brand-600">
             {t.education.badge}
           </span>
@@ -45,20 +46,20 @@ export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) 
             {t.education.title}
           </h2>
           <p className="mx-auto max-w-2xl text-slate-600">{t.education.subtitle}</p>
-        </div>
+        </Reveal>
 
         <div className="mb-20">
-          <div className="mb-8 flex items-center gap-4">
+          <Reveal className="mb-8 flex items-center gap-4">
             <div className="h-px flex-1 bg-slate-200" />
             <h3 className="text-center text-lg font-bold uppercase text-slate-800 sm:text-xl">
               {t.education.academicTitle}
             </h3>
             <div className="h-px flex-1 bg-slate-200" />
-          </div>
+          </Reveal>
 
           <div className="mx-auto max-w-4xl space-y-6">
             {t.education.academic.map((item) => (
-              <article
+              <RevealArticle
                 key={item.id}
                 className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm transition-shadow hover:shadow-md sm:p-8"
               >
@@ -96,19 +97,19 @@ export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) 
                     ) : null}
                   </div>
                 </div>
-              </article>
+              </RevealArticle>
             ))}
           </div>
         </div>
 
         <div>
-          <div className="mb-8 flex items-center gap-4">
+          <Reveal className="mb-8 flex items-center gap-4">
             <div className="h-px flex-1 bg-slate-200" />
             <h3 className="text-center text-lg font-bold uppercase text-slate-800 sm:text-xl">
               {t.education.professionalTitle}
             </h3>
             <div className="h-px flex-1 bg-slate-200" />
-          </div>
+          </Reveal>
 
           <div className="mx-auto max-w-4xl space-y-4">
             {t.education.professional.map((vendor) => {
@@ -117,7 +118,7 @@ export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) 
               const panelId = `education-panel-${vendor.id}`;
 
               return (
-                <article
+                <RevealArticle
                   id={`education-card-${vendor.id}`}
                   key={vendor.id}
                   className={`group scroll-mt-24 overflow-hidden rounded-xl border bg-white transition-all duration-300 ${
@@ -224,7 +225,7 @@ export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) 
                       </ul>
                     </div>
                   ) : null}
-                </article>
+                </RevealArticle>
               );
             })}
           </div>

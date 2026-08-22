@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { scrollToElementAfterLayout } from '../scrollToElement';
 import { BriefcaseIcon, ChevronDownIcon } from './Icons';
+import { Reveal, RevealArticle } from './Reveal';
 
 export const Experience = () => {
   const { t } = useLanguage();
@@ -16,12 +17,12 @@ export const Experience = () => {
   return (
     <section id="experience" className="scroll-mt-20 bg-white py-20">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-16 text-center">
+        <Reveal className="mb-16 text-center">
           <h2 className="mb-4 font-serif text-3xl font-bold text-slate-900 md:text-4xl">
             {t.experience.title}
           </h2>
           <p className="text-sm text-slate-500">{t.experience.subtitle}</p>
-        </div>
+        </Reveal>
 
         <div className="relative">
           <div className="absolute bottom-0 left-4 top-2 w-0.5 bg-slate-200 md:left-4" aria-hidden="true" />
@@ -33,7 +34,7 @@ export const Experience = () => {
               const panelId = `experience-panel-${item.id}`;
 
               return (
-                <article
+                <RevealArticle
                   key={item.id}
                   id={`experience-item-${item.id}`}
                   className="group relative scroll-mt-24 pl-12 md:pl-24"
@@ -163,7 +164,7 @@ export const Experience = () => {
                       </div>
                     ) : null}
                   </div>
-                </article>
+                </RevealArticle>
               );
             })}
           </div>

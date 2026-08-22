@@ -10,6 +10,17 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+
+  .reveal {
+    @apply translate-y-6 opacity-0;
+    transition:
+      opacity 600ms ease-out,
+      transform 600ms ease-out;
+  }
+
+  .reveal.is-visible {
+    @apply translate-y-0 opacity-100;
+  }
 }
 
 @layer base {
@@ -39,5 +50,12 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .reveal,
+  .reveal.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
