@@ -37,6 +37,7 @@ export const IMAGES = {
     openAIFoundation: assetPath('certifications/openAI-foundational-knowledge.png'),
     openAITechPract: assetPath('certifications/openAI-technical-practitioner.png'),
     openAIConsultSolPract: assetPath('certifications/openAI-consultative-solutions-practitioner.png'),
+    openAIGPTSolPract: assetPath('certifications/openAI-chatGPT-solutions-practitioner.png'),
     ghAdmin: assetPath('certifications/github-administration.png'),
     ghActions: assetPath('certifications/github-actions.png'),
     ardoqFund: assetPath('certifications/ardoq-foundations.png'),
@@ -74,6 +75,7 @@ export const LINKS = {
       openAIFoundation: "https://i.ibb.co/Kzh4dy12/Open-AI-Foundational-Knowledge.png",
       openAITechPract: "https://i.ibb.co/DHSh76pn/Open-AI-Technical-Practitioner.png",
       openAIConsultSolPract: "https://i.ibb.co/9Xnc322/Open-AI-Consultative-Solutions-Practitioner.png",
+      openAIGPTSolPract: "https://i.ibb.co/TqbWS3GW/Chat-GPT-Solutions-Practitioner.png",
       ghAdmin: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/C8A98D11F942DD8E?sharingId=3AB956A14FB38743",
       ghActions: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/820E978A2A19A73C?sharingId=3AB956A14FB38743",
       ardoqFund: "https://www.credly.com/badges/a095b292-1ef9-4156-9ddf-cc9acfe89a11/public_url",
@@ -244,6 +246,12 @@ export const EDUCATION_DATA = {
       logoUrl: IMAGES.logos.openAI,
       tags: ["Digital Transformation", "AI", "Generative AI", "Agents", "ChatGPT", "LLMs"],
       certifications: [
+        { 
+          name: "ChatGPT Solutions Practitioner", 
+          image: IMAGES.badges.openAIGPTSolPract, 
+          date: { ca: "Ago. 2026", es: "Ago. 2026", en: "Aug. 2026" }, 
+          credentialUrl: LINKS.credentials.openAIGPTSolPract 
+        },
         { 
           name: "OpenAI Foundational Knowledge", 
           image: IMAGES.badges.openAIFoundation, 
