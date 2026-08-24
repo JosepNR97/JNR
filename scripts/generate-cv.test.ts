@@ -15,7 +15,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { CV_FILENAMES } from '../cvConfig';
 import { translations } from '../translations';
 import type { Language } from '../types';
-import { buildCvModel } from './cv-data';
+import { buildCvModel, sanitizePdfText } from './cv-data';
 import { generateCvDocuments } from './generate-cv';
 
 const languages: Language[] = ['ca', 'es', 'en'];
@@ -167,7 +167,8 @@ describe('CV generator', () => {
         source.education.professional.flatMap(
           (provider) =>
             provider.certifications.map(
-              (certification) => certification.name,
+              (certification) =>
+                sanitizePdfText(certification.name),
             ),
         );
 

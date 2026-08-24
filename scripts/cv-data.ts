@@ -48,7 +48,7 @@ const CV_COPY = {
   },
 } satisfies Record<Language, Record<string, string>>;
 
-const sanitizePdfText = (value: string) =>
+export const sanitizePdfText = (value: string) =>
   value
     .replace(/[\u2010-\u2015]/g, '-')
     .replace(/\u00a0/g, ' ')
