@@ -55,14 +55,14 @@ export const sanitizePdfText = (value: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const summarize = (value: string, maximumLength = 245) => {
+/*const summarize = (value: string, maximumLength = 245) => {
   const text = sanitizePdfText(value);
   if (text.length <= maximumLength) return text;
 
   const truncated = text.slice(0, maximumLength + 1);
   const lastSpace = truncated.lastIndexOf(' ');
   return `${truncated.slice(0, Math.max(lastSpace, maximumLength - 24)).trim()}...`;
-};
+};*/
 
 const validCredentialUrl = (value: string) => (/^https?:\/\//i.test(value) ? value : null);
 
@@ -122,7 +122,7 @@ export const buildCvModel = (language: Language): CvModel => {
       year: sanitizePdfText(achievement.year),
       sector: sanitizePdfText(achievement.sector),
       title: sanitizePdfText(achievement.title),
-      summary: summarize(achievement.description),
+      summary: sanitizePdfText(achievement.description),
       role: sanitizePdfText(item.role),
       company: sanitizePdfText(item.company),
     })),
@@ -145,7 +145,7 @@ export const buildCvModel = (language: Language): CvModel => {
     },
     expertise: t.services.items.map((item) => ({
       title: sanitizePdfText(item.title),
-      description: summarize(item.description, 190),
+      description: sanitizePdfText(item.description),
     })),
     experience: t.experience.items.map((item) => ({
       role: sanitizePdfText(item.role),
