@@ -74,9 +74,12 @@ npm run lint
 npm run test
 npm run build
 npm run check
+npm run audit:security
 ```
 
 `npm run check` ejecuta lint, pruebas y build. Es el mismo control utilizado antes del despliegue en GitHub Actions.
+
+La política de actualización, la revisión de scripts de instalación y las migraciones major pendientes se documentan en [docs/dependency-maintenance.md](docs/dependency-maintenance.md). Dependabot revisa semanalmente npm y GitHub Actions, y la auditoría automática bloquea vulnerabilidades de severidad alta o crítica.
 
 ## 🖼️ Gestión de imágenes
 
