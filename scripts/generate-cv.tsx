@@ -20,26 +20,59 @@ import { buildCvModel } from './cv-data';
 import type { CvModel, CvProject } from './cv-data';
 
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
-const generatedDocumentsDirectory = path.join(repositoryRoot, 'public', 'assets', 'documents');
+const generatedDocumentsDirectory = path.join(
+  repositoryRoot,
+  'public',
+  'assets',
+  'documents',
+);
 
 Font.register({
   family: 'Inter',
   fonts: [
     {
-      src: path.join(repositoryRoot, 'node_modules', '@fontsource', 'inter', 'files', 'inter-latin-400-normal.woff'),
+      src: path.join(
+        repositoryRoot,
+        'node_modules',
+        '@fontsource',
+        'inter',
+        'files',
+        'inter-latin-400-normal.woff',
+      ),
       fontWeight: 400,
     },
     {
-      src: path.join(repositoryRoot, 'node_modules', '@fontsource', 'inter', 'files', 'inter-latin-400-italic.woff'),
+      src: path.join(
+        repositoryRoot,
+        'node_modules',
+        '@fontsource',
+        'inter',
+        'files',
+        'inter-latin-400-italic.woff',
+      ),
       fontStyle: 'italic',
       fontWeight: 400,
     },
     {
-      src: path.join(repositoryRoot, 'node_modules', '@fontsource', 'inter', 'files', 'inter-latin-600-normal.woff'),
+      src: path.join(
+        repositoryRoot,
+        'node_modules',
+        '@fontsource',
+        'inter',
+        'files',
+        'inter-latin-600-normal.woff',
+      ),
       fontWeight: 600,
     },
     {
-      src: path.join(repositoryRoot, 'node_modules', '@fontsource', 'inter', 'files', 'inter-latin-700-normal.woff'),
+      src: path.join(
+        repositoryRoot,
+        'node_modules',
+        '@fontsource',
+        'inter',
+        'files',
+        'inter-latin-700-normal.woff',
+      ),
       fontWeight: 700,
     },
   ],
@@ -85,6 +118,10 @@ const styles = StyleSheet.create({
     paddingRight: 38,
     paddingBottom: 36,
     paddingLeft: 38,
+  },
+  certificationPage: {
+    paddingTop: 30,
+    paddingBottom: 30,
   },
   firstPage: {
     backgroundColor: colors.paper,
@@ -417,7 +454,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
     borderRadius: 6,
-    marginBottom: 7,
+    marginBottom: 5,
     overflow: 'hidden',
   },
   providerHeading: {
@@ -425,15 +462,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.lavender,
     fontSize: 7.7,
     fontWeight: 700,
-    paddingTop: 5,
+    paddingTop: 4,
     paddingRight: 6,
-    paddingBottom: 5,
+    paddingBottom: 4,
     paddingLeft: 6,
   },
   certificationItem: {
-    paddingTop: 4.5,
+    paddingTop: 3.4,
     paddingRight: 6,
-    paddingBottom: 4.5,
+    paddingBottom: 3.4,
     paddingLeft: 6,
     borderTopWidth: 0.6,
     borderTopColor: colors.line,
@@ -486,10 +523,23 @@ const styles = StyleSheet.create({
   },
 });
 
-const Footer = ({ model, firstPage = false }: { model: CvModel; firstPage?: boolean }) => (
-  <View style={[styles.footer, firstPage ? styles.firstPageFooter : {}]} fixed>
+const Footer = ({
+  model,
+  firstPage = false,
+}: {
+  model: CvModel;
+  firstPage?: boolean;
+}) => (
+  <View
+    style={[styles.footer, firstPage ? styles.firstPageFooter : {}]}
+    fixed
+  >
     <Text>{model.labels.generatedFrom}</Text>
-    <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
+    <Text
+      render={({ pageNumber, totalPages }) =>
+        `${pageNumber} / ${totalPages}`
+      }
+    />
   </View>
 );
 
@@ -498,28 +548,43 @@ const Sidebar = ({ model }: { model: CvModel }) => (
     <View style={styles.portraitFrame}>
       <Image src={model.profile.imagePath} style={styles.portrait} />
     </View>
-    <Text style={styles.sidebarName}>{model.profile.name.replaceAll(' ', '\u00A0')}</Text>
+
+    <Text style={styles.sidebarName}>
+      {model.profile.name.replaceAll(' ', '\u00A0')}
+    </Text>
+
     <Text style={styles.sidebarRole}>{model.profile.title}</Text>
 
     <View style={styles.sidebarSection}>
       <Text style={styles.sidebarHeading}>{model.labels.contact}</Text>
+
       <Text style={styles.contactLabel}>{model.labels.email}</Text>
-      <Link src={`mailto:${model.profile.email}`} style={styles.contactValue}>
+
+      <Link
+        src={`mailto:${model.profile.email}`}
+        style={styles.contactValue}
+      >
         {model.profile.email}
       </Link>
+
       <Text style={styles.contactLabel}>{model.labels.linkedin}</Text>
+
       <Link src={model.profile.linkedin} style={styles.sidebarLink}>
         LinkedIn
       </Link>
+
       <Text style={styles.contactLabel}>{model.labels.website}</Text>
+
       <Link src={model.profile.website} style={styles.sidebarLink}>
         josepnr97.github.io/JNR
       </Link>
+
       <Text style={styles.contactLabel}>{model.profile.location}</Text>
     </View>
 
     <View style={styles.sidebarSection}>
       <Text style={styles.sidebarHeading}>{model.labels.expertise}</Text>
+
       {model.expertise.map((item) => (
         <Text key={item.title} style={styles.expertisePill}>
           {item.title}
@@ -534,9 +599,16 @@ const Sidebar = ({ model }: { model: CvModel }) => (
   </View>
 );
 
-const PageHeader = ({ title, model }: { title: string; model: CvModel }) => (
+const PageHeader = ({
+  title,
+  model,
+}: {
+  title: string;
+  model: CvModel;
+}) => (
   <View style={styles.pageHeader}>
     <Text style={styles.pageHeaderTitle}>{title}</Text>
+
     <Text style={styles.pageHeaderMeta}>
       {model.profile.name} · {model.language.toUpperCase()}
     </Text>
@@ -546,36 +618,57 @@ const PageHeader = ({ title, model }: { title: string; model: CvModel }) => (
 const ProjectEntry = ({ project }: { project: CvProject }) => (
   <View style={styles.project} wrap={false}>
     <View style={styles.projectDot} />
+
     <Text style={styles.projectMeta}>
       {project.year} · {project.sector}
     </Text>
+
     <Text style={styles.projectTitle}>{project.title}</Text>
     <Text style={styles.projectSummary}>{project.summary}</Text>
   </View>
 );
 
 const ProjectGroups = ({ projects }: { projects: CvProject[] }) => {
-  const groups = projects.reduce<Array<{ role: string; company: string; projects: CvProject[] }>>(
-    (result, project) => {
-      const current = result.at(-1);
-      if (current?.role === project.role && current.company === project.company) {
-        current.projects.push(project);
-      } else {
-        result.push({ role: project.role, company: project.company, projects: [project] });
-      }
-      return result;
-    },
-    [],
-  );
+  const groups = projects.reduce<
+    Array<{
+      role: string;
+      company: string;
+      projects: CvProject[];
+    }>
+  >((result, project) => {
+    const current = result.at(-1);
+
+    if (
+      current?.role === project.role &&
+      current.company === project.company
+    ) {
+      current.projects.push(project);
+    } else {
+      result.push({
+        role: project.role,
+        company: project.company,
+        projects: [project],
+      });
+    }
+
+    return result;
+  }, []);
 
   return groups.map((group) => (
-    <View key={`${group.role}-${group.company}`} style={styles.projectGroup}>
+    <View
+      key={`${group.role}-${group.company}`}
+      style={styles.projectGroup}
+    >
       <View style={styles.projectGroupHeading} wrap={false}>
         <Text style={styles.projectGroupRole}>{group.role}</Text>
         <Text style={styles.projectGroupCompany}>{group.company}</Text>
       </View>
+
       {group.projects.map((project) => (
-        <ProjectEntry key={`${project.year}-${project.title}`} project={project} />
+        <ProjectEntry
+          key={`${project.year}-${project.title}`}
+          project={project}
+        />
       ))}
     </View>
   ));
@@ -590,13 +683,26 @@ const CertificationGroup = ({
 }) => (
   <View style={styles.providerGroup} wrap={false}>
     <Text style={styles.providerHeading}>{provider.name}</Text>
+
     {provider.certifications.map((certification) => (
-      <View key={`${provider.name}-${certification.name}`} style={styles.certificationItem}>
-        <Text style={styles.certificationName}>{certification.name}</Text>
+      <View
+        key={`${provider.name}-${certification.name}`}
+        style={styles.certificationItem}
+      >
+        <Text style={styles.certificationName}>
+          {certification.name}
+        </Text>
+
         <View style={styles.certificationMetaRow}>
-          <Text style={styles.certificationDate}>{certification.date}</Text>
+          <Text style={styles.certificationDate}>
+            {certification.date}
+          </Text>
+
           {certification.credentialUrl ? (
-            <Link src={certification.credentialUrl} style={styles.credentialLink}>
+            <Link
+              src={certification.credentialUrl}
+              style={styles.credentialLink}
+            >
               {credentialLabel}
             </Link>
           ) : null}
@@ -608,15 +714,29 @@ const CertificationGroup = ({
 
 export const CvDocument = ({ model }: { model: CvModel }) => {
   const providerColumns = model.certificationProviders.reduce<
-    [CvModel['certificationProviders'], CvModel['certificationProviders']]
+    [
+      CvModel['certificationProviders'],
+      CvModel['certificationProviders'],
+    ]
   >(
     (columns, provider) => {
-      const getColumnWeight = (column: CvModel['certificationProviders']) =>
-        column.reduce((total, item) => total + item.certifications.length + 1, 0);
-      const targetColumn = getColumnWeight(columns[0]) <= getColumnWeight(columns[1])
-        ? columns[0]
-        : columns[1];
+      const getColumnWeight = (
+        column: CvModel['certificationProviders'],
+      ) =>
+        column.reduce(
+          (total, item) =>
+            total + item.certifications.length + 1,
+          0,
+        );
+
+      const targetColumn =
+        getColumnWeight(columns[0]) <=
+        getColumnWeight(columns[1])
+          ? columns[0]
+          : columns[1];
+
       targetColumn.push(provider);
+
       return columns;
     },
     [[], []],
@@ -627,15 +747,26 @@ export const CvDocument = ({ model }: { model: CvModel }) => {
       title={`${model.profile.name} - CV ${model.language.toUpperCase()}`}
       author={model.profile.name}
       subject={model.profile.title}
-      keywords={model.expertise.map((item) => item.title).join(', ')}
+      keywords={model.expertise
+        .map((item) => item.title)
+        .join(', ')}
       creator="JNR Portfolio CV Generator"
     >
       <Page size="A4" style={styles.firstPage}>
         <Sidebar model={model} />
+
         <View style={styles.firstPageMain}>
-          <Text style={styles.eyebrow}>{model.labels.profile}</Text>
-          <Text style={styles.title}>{model.profile.name}</Text>
-          <Text style={styles.tagline}>{model.profile.tagline}</Text>
+          <Text style={styles.eyebrow}>
+            {model.labels.profile}
+          </Text>
+
+          <Text style={styles.title}>
+            {model.profile.name}
+          </Text>
+
+          <Text style={styles.tagline}>
+            {model.profile.tagline}
+          </Text>
 
           {model.profile.summary.map((paragraph) => (
             <Text key={paragraph} style={styles.summaryText}>
@@ -643,98 +774,201 @@ export const CvDocument = ({ model }: { model: CvModel }) => {
             </Text>
           ))}
 
-          <Text style={styles.sectionHeading}>{model.labels.experience}</Text>
+          <Text style={styles.sectionHeading}>
+            {model.labels.experience}
+          </Text>
+
           {model.experience.map((item) => (
-            <View key={`${item.role}-${item.period}`} style={styles.experienceItem} wrap={false}>
+            <View
+              key={`${item.role}-${item.period}`}
+              style={styles.experienceItem}
+              wrap={false}
+            >
               <View style={styles.timelineDot} />
-              <Text style={styles.itemPeriod}>{item.period}</Text>
-              <Text style={styles.itemTitle}>{item.role}</Text>
-              <Text style={styles.itemCompany}>{item.company}</Text>
-              <Text style={styles.itemDescription}>{item.description}</Text>
+
+              <Text style={styles.itemPeriod}>
+                {item.period}
+              </Text>
+
+              <Text style={styles.itemTitle}>
+                {item.role}
+              </Text>
+
+              <Text style={styles.itemCompany}>
+                {item.company}
+              </Text>
+
+              <Text style={styles.itemDescription}>
+                {item.description}
+              </Text>
             </View>
           ))}
         </View>
+
         <Footer model={model} firstPage />
       </Page>
 
       <Page size="A4" style={styles.page}>
-        <PageHeader title={model.labels.projects} model={model} />
+        <PageHeader
+          title={model.labels.projects}
+          model={model}
+        />
+
         <ProjectGroups projects={model.recentProjects} />
+
         <Footer model={model} />
       </Page>
 
       <Page size="A4" style={styles.page}>
-        <PageHeader title={model.labels.projects} model={model} />
+        <PageHeader
+          title={model.labels.projects}
+          model={model}
+        />
+
         <ProjectGroups projects={model.earlierProjects} />
 
-        <Text style={styles.sectionHeading}>{model.labels.education}</Text>
+        <Text style={styles.sectionHeading}>
+          {model.labels.education}
+        </Text>
+
         <View style={styles.educationGrid}>
           {model.education.map((item) => (
-            <View key={`${item.degree}-${item.period}`} style={styles.educationCard} wrap={false}>
-              <Text style={styles.educationPeriod}>{item.period}</Text>
-              <Text style={styles.educationDegree}>{item.degree}</Text>
-              <Text style={styles.educationInstitution}>{item.institution}</Text>
-              {item.description ? <Text style={styles.educationDescription}>{item.description}</Text> : null}
+            <View
+              key={`${item.degree}-${item.period}`}
+              style={styles.educationCard}
+              wrap={false}
+            >
+              <Text style={styles.educationPeriod}>
+                {item.period}
+              </Text>
+
+              <Text style={styles.educationDegree}>
+                {item.degree}
+              </Text>
+
+              <Text style={styles.educationInstitution}>
+                {item.institution}
+              </Text>
+
+              {item.description ? (
+                <Text style={styles.educationDescription}>
+                  {item.description}
+                </Text>
+              ) : null}
             </View>
           ))}
         </View>
+
         <Footer model={model} />
       </Page>
 
-      <Page size="A4" style={styles.page}>
-        <PageHeader title={model.labels.certifications} model={model} />
+      <Page
+        size="A4"
+        style={[styles.page, styles.certificationPage]}
+      >
+        <PageHeader
+          title={model.labels.certifications}
+          model={model}
+        />
+
         <View style={styles.certificationColumns}>
-          {providerColumns.map((providers, columnIndex) => (
-            <View key={`certification-column-${columnIndex}`} style={styles.certificationColumn}>
-              {providers.map((provider) => (
-                <CertificationGroup
-                  key={provider.name}
-                  provider={provider}
-                  credentialLabel={model.labels.credential}
-                />
-              ))}
-            </View>
-          ))}
+          {providerColumns.map(
+            (providers, columnIndex) => (
+              <View
+                key={`certification-column-${columnIndex}`}
+                style={styles.certificationColumn}
+              >
+                {providers.map((provider) => (
+                  <CertificationGroup
+                    key={provider.name}
+                    provider={provider}
+                    credentialLabel={
+                      model.labels.credential
+                    }
+                  />
+                ))}
+              </View>
+            ),
+          )}
         </View>
+
         <Footer model={model} />
       </Page>
     </Document>
   );
 };
 
-export const generateCvDocuments = async (outputDirectory = generatedDocumentsDirectory) => {
+export const generateCvDocuments = async (
+  outputDirectory = generatedDocumentsDirectory,
+) => {
   await mkdir(outputDirectory, { recursive: true });
 
   const languages: Language[] = ['ca', 'es', 'en'];
   const generatedFiles: string[] = [];
   const imagePath = buildCvModel('es').profile.imagePath;
-  const portraitDataUri = `data:image/png;base64,${(await readFile(imagePath)).toString('base64')}`;
+
+  const portraitDataUri =
+    `data:image/png;base64,${(
+      await readFile(imagePath)
+    ).toString('base64')}`;
 
   for (const language of languages) {
-    const outputPath = path.join(outputDirectory, CV_FILENAMES[language]);
+    const outputPath = path.join(
+      outputDirectory,
+      CV_FILENAMES[language],
+    );
+
     const model = buildCvModel(language);
+
     model.profile.imagePath = portraitDataUri;
-    await renderToFile(<CvDocument model={model} />, outputPath);
+
+    await renderToFile(
+      <CvDocument model={model} />,
+      outputPath,
+    );
+
     await markExternalLinksForNewWindow(outputPath);
+
     generatedFiles.push(outputPath);
   }
 
   return generatedFiles;
 };
 
-const markExternalLinksForNewWindow = async (pdfPath: string) => {
-  const pdf = await PDFDocument.load(await readFile(pdfPath));
+const markExternalLinksForNewWindow = async (
+  pdfPath: string,
+) => {
+  const pdf = await PDFDocument.load(
+    await readFile(pdfPath),
+  );
 
   pdf.getPages().forEach((page) => {
     const annotations = page.node.Annots();
+
     if (!annotations) return;
 
-    for (let index = 0; index < annotations.size(); index += 1) {
-      const annotation = pdf.context.lookup(annotations.get(index), PDFDict);
-      const action = annotation.lookup(PDFName.of('A'), PDFDict);
+    for (
+      let index = 0;
+      index < annotations.size();
+      index += 1
+    ) {
+      const annotation = pdf.context.lookup(
+        annotations.get(index),
+        PDFDict,
+      );
+
+      const action = annotation.lookup(
+        PDFName.of('A'),
+        PDFDict,
+      );
+
       const actionType = action.get(PDFName.of('S'));
+
       if (actionType?.toString() === '/URI') {
-        action.set(PDFName.of('NewWindow'), PDFBool.True);
+        action.set(
+          PDFName.of('NewWindow'),
+          PDFBool.True,
+        );
       }
     }
   });
@@ -743,13 +977,16 @@ const markExternalLinksForNewWindow = async (pdfPath: string) => {
 };
 
 const isExecutedDirectly = process.argv[1]
-  ? path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+  ? path.resolve(process.argv[1]) ===
+    fileURLToPath(import.meta.url)
   : false;
 
 if (isExecutedDirectly) {
   generateCvDocuments()
     .then((generatedFiles) => {
-      console.log(`Generated ${generatedFiles.length} CV documents.`);
+      console.log(
+        `Generated ${generatedFiles.length} CV documents.`,
+      );
     })
     .catch((error: unknown) => {
       console.error(error);
