@@ -38,6 +38,7 @@ export const IMAGES = {
     openAITechPract: assetPath('certifications/openAI-technical-practitioner.png'),
     openAIConsultSolPract: assetPath('certifications/openAI-consultative-solutions-practitioner.png'),
     openAIGPTSolPract: assetPath('certifications/openAI-chatGPT-solutions-practitioner.png'),
+    openAICodexSolPract: assetPath('certifications/openAI-codex-solutions-practitioner.png'),
     ghAdmin: assetPath('certifications/github-administration.png'),
     ghActions: assetPath('certifications/github-actions.png'),
     ardoqFund: assetPath('certifications/ardoq-foundations.png'),
@@ -76,6 +77,7 @@ export const LINKS = {
       openAITechPract: "https://i.ibb.co/DHSh76pn/Open-AI-Technical-Practitioner.png",
       openAIConsultSolPract: "https://i.ibb.co/9Xnc322/Open-AI-Consultative-Solutions-Practitioner.png",
       openAIGPTSolPract: "https://i.ibb.co/TqbWS3GW/Chat-GPT-Solutions-Practitioner.png",
+      openAICodexSolPract: "https://i.ibb.co/9HypcV0s/Codex-Solutions-Practitioner.png",
       ghAdmin: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/C8A98D11F942DD8E?sharingId=3AB956A14FB38743",
       ghActions: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/820E978A2A19A73C?sharingId=3AB956A14FB38743",
       ardoqFund: "https://www.credly.com/badges/a095b292-1ef9-4156-9ddf-cc9acfe89a11/public_url",
@@ -244,8 +246,14 @@ export const EDUCATION_DATA = {
       id: "v_openAI",
       name: "OpenAI",
       logoUrl: IMAGES.logos.openAI,
-      tags: ["Digital Transformation", "AI", "Generative AI", "Agents", "ChatGPT", "LLMs"],
+      tags: ["Digital Transformation", "AI", "Generative AI", "Agents", "ChatGPT", "Codex", "LLMs"],
       certifications: [
+        { 
+          name: "Codex Solutions Practitioner", 
+          image: IMAGES.badges.openAICodexSolPract, 
+          date: { ca: "Ago. 2026", es: "Ago. 2026", en: "Aug. 2026" }, 
+          credentialUrl: LINKS.credentials.openAICodexSolPract 
+        },
         { 
           name: "ChatGPT Solutions Practitioner", 
           image: IMAGES.badges.openAIGPTSolPract, 
