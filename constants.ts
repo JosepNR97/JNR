@@ -81,7 +81,7 @@ export const LINKS = {
       openAIGPTSolPract: "https://i.ibb.co/TqbWS3GW/Chat-GPT-Solutions-Practitioner.png",
       openAICodexSolPract: "https://i.ibb.co/9HypcV0s/Codex-Solutions-Practitioner.png",
       openAIGPTDeployPract: "https://i.ibb.co/ZzzggSC5/Chat-GPT-Deployment-Practitioner.png",
-      openAICodexDeployPract: "https://www.google.com/",
+      openAICodexDeployPract: "https://i.ibb.co/20tjCnBx/Codex-Deployment-Practitioner.png",
       ghAdmin: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/C8A98D11F942DD8E?sharingId=3AB956A14FB38743",
       ghActions: "https://learn.microsoft.com/api/credentials/share/en-us/JosepNezRiba-6009/820E978A2A19A73C?sharingId=3AB956A14FB38743",
       ardoqFund: "https://www.credly.com/badges/a095b292-1ef9-4156-9ddf-cc9acfe89a11/public_url",
@@ -111,7 +111,7 @@ export const EDUCATION_DATA = {
       year: {
         ca: "Set. 2022 - Nov. 2022",
         es: "Sept. 2022 - Nov. 2022",
-        en: "Sept 2022 - Nov 2022"
+        en: "Sept. 2022 - Nov. 2022"
       },
       logoUrl: IMAGES.logos.isdi,
       description: {
@@ -131,7 +131,7 @@ export const EDUCATION_DATA = {
       year: {
         ca: "Set. 2015 - Juny 2022",
         es: "Sept. 2015 - Jun. 2022",
-        en: "Sept 2015 - June 2022"
+        en: "Sept. 2015 - June 2022"
       },
       logoUrl: IMAGES.logos.ub,
       description: {
@@ -255,7 +255,7 @@ export const EDUCATION_DATA = {
         { 
           name: "Codex Deployment Practitioner", 
           image: IMAGES.badges.openAICodexDeployPract, 
-          date: { ca: "Ago. 2026", es: "Ago. 2026", en: "Aug. 2026" }, 
+          date: { ca: "Set. 2026", es: "Sept. 2026", en: "Sept. 2026" }, 
           credentialUrl: LINKS.credentials.openAICodexDeployPract 
         },
         { 
