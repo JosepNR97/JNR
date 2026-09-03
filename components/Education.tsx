@@ -61,11 +61,11 @@ export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) 
             {t.education.academic.map((item) => (
               <RevealArticle
                 key={item.id}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm transition-shadow hover:shadow-md sm:p-8"
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-xs transition-shadow hover:shadow-md sm:p-8"
               >
                 <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[2fr_1fr]">
                   <div className="flex items-center gap-5 text-left sm:gap-6">
-                    <div className="grid h-20 w-20 shrink-0 place-items-center rounded-lg border border-slate-100 bg-white p-2 shadow-sm">
+                    <div className="grid h-20 w-20 shrink-0 place-items-center rounded-lg border border-slate-100 bg-white p-2 shadow-xs">
                       {item.logoUrl ? (
                         <img
                           src={item.logoUrl}
