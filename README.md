@@ -12,22 +12,33 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 - 📱 Interfaz responsive y accesible mediante teclado.
 - 💼 Trayectoria profesional con proyectos desplegables.
 - 🎓 Formación académica y certificaciones agrupadas por proveedor.
-- 🏅 Carrusel interactivo de organizaciones acreditadoras.
+- 🏅 Carrusel continuo e interactivo de organizaciones acreditadoras, arrastrable manualmente y respetuoso con `prefers-reduced-motion`.
 - 🖼️ Recursos visuales servidos localmente, sin depender de URLs de imágenes externas.
 - 📄 CV descargable en el idioma activo, generado automáticamente desde los datos del portfolio.
 - 🔎 Metadatos SEO, Open Graph y datos estructurados de tipo `Person`.
 - 📊 Google Analytics inicializado al cargar la web.
-- ⚙️ Despliegue automatizado mediante GitHub Actions y GitHub Pages.
+- ⚙️ Integración continua para pull requests y despliegue automatizado mediante GitHub Actions y GitHub Pages.
 
 ## 🧰 Stack tecnológico
 
-- **React 18** y **TypeScript** en modo estricto.
+- **React 19** y **React DOM 19**.
+- **TypeScript 6** en modo estricto.
 - **Vite 8** para desarrollo y build.
-- **Tailwind CSS** compilado mediante PostCSS.
-- **Lucide React** para la iconografía de interfaz.
+- **Tailwind CSS 4** compilado mediante `@tailwindcss/postcss`.
+- **Lucide React 1** para la iconografía de interfaz, complementado con SVG local cuando un icono ya no forma parte de la librería.
 - **React PDF** para generar los CV en catalán, castellano e inglés.
-- **Vitest** y **Testing Library** para pruebas.
-- **ESLint** y **Prettier** para mantener la calidad del código.
+- **Vitest 4** y **Testing Library 16** para pruebas.
+- **ESLint 10** y **Prettier** para mantener la calidad del código.
+
+## 🖥️ Requisitos de desarrollo
+
+El proyecto declara como entorno soportado:
+
+- **Node.js:** `^24.15.0 || >=26.0.0`
+- **npm:** `>=11.19.0 <12`
+- **Package manager de referencia:** `npm@11.19.0`
+
+Tailwind CSS 4 tiene como baseline de navegador Safari 16.4+, Chrome 111+ y Firefox 128+.
 
 ## 🗂️ Estructura del proyecto
 
@@ -54,43 +65,3 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 ├── types.ts                 Contratos TypeScript
 ├── styles.css               Estilos globales y Tailwind
 └── index.tsx                Punto de entrada
-```
-
-## ▶️ Desarrollo local
-
-```bash
-npm ci
-npm run dev
-```
-
-Vite mostrará la URL local, normalmente `http://localhost:5173`.
-
-Antes de iniciar Vite se generan los tres CV. También pueden regenerarse manualmente con `npm run generate:cv`; los PDF de `public/assets/documents/` se ignoran en Git y se recrean antes de cada build.
-
-## ✅ Controles de calidad
-
-```bash
-npm run lint
-npm run test
-npm run build
-npm run check
-npm run audit:security
-```
-
-`npm run check` ejecuta lint, pruebas y build. Es el mismo control utilizado antes del despliegue en GitHub Actions.
-
-La política de actualización, la revisión de scripts de instalación y las migraciones major pendientes se documentan en [docs/dependency-maintenance.md](docs/dependency-maintenance.md). Dependabot revisa semanalmente npm y GitHub Actions, y la auditoría automática bloquea vulnerabilidades de severidad alta o crítica.
-
-## 🖼️ Gestión de imágenes
-
-Todos los recursos visuales utilizados por la interfaz están almacenados en `public/assets/` y se referencian mediante `assetPath()`. Esto evita que logos o insignias desaparezcan por cambios, bloqueos o caducidad de servidores externos.
-
-Los enlaces de credenciales, LinkedIn, Analytics y metadatos permanecen como URLs porque son destinos de navegación o servicios, no recursos gráficos de la interfaz.
-
-## 🚢 Despliegue
-
-Los cambios enviados a `main` activan el workflow de GitHub Pages. La instalación usa `npm ci`, por lo que `package-lock.json` debe mantenerse versionado y actualizado.
-
-## ©️ Licencia
-
-© 2026 Josep Núñez Riba. Todos los derechos reservados.
