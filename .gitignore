@@ -7,23 +7,30 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies and package-manager caches
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+dist-ssr/
+
+# Generated files
 public/assets/documents/*.pdf
+
+# Local environment files
 *.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-public/assets/documents/Josep_Nunez_Riba_CV_CA.pdf
-public/assets/documents/Josep_Nunez_Riba_CV_EN.pdf
-public/assets/documents/Josep_Nunez_Riba_CV_ES.pdf
+
+# Local project files
 backlog-tool-v3.html
