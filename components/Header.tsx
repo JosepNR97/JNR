@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Language } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { CloseIcon, MenuIcon } from './Icons';
@@ -23,7 +23,11 @@ const MENU_LABELS: Record<
     close: 'Cerrar menú',
     navigation: 'Navegación principal',
   },
-  en: { open: 'Open menu', close: 'Close menu', navigation: 'Main navigation' },
+  en: {
+    open: 'Open menu',
+    close: 'Close menu',
+    navigation: 'Main navigation',
+  },
 };
 
 interface LanguageSelectorProps {
@@ -72,32 +76,73 @@ const LanguageSelector = ({
 
 export const Header = () => {
   const { language, setLanguage, t } = useLanguage();
+
   const [isScrolled, setIsScrolled] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const isScrolledRef = useRef(false);
+
   const labels = MENU_LABELS[language];
 
   useEffect(() => {
     let animationFrame = 0;
 
     const updateScrollState = () => {
-      if (animationFrame) return;
-      animationFrame = window.requestAnimationFrame(() => {
-        const scrollableHeight =
-          document.documentElement.scrollHeight - window.innerHeight;
-        const progress =
-          scrollableHeight > 0 ? window.scrollY / scrollableHeight : 0;
-        setIsScrolled(window.scrollY > 50);
-        setScrollProgress(Math.max(0, Math.min(1, progress)));
-        animationFrame = 0;
-      });
+      animationFrame = 0;
+
+      const documentElement = document.documentElement;
+
+      const scrollTop = Math.max(
+        0,
+        window.scrollY || documentElement.scrollTop,
+      );
+
+      const scrollableHeight = Math.max(
+        0,
+        documentElement.scrollHeight - documentElement.clientHeight,
+      );
+
+      const progress =
+        scrollableHeight > 0 ? scrollTop / scrollableHeight : 0;
+
+      const clampedProgress = Math.max(0, Math.min(1, progress));
+
+      const nextIsScrolled = scrollTop > 50;
+
+      if (nextIsScrolled !== isScrolledRef.current) {
+        isScrolledRef.current = nextIsScrolled;
+        setIsScrolled(nextIsScrolled);
+      }
+
+      if (progressBarRef.current) {
+        progressBarRef.current.style.transform = `scaleX(${clampedProgress})`;
+      }
     };
 
-    updateScrollState();
-    window.addEventListener('scroll', updateScrollState, { passive: true });
+    const scheduleScrollUpdate = () => {
+      if (animationFrame) return;
+
+      animationFrame = window.requestAnimationFrame(updateScrollState);
+    };
+
+    scheduleScrollUpdate();
+
+    window.addEventListener('scroll', scheduleScrollUpdate, {
+      passive: true,
+    });
+
+    window.addEventListener('resize', scheduleScrollUpdate, {
+      passive: true,
+    });
+
     return () => {
-      window.removeEventListener('scroll', updateScrollState);
-      window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener('scroll', scheduleScrollUpdate);
+      window.removeEventListener('resize', scheduleScrollUpdate);
+
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+      }
     };
   }, []);
 
@@ -108,10 +153,13 @@ export const Header = () => {
     document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMobileMenuOpen(false);
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', handleKeyDown);
@@ -127,7 +175,10 @@ export const Header = () => {
   ];
 
   const scrolledHeader = isScrolled && !mobileMenuOpen;
-  const navLinkClass = scrolledHeader ? 'text-slate-600' : 'text-slate-200';
+
+  const navLinkClass = scrolledHeader
+    ? 'text-slate-600'
+    : 'text-slate-200';
 
   return (
     <>
@@ -194,14 +245,18 @@ export const Header = () => {
               <CloseIcon className="h-7 w-7 text-white" />
             ) : (
               <MenuIcon
-                className={`h-6 w-6 ${isScrolled ? 'text-slate-900' : 'text-white'}`}
+                className={`h-6 w-6 ${
+                  isScrolled ? 'text-slate-900' : 'text-white'
+                }`}
               />
             )}
           </button>
         </div>
+
         <div
-          className="absolute bottom-0 left-0 h-[3px] bg-brand-500 shadow-[0_0_6px_rgba(14,165,233,0.45)] transition-[width] duration-150 ease-out"
-          style={{ width: `${scrollProgress * 100}%` }}
+          ref={progressBarRef}
+          className="pointer-events-none absolute bottom-0 left-0 h-[3px] w-full origin-left bg-brand-500 shadow-[0_0_6px_rgba(14,165,233,0.45)] will-change-transform"
+          style={{ transform: 'scaleX(0)' }}
           aria-hidden="true"
         />
       </header>
