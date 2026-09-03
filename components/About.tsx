@@ -30,7 +30,7 @@ export const About: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <Reveal className="relative group max-w-md mx-auto lg:mx-0 w-full">
             <div
-              className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-brand-500 to-indigo-600 opacity-30 blur-xl transition-opacity group-hover:opacity-50"
+              className="absolute -inset-4 rounded-2xl bg-linear-to-r/srgb from-brand-500 to-indigo-600 opacity-30 blur-xl transition-opacity group-hover:opacity-50"
               aria-hidden="true"
             />
             <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-slate-200 shadow-2xl">
@@ -58,7 +58,7 @@ export const About: React.FC = () => {
 
             {/* Languages Section - Added hover:border-brand-200 and transition-colors */}
             <div className="mt-8 flex items-center gap-3 text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100 hover:border-brand-200 transition-colors">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-brand-600 shadow-sm border border-slate-100 shrink-0">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-brand-600 shadow-xs border border-slate-100 shrink-0">
                 <GlobeIcon className="w-5 h-5" />
               </div>
               <div>
