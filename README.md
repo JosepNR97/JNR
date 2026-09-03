@@ -26,7 +26,7 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 - **React 19** y **React DOM 19**.
 - **TypeScript 6** en modo estricto.
 - **Vite 8** para desarrollo y build.
-- **Tailwind CSS 4** mediante `@tailwindcss/postcss`.
+- **Tailwind CSS 4** integrado directamente en Vite mediante `@tailwindcss/vite`.
 - **Lucide React 1** para la iconografía de interfaz, complementado con SVG local cuando un icono deja de formar parte de la librería.
 - **React PDF** para generar los CV en catalán, castellano e inglés.
 - **Vitest 4** y **Testing Library 16** para pruebas.
