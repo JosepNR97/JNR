@@ -12,6 +12,7 @@ describe('useRevealOnScroll', () => {
     class ControlledIntersectionObserver implements IntersectionObserver {
       readonly root = null;
       readonly rootMargin = '0px 0px -10% 0px';
+      readonly scrollMargin = '0px 0px 0px 0px';
       readonly thresholds = [0.15];
 
       constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
