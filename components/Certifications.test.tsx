@@ -9,20 +9,87 @@ import { vi } from 'vitest';
 import { LanguageProvider } from '../context/LanguageContext';
 import { Certifications } from './Certifications';
 
+let animationCallback:
+  | FrameRequestCallback
+  | undefined;
+
+const runAnimationFrame = (
+  timestamp: number,
+) => {
+  act(() => {
+    animationCallback?.(timestamp);
+  });
+};
+
+const mockMatchMedia = (
+  reducedMotion = false,
+) => {
+  window.matchMedia = vi
+    .fn()
+    .mockImplementation((query: string) => ({
+      matches:
+        query ===
+          '(prefers-reduced-motion: reduce)' &&
+        reducedMotion,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+};
+
 describe('Certifications', () => {
   beforeEach(() => {
-    window.matchMedia = vi
-      .fn()
-      .mockImplementation((query: string) => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      }));
+    animationCallback = undefined;
+
+    mockMatchMedia(false);
+
+    vi.spyOn(
+      window,
+      'requestAnimationFrame',
+    ).mockImplementation((callback) => {
+      animationCallback = callback;
+      return 1;
+    });
+
+    vi.spyOn(
+      window,
+      'cancelAnimationFrame',
+    ).mockImplementation(() => undefined);
+
+    vi.spyOn(
+      HTMLElement.prototype,
+      'getBoundingClientRect',
+    ).mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const isCarouselSegment =
+        this.dataset.carouselSegment ===
+        'true';
+
+      const width = isCarouselSegment
+        ? 1000
+        : 0;
+
+      const height = isCarouselSegment
+        ? 80
+        : 0;
+
+      return {
+        x: 0,
+        y: 0,
+        width,
+        height,
+        top: 0,
+        right: width,
+        bottom: height,
+        left: 0,
+        toJSON: () => ({}),
+      } as DOMRect;
+    });
   });
 
   afterEach(() => {
@@ -42,122 +109,182 @@ describe('Certifications', () => {
     );
 
     await user.click(
-      screen.getByRole('button', { name: /AWS/i }),
+      screen.getByRole('button', {
+        name: /AWS/i,
+      }),
     );
 
-    expect(onSelectVendor).toHaveBeenCalledWith('v_aws');
+    expect(
+      onSelectVendor,
+    ).toHaveBeenCalledWith('v_aws');
   });
 
-  it('wraps the automatic scroll back to the equivalent middle segment', () => {
-    let animationCallback:
-      | FrameRequestCallback
-      | undefined;
-
-    vi.spyOn(
-      window,
-      'requestAnimationFrame',
-    ).mockImplementation((callback) => {
-      animationCallback = callback;
-      return 1;
-    });
-
+  it('moves the carousel automatically over time', () => {
     render(
       <LanguageProvider>
-        <Certifications onSelectVendor={vi.fn()} />
+        <Certifications
+          onSelectVendor={vi.fn()}
+        />
       </LanguageProvider>,
     );
 
-    const firstLogo = screen.getByRole('button', {
-      name: /AWS/i,
-    });
-
-    const container =
-      firstLogo.closest<HTMLDivElement>(
-        '.overflow-x-auto',
-      );
-
-    expect(container).not.toBeNull();
-
-    if (!container) {
-      throw new Error(
-        'Certification carousel was not rendered',
-      );
-    }
-
-    Object.defineProperty(container, 'scrollWidth', {
-      configurable: true,
-      value: 5000,
-    });
-
-    container.scrollLeft = 2999.8;
-
-    act(() => {
-      animationCallback?.(1000);
-    });
-
-    act(() => {
-      animationCallback?.(1016);
-    });
-
-    expect(container.scrollLeft).toBeCloseTo(
-      2000.248,
-      2,
+    const track = screen.getByTestId(
+      'certifications-track',
     );
+
+    expect(track.style.transform).toBe(
+      'translate3d(-1000px, 0, 0)',
+    );
+
+    runAnimationFrame(1000);
+
+    const initialTransform =
+      track.style.transform;
+
+    runAnimationFrame(1016);
+
+    expect(
+      track.style.transform,
+    ).not.toBe(initialTransform);
   });
 
-  it('keeps auto-scrolling while the pointer is hovering over the carousel', () => {
-    let animationCallback:
-      | FrameRequestCallback
-      | undefined;
-
-    vi.spyOn(
-      window,
-      'requestAnimationFrame',
-    ).mockImplementation((callback) => {
-      animationCallback = callback;
-      return 1;
-    });
-
+  it('pauses while the pointer is hovering and resumes when it leaves', () => {
     render(
       <LanguageProvider>
-        <Certifications onSelectVendor={vi.fn()} />
+        <Certifications
+          onSelectVendor={vi.fn()}
+        />
       </LanguageProvider>,
     );
 
-    const firstLogo = screen.getByRole('button', {
-      name: /AWS/i,
+    const viewport = screen.getByTestId(
+      'certifications-viewport',
+    );
+
+    const track = screen.getByTestId(
+      'certifications-track',
+    );
+
+    runAnimationFrame(1000);
+    runAnimationFrame(1016);
+
+    fireEvent.mouseEnter(viewport);
+
+    const pausedTransform =
+      track.style.transform;
+
+    runAnimationFrame(1032);
+    runAnimationFrame(1048);
+
+    expect(track.style.transform).toBe(
+      pausedTransform,
+    );
+
+    fireEvent.mouseLeave(viewport);
+
+    runAnimationFrame(1064);
+
+    expect(
+      track.style.transform,
+    ).not.toBe(pausedTransform);
+  });
+
+  it('allows manual dragging and suppresses the click generated by a drag', () => {
+    const onSelectVendor = vi.fn();
+
+    render(
+      <LanguageProvider>
+        <Certifications
+          onSelectVendor={onSelectVendor}
+        />
+      </LanguageProvider>,
+    );
+
+    const viewport = screen.getByTestId(
+      'certifications-viewport',
+    );
+
+    const track = screen.getByTestId(
+      'certifications-track',
+    );
+
+    const awsButton = screen.getByRole(
+      'button',
+      {
+        name: /AWS/i,
+      },
+    );
+
+    const initialTransform =
+      track.style.transform;
+
+    fireEvent.pointerDown(awsButton, {
+      pointerId: 1,
+      button: 0,
+      clientX: 500,
     });
 
-    const container =
-      firstLogo.closest<HTMLDivElement>(
-        '.overflow-x-auto',
-      );
-
-    expect(container).not.toBeNull();
-
-    if (!container) {
-      throw new Error(
-        'Certification carousel was not rendered',
-      );
-    }
-
-    Object.defineProperty(container, 'scrollWidth', {
-      configurable: true,
-      value: 5000,
+    fireEvent.pointerMove(viewport, {
+      pointerId: 1,
+      clientX: 420,
     });
 
-    container.scrollLeft = 2000;
+    expect(
+      track.style.transform,
+    ).not.toBe(initialTransform);
 
-    fireEvent.mouseEnter(container);
-
-    act(() => {
-      animationCallback?.(1000);
+    fireEvent.pointerUp(viewport, {
+      pointerId: 1,
+      button: 0,
+      clientX: 420,
     });
 
-    act(() => {
-      animationCallback?.(1016);
-    });
+    /*
+     * This represents the click a browser emits
+     * immediately after the pointer sequence.
+     * A drag must not open the vendor.
+     */
+    fireEvent.click(awsButton);
 
-    expect(container.scrollLeft).toBeGreaterThan(2000);
+    expect(
+      onSelectVendor,
+    ).not.toHaveBeenCalled();
+
+    /*
+     * The following independent click must work
+     * normally.
+     */
+    fireEvent.click(awsButton);
+
+    expect(
+      onSelectVendor,
+    ).toHaveBeenCalledWith('v_aws');
+  });
+
+  it('does not auto-scroll when reduced motion is requested', () => {
+    mockMatchMedia(true);
+
+    render(
+      <LanguageProvider>
+        <Certifications
+          onSelectVendor={vi.fn()}
+        />
+      </LanguageProvider>,
+    );
+
+    const track = screen.getByTestId(
+      'certifications-track',
+    );
+
+    const initialTransform =
+      track.style.transform;
+
+    runAnimationFrame(1000);
+    runAnimationFrame(1016);
+    runAnimationFrame(1032);
+
+    expect(track.style.transform).toBe(
+      initialTransform,
+    );
   });
 });
