@@ -12,6 +12,7 @@ describe('About', () => {
     class ControlledIntersectionObserver implements IntersectionObserver {
       readonly root = null;
       readonly rootMargin = '';
+      readonly scrollMargin = '0px 0px 0px 0px';
       readonly thresholds = [0.15];
 
       constructor(private readonly callback: IntersectionObserverCallback) {}
