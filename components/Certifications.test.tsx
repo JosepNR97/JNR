@@ -26,19 +26,21 @@ const mockMatchMedia = (
 ) => {
   window.matchMedia = vi
     .fn()
-    .mockImplementation((query: string) => ({
-      matches:
-        query ===
-          '(prefers-reduced-motion: reduce)' &&
-        reducedMotion,
-      media: query,
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
+    .mockImplementation(
+      (query: string) => ({
+        matches:
+          query ===
+            '(prefers-reduced-motion: reduce)' &&
+          reducedMotion,
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }),
+    );
 };
 
 describe('Certifications', () => {
@@ -58,7 +60,9 @@ describe('Certifications', () => {
     vi.spyOn(
       window,
       'cancelAnimationFrame',
-    ).mockImplementation(() => undefined);
+    ).mockImplementation(
+      () => undefined,
+    );
 
     vi.spyOn(
       HTMLElement.prototype,
@@ -70,13 +74,15 @@ describe('Certifications', () => {
         this.dataset.carouselSegment ===
         'true';
 
-      const width = isCarouselSegment
-        ? 1000
-        : 0;
+      const width =
+        isCarouselSegment
+          ? 1000
+          : 0;
 
-      const height = isCarouselSegment
-        ? 80
-        : 0;
+      const height =
+        isCarouselSegment
+          ? 80
+          : 0;
 
       return {
         x: 0,
@@ -96,30 +102,7 @@ describe('Certifications', () => {
     vi.restoreAllMocks();
   });
 
-  it('selects the certification vendor on a regular click', async () => {
-    const user = userEvent.setup();
-    const onSelectVendor = vi.fn();
-
-    render(
-      <LanguageProvider>
-        <Certifications
-          onSelectVendor={onSelectVendor}
-        />
-      </LanguageProvider>,
-    );
-
-    await user.click(
-      screen.getByRole('button', {
-        name: /AWS/i,
-      }),
-    );
-
-    expect(
-      onSelectVendor,
-    ).toHaveBeenCalledWith('v_aws');
-  });
-
-  it('moves the carousel automatically over time', () => {
+  it('renders enough repeated segments for very wide viewports', () => {
     render(
       <LanguageProvider>
         <Certifications
@@ -128,12 +111,90 @@ describe('Certifications', () => {
       </LanguageProvider>,
     );
 
-    const track = screen.getByTestId(
-      'certifications-track',
+    expect(
+      screen.getAllByTestId(
+        'certifications-segment',
+      ),
+    ).toHaveLength(9);
+  });
+
+  it('eagerly loads every repeated carousel logo', () => {
+    render(
+      <LanguageProvider>
+        <Certifications
+          onSelectVendor={vi.fn()}
+        />
+      </LanguageProvider>,
     );
 
-    expect(track.style.transform).toBe(
-      'translate3d(-1000px, 0, 0)',
+    const viewport =
+      screen.getByTestId(
+        'certifications-viewport',
+      );
+
+    const images =
+      viewport.querySelectorAll('img');
+
+    expect(
+      images.length,
+    ).toBeGreaterThan(0);
+
+    images.forEach((image) => {
+      expect(image).toHaveAttribute(
+        'loading',
+        'eager',
+      );
+    });
+  });
+
+  it('selects the certification vendor on a regular click', async () => {
+    const user = userEvent.setup();
+    const onSelectVendor = vi.fn();
+
+    render(
+      <LanguageProvider>
+        <Certifications
+          onSelectVendor={
+            onSelectVendor
+          }
+        />
+      </LanguageProvider>,
+    );
+
+    await user.click(
+      screen.getByRole(
+        'button',
+        {
+          name: /AWS/i,
+        },
+      ),
+    );
+
+    expect(
+      onSelectVendor,
+    ).toHaveBeenCalledWith(
+      'v_aws',
+    );
+  });
+
+  it('starts from the middle copy and moves automatically over time', () => {
+    render(
+      <LanguageProvider>
+        <Certifications
+          onSelectVendor={vi.fn()}
+        />
+      </LanguageProvider>,
+    );
+
+    const track =
+      screen.getByTestId(
+        'certifications-track',
+      );
+
+    expect(
+      track.style.transform,
+    ).toBe(
+      'translate3d(-4000px, 0, 0)',
     );
 
     runAnimationFrame(1000);
@@ -157,18 +218,22 @@ describe('Certifications', () => {
       </LanguageProvider>,
     );
 
-    const viewport = screen.getByTestId(
-      'certifications-viewport',
-    );
+    const viewport =
+      screen.getByTestId(
+        'certifications-viewport',
+      );
 
-    const track = screen.getByTestId(
-      'certifications-track',
-    );
+    const track =
+      screen.getByTestId(
+        'certifications-track',
+      );
 
     runAnimationFrame(1000);
     runAnimationFrame(1016);
 
-    fireEvent.mouseEnter(viewport);
+    fireEvent.mouseEnter(
+      viewport,
+    );
 
     const pausedTransform =
       track.style.transform;
@@ -176,11 +241,13 @@ describe('Certifications', () => {
     runAnimationFrame(1032);
     runAnimationFrame(1048);
 
-    expect(track.style.transform).toBe(
-      pausedTransform,
-    );
+    expect(
+      track.style.transform,
+    ).toBe(pausedTransform);
 
-    fireEvent.mouseLeave(viewport);
+    fireEvent.mouseLeave(
+      viewport,
+    );
 
     runAnimationFrame(1064);
 
@@ -190,59 +257,73 @@ describe('Certifications', () => {
   });
 
   it('allows manual dragging and suppresses the click generated by a drag', () => {
-    const onSelectVendor = vi.fn();
+    const onSelectVendor =
+      vi.fn();
 
     render(
       <LanguageProvider>
         <Certifications
-          onSelectVendor={onSelectVendor}
+          onSelectVendor={
+            onSelectVendor
+          }
         />
       </LanguageProvider>,
     );
 
-    const viewport = screen.getByTestId(
-      'certifications-viewport',
-    );
+    const viewport =
+      screen.getByTestId(
+        'certifications-viewport',
+      );
 
-    const track = screen.getByTestId(
-      'certifications-track',
-    );
+    const track =
+      screen.getByTestId(
+        'certifications-track',
+      );
 
-    const awsButton = screen.getByRole(
-      'button',
-      {
-        name: /AWS/i,
-      },
-    );
+    const awsButton =
+      screen.getByRole(
+        'button',
+        {
+          name: /AWS/i,
+        },
+      );
 
     const initialTransform =
       track.style.transform;
 
-    fireEvent.pointerDown(awsButton, {
-      pointerId: 1,
-      button: 0,
-      clientX: 500,
-    });
+    fireEvent.pointerDown(
+      awsButton,
+      {
+        pointerId: 1,
+        button: 0,
+        clientX: 500,
+      },
+    );
 
-    fireEvent.pointerMove(viewport, {
-      pointerId: 1,
-      clientX: 420,
-    });
+    fireEvent.pointerMove(
+      viewport,
+      {
+        pointerId: 1,
+        clientX: 420,
+      },
+    );
 
     expect(
       track.style.transform,
     ).not.toBe(initialTransform);
 
-    fireEvent.pointerUp(viewport, {
-      pointerId: 1,
-      button: 0,
-      clientX: 420,
-    });
+    fireEvent.pointerUp(
+      viewport,
+      {
+        pointerId: 1,
+        button: 0,
+        clientX: 420,
+      },
+    );
 
     /*
-     * This represents the click a browser emits
-     * immediately after the pointer sequence.
-     * A drag must not open the vendor.
+     * A browser emits a click after pointerup.
+     * A drag must suppress that click.
      */
     fireEvent.click(awsButton);
 
@@ -251,14 +332,16 @@ describe('Certifications', () => {
     ).not.toHaveBeenCalled();
 
     /*
-     * The following independent click must work
-     * normally.
+     * A subsequent independent click must
+     * continue working normally.
      */
     fireEvent.click(awsButton);
 
     expect(
       onSelectVendor,
-    ).toHaveBeenCalledWith('v_aws');
+    ).toHaveBeenCalledWith(
+      'v_aws',
+    );
   });
 
   it('does not auto-scroll when reduced motion is requested', () => {
@@ -272,9 +355,10 @@ describe('Certifications', () => {
       </LanguageProvider>,
     );
 
-    const track = screen.getByTestId(
-      'certifications-track',
-    );
+    const track =
+      screen.getByTestId(
+        'certifications-track',
+      );
 
     const initialTransform =
       track.style.transform;
@@ -283,8 +367,8 @@ describe('Certifications', () => {
     runAnimationFrame(1016);
     runAnimationFrame(1032);
 
-    expect(track.style.transform).toBe(
-      initialTransform,
-    );
+    expect(
+      track.style.transform,
+    ).toBe(initialTransform);
   });
 });

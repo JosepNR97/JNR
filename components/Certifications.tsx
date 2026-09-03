@@ -9,23 +9,54 @@ interface CertificationsProps {
 
 const AUTO_SCROLL_PX_PER_SECOND = 52;
 const DRAG_THRESHOLD = 6;
-const CAROUSEL_COPIES = 3;
-const INTERACTIVE_COPY_INDEX = 1;
 
-const normalizeOffset = (offset: number, segmentWidth: number) => {
+/*
+ * Nine copies give us four complete sequences on either side of
+ * the accessible middle copy. With the current logo dimensions,
+ * this provides enough buffer for very wide and 8K-class viewports
+ * while keeping the loop independent from viewport width.
+ */
+const CAROUSEL_COPIES = 9;
+const INTERACTIVE_COPY_INDEX = Math.floor(CAROUSEL_COPIES / 2);
+
+const normalizeOffset = (
+  offset: number,
+  segmentWidth: number,
+) => {
   if (segmentWidth <= 0) return offset;
+
+  const lowerBoundary =
+    -(INTERACTIVE_COPY_INDEX + 1) * segmentWidth;
+
+  const upperBoundary =
+    -(INTERACTIVE_COPY_INDEX - 1) * segmentWidth;
 
   let normalizedOffset = offset;
 
-  while (normalizedOffset <= -2 * segmentWidth) {
+  while (normalizedOffset <= lowerBoundary) {
     normalizedOffset += segmentWidth;
   }
 
-  while (normalizedOffset > -segmentWidth) {
+  while (normalizedOffset > upperBoundary) {
     normalizedOffset -= segmentWidth;
   }
 
   return normalizedOffset;
+};
+
+const getLoopProgress = (
+  offset: number,
+  segmentWidth: number,
+) => {
+  if (segmentWidth <= 0) return 0;
+
+  const distance = -offset;
+
+  const remainder =
+    ((distance % segmentWidth) + segmentWidth) %
+    segmentWidth;
+
+  return remainder / segmentWidth;
 };
 
 const applyTrackOffset = (
@@ -40,12 +71,12 @@ export const Certifications = ({
 }: CertificationsProps) => {
   const { t } = useLanguage();
 
-  const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const segmentRef = useRef<HTMLDivElement>(null);
 
   const animationFrameRef = useRef(0);
-  const previousFrameTimeRef = useRef<number | null>(null);
+  const previousFrameTimeRef =
+    useRef<number | null>(null);
 
   const segmentWidthRef = useRef(0);
   const offsetRef = useRef(0);
@@ -55,7 +86,8 @@ export const Certifications = ({
   const draggingRef = useRef(false);
   const reducedMotionRef = useRef(false);
 
-  const dragResetTimeoutRef = useRef<number | null>(null);
+  const dragResetTimeoutRef =
+    useRef<number | null>(null);
 
   const pointerRef = useRef({
     active: false,
@@ -65,13 +97,16 @@ export const Certifications = ({
     moved: false,
   });
 
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDragging, setIsDragging] =
+    useState(false);
 
   useLayoutEffect(() => {
     const segment = segmentRef.current;
     const track = trackRef.current;
 
-    if (!segment || !track) return undefined;
+    if (!segment || !track) {
+      return undefined;
+    }
 
     const measureSegment = () => {
       const nextSegmentWidth =
@@ -87,28 +122,20 @@ export const Certifications = ({
       const previousSegmentWidth =
         segmentWidthRef.current;
 
-      let progress = 0;
+      const progress =
+        previousSegmentWidth > 0
+          ? getLoopProgress(
+              offsetRef.current,
+              previousSegmentWidth,
+            )
+          : 0;
 
-      if (previousSegmentWidth > 0) {
-        const previousOffset = normalizeOffset(
-          offsetRef.current,
-          previousSegmentWidth,
-        );
-
-        progress =
-          (-previousOffset - previousSegmentWidth) /
-          previousSegmentWidth;
-
-        progress = Math.max(
-          0,
-          Math.min(progress, 0.999999),
-        );
-      }
-
-      segmentWidthRef.current = nextSegmentWidth;
+      segmentWidthRef.current =
+        nextSegmentWidth;
 
       offsetRef.current =
-        -nextSegmentWidth * (1 + progress);
+        -(INTERACTIVE_COPY_INDEX + progress) *
+        nextSegmentWidth;
 
       applyTrackOffset(
         track,
@@ -118,9 +145,13 @@ export const Certifications = ({
 
     measureSegment();
 
-    let resizeObserver: ResizeObserver | undefined;
+    let resizeObserver:
+      | ResizeObserver
+      | undefined;
 
-    if (typeof ResizeObserver !== 'undefined') {
+    if (
+      typeof ResizeObserver !== 'undefined'
+    ) {
       resizeObserver = new ResizeObserver(
         measureSegment,
       );
@@ -163,13 +194,16 @@ export const Certifications = ({
 
     previousFrameTimeRef.current = null;
 
-    const animate = (frameTime: number) => {
+    const animate = (
+      frameTime: number,
+    ) => {
       const track = trackRef.current;
       const segmentWidth =
         segmentWidthRef.current;
 
       if (
-        previousFrameTimeRef.current === null
+        previousFrameTimeRef.current ===
+        null
       ) {
         previousFrameTimeRef.current =
           frameTime;
@@ -234,7 +268,8 @@ export const Certifications = ({
       );
 
       if (
-        dragResetTimeoutRef.current !== null
+        dragResetTimeoutRef.current !==
+        null
       ) {
         window.clearTimeout(
           dragResetTimeoutRef.current,
@@ -249,7 +284,8 @@ export const Certifications = ({
     if (event.button !== 0) return;
 
     if (
-      dragResetTimeoutRef.current !== null
+      dragResetTimeoutRef.current !==
+      null
     ) {
       window.clearTimeout(
         dragResetTimeoutRef.current,
@@ -259,12 +295,12 @@ export const Certifications = ({
     }
 
     /*
-     * A mouse click may leave the clicked button focused.
-     * That focus must not permanently pause autoplay once
-     * the pointer leaves the carousel. Keyboard focus is
-     * handled separately with :focus-visible.
+     * Mouse focus must not permanently pause autoplay.
+     * Keyboard focus is handled independently through
+     * :focus-visible.
      */
-    keyboardFocusPausedRef.current = false;
+    keyboardFocusPausedRef.current =
+      false;
 
     pointerRef.current = {
       active: true,
@@ -283,12 +319,14 @@ export const Certifications = ({
   ) => {
     const pointer = pointerRef.current;
     const track = trackRef.current;
+
     const segmentWidth =
       segmentWidthRef.current;
 
     if (
       !pointer.active ||
-      pointer.pointerId !== event.pointerId ||
+      pointer.pointerId !==
+        event.pointerId ||
       !track ||
       segmentWidth <= 0
     ) {
@@ -312,8 +350,8 @@ export const Certifications = ({
       pointer.moved = true;
 
       /*
-       * Include the first few pixels consumed by the
-       * drag threshold so the movement feels immediate.
+       * Include the pixels consumed by the threshold so
+       * that dragging starts without a visible jump.
        */
       deltaX = distanceFromStart;
 
@@ -326,10 +364,11 @@ export const Certifications = ({
 
     event.preventDefault();
 
-    offsetRef.current = normalizeOffset(
-      offsetRef.current + deltaX,
-      segmentWidth,
-    );
+    offsetRef.current =
+      normalizeOffset(
+        offsetRef.current + deltaX,
+        segmentWidth,
+      );
 
     applyTrackOffset(
       track,
@@ -367,15 +406,18 @@ export const Certifications = ({
     }
 
     /*
-     * A real click is emitted immediately after pointerup.
-     * Keep "moved" alive until that click has had a chance
-     * to be suppressed, then reset it for future clicks.
+     * Browsers emit click immediately after pointerup.
+     * Preserve the moved flag until that click can be
+     * discarded, then allow normal clicks again.
      */
     if (moved) {
       dragResetTimeoutRef.current =
         window.setTimeout(() => {
-          pointerRef.current.moved = false;
-          dragResetTimeoutRef.current = null;
+          pointerRef.current.moved =
+            false;
+
+          dragResetTimeoutRef.current =
+            null;
         }, 0);
     } else {
       pointerRef.current.moved = false;
@@ -396,36 +438,40 @@ export const Certifications = ({
   const handleFocusCapture = (
     event: React.FocusEvent<HTMLDivElement>,
   ) => {
-    const target = event.target as HTMLElement;
+    const target =
+      event.target as HTMLElement;
 
     const isFocusVisible = (() => {
       try {
-        return target.matches(':focus-visible');
+        return target.matches(
+          ':focus-visible',
+        );
       } catch {
         return false;
       }
     })();
 
     /*
-     * Mouse clicks also create focus, but they should
-     * only pause the carousel while the mouse is hovering.
-     * Keyboard focus, on the other hand, should keep the
-     * carousel still while the user navigates its buttons.
+     * Mouse clicks also focus buttons. Only keyboard-visible
+     * focus should keep the carousel paused after hover ends.
      */
     if (!isFocusVisible) return;
 
-    keyboardFocusPausedRef.current = true;
+    keyboardFocusPausedRef.current =
+      true;
 
     const track = trackRef.current;
     const segmentWidth =
       segmentWidthRef.current;
 
     /*
-     * Bring the accessible middle copy back into view
-     * before keyboard navigation starts.
+     * Recenter the accessible sequence before keyboard
+     * navigation so all keyboard targets are predictable.
      */
     if (track && segmentWidth > 0) {
-      offsetRef.current = -segmentWidth;
+      offsetRef.current =
+        -INTERACTIVE_COPY_INDEX *
+        segmentWidth;
 
       applyTrackOffset(
         track,
@@ -456,7 +502,6 @@ export const Certifications = ({
       </div>
 
       <div
-        ref={viewportRef}
         data-testid="certifications-viewport"
         className={`w-full touch-pan-y select-none overflow-hidden ${
           isDragging
@@ -492,6 +537,7 @@ export const Certifications = ({
                     ? segmentRef
                     : undefined
                 }
+                data-testid="certifications-segment"
                 data-carousel-segment={
                   copyIndex ===
                   INTERACTIVE_COPY_INDEX
@@ -526,7 +572,7 @@ export const Certifications = ({
                       <img
                         src={logo.url}
                         alt=""
-                        loading="lazy"
+                        loading="eager"
                         decoding="async"
                         draggable="false"
                         className="max-h-14 max-w-full object-contain opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
