@@ -46,25 +46,37 @@ export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
     const updateMotionPreference = () => {
       reducedMotionRef.current = mediaQuery.matches;
     };
 
     updateMotionPreference();
+
     const container = containerRef.current;
-    if (container) container.scrollLeft = getSegmentWidth(container);
+    if (container) {
+      container.scrollLeft = getSegmentWidth(container);
+    }
+
     mediaQuery.addEventListener('change', updateMotionPreference);
 
     const animate = () => {
       const currentContainer = containerRef.current;
-      if (currentContainer && !pauseRef.current && !reducedMotionRef.current) {
+
+      if (
+        currentContainer &&
+        !pauseRef.current &&
+        !reducedMotionRef.current
+      ) {
         currentContainer.scrollLeft += AUTO_SCROLL_SPEED;
         normalizeScrollPosition(currentContainer);
       }
+
       requestRef.current = window.requestAnimationFrame(animate);
     };
 
     requestRef.current = window.requestAnimationFrame(animate);
+
     return () => {
       mediaQuery.removeEventListener('change', updateMotionPreference);
       window.cancelAnimationFrame(requestRef.current);
@@ -73,6 +85,7 @@ export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return;
+
     const container = containerRef.current;
     if (!container) return;
 
@@ -82,6 +95,7 @@ export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
       startScroll: container.scrollLeft,
       moved: false,
     };
+
     pauseRef.current = true;
     setIsDragging(true);
   };
@@ -89,22 +103,29 @@ export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     const container = containerRef.current;
     const pointer = pointerRef.current;
+
     if (!container || !pointer.active) return;
 
     const distance = event.clientX - pointer.startX;
+
     if (Math.abs(distance) > DRAG_THRESHOLD && !pointer.moved) {
       pointer.moved = true;
       container.setPointerCapture?.(event.pointerId);
     }
+
     container.scrollLeft = pointer.startScroll - distance;
     normalizeScrollPosition(container, pointer);
   };
 
   const handlePointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
     const container = containerRef.current;
+
     pointerRef.current.active = false;
     setIsDragging(false);
-    pauseRef.current = container?.matches(':hover, :focus-within') ?? false;
+
+    pauseRef.current =
+      container?.matches(':hover, :focus-within') ?? false;
+
     if (container?.hasPointerCapture?.(event.pointerId)) {
       container.releasePointerCapture?.(event.pointerId);
     }
@@ -115,6 +136,7 @@ export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
       pointerRef.current.moved = false;
       return;
     }
+
     onSelectVendor(vendorId);
   };
 
@@ -128,7 +150,9 @@ export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
 
       <div
         ref={containerRef}
-        className={`scrollbar-none w-full touch-pan-y select-none overflow-x-auto ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`scrollbar-none w-full touch-pan-y select-none overflow-x-auto ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
@@ -137,21 +161,24 @@ export const Certifications = ({ onSelectVendor }: CertificationsProps) => {
           pauseRef.current = true;
         }}
         onMouseLeave={() => {
-          if (!pointerRef.current.active) pauseRef.current = false;
+          if (!pointerRef.current.active) {
+            pauseRef.current = false;
+          }
         }}
         onFocus={() => {
           pauseRef.current = true;
         }}
         onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget))
+          if (!event.currentTarget.contains(event.relatedTarget)) {
             pauseRef.current = false;
+          }
         }}
       >
         <div className="inline-flex min-w-max items-center py-4">
           {Array.from({ length: CAROUSEL_COPIES }, (_, copyIndex) => (
             <div
               key={copyIndex}
-              className="inline-flex items-center gap-16 px-8"
+              className="inline-flex min-w-[100vw] items-center justify-evenly gap-16 px-8"
               aria-hidden={copyIndex !== 1}
             >
               {CERTIFICATION_LOGOS.map((logo) => (
