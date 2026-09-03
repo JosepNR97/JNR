@@ -15,6 +15,7 @@ Baseline revisado tras la migración major realizada en septiembre de 2026.
 | TypeScript | `6.0.x` |
 | Vite | `8.2.x` |
 | Tailwind CSS | `4.3.x` |
+| Integración Tailwind | `@tailwindcss/vite` `4.3.x` |
 | Lucide React | `1.x` |
 | Testing Library React | `16.3.x` |
 | Testing Library DOM | `10.4.x` |
@@ -88,8 +89,9 @@ Si no se dispone de un entorno local compatible, puede utilizarse temporalmente 
 2. regenere el lockfile;
 3. compruebe que `npm ci` funciona;
 4. ejecute `npm audit`;
-5. haga commit únicamente del lockfile esperado;
-6. sea eliminado antes de integrar la pull request.
+5. ejecute el pipeline completo de validación;
+6. haga commit únicamente del lockfile esperado;
+7. sea eliminado antes de integrar la pull request.
 
 ## Familias de dependencias que deben mantenerse alineadas
 
@@ -160,20 +162,53 @@ La migración podrá realizarse cuando el tooling relacionado declare soporte ad
 
 La migración a Tailwind CSS 4 está completada.
 
-La configuración actual utiliza:
+La entrada CSS utiliza:
 
 ```css
 @import "tailwindcss";
 @config "./tailwind.config.js";
 ```
 
-y el plugin PostCSS:
+Tailwind está integrado directamente en el pipeline de Vite mediante:
+
+```text
+@tailwindcss/vite
+```
+
+y se registra en `vite.config.ts` mediante:
+
+```ts
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+  plugins: [tailwindcss(), react()],
+  base: './',
+});
+```
+
+El proyecto no mantiene un `postcss.config.js` propio y ya no declara como dependencias directas:
 
 ```text
 @tailwindcss/postcss
+postcss
+autoprefixer
 ```
 
-`autoprefixer` ya no se mantiene como dependencia explícita del proyecto.
+Esto no significa que `postcss` deba desaparecer necesariamente de `package-lock.json`.
+
+Vite puede mantener PostCSS como dependencia transitiva para su propio pipeline CSS. La ausencia relevante es la de `postcss` como dependencia directa del proyecto y la de `@tailwindcss/postcss` como mecanismo de integración de Tailwind.
+
+### Configuración JavaScript legacy
+
+`tailwind.config.js` continúa utilizándose para la configuración del theme y se carga explícitamente desde `styles.css` mediante:
+
+```css
+@config "./tailwind.config.js";
+```
+
+Tailwind CSS 4 permite mantener configuraciones JavaScript existentes mediante `@config`, aunque el enfoque nativo de la versión 4 es la configuración CSS-first.
+
+Una eventual migración desde `tailwind.config.js` a `@theme` deberá realizarse en una pull request independiente para separar claramente cambios de configuración visual de cambios de tooling.
 
 ### Compatibilidad visual con Tailwind CSS 3
 
@@ -381,6 +416,28 @@ Tailwind CSS 4 modificó varias escalas y comportamientos, por lo que después d
 - responsive behavior;
 - estados hover y focus.
 
+### Separar framework e integración de build
+
+La versión de Tailwind y el mecanismo mediante el que se integra en el bundler son decisiones distintas.
+
+En proyectos Vite, el baseline actual utiliza el plugin dedicado:
+
+```text
+@tailwindcss/vite
+```
+
+en lugar de enrutar Tailwind a través de un `postcss.config.js` propio.
+
+Cuando se actualice Tailwind debe comprobarse también la compatibilidad entre:
+
+```text
+tailwindcss
+@tailwindcss/vite
+vite
+```
+
+y mantener alineadas las versiones de los dos paquetes de Tailwind.
+
 ## CI y protección de main
 
 Las pull requests hacia `main` deben superar el workflow de CI antes del merge.
@@ -431,6 +488,7 @@ Revisar además:
 - dependencias transitivas vulnerables;
 - peer dependencies;
 - paquetes con scripts de instalación;
+- compatibilidad entre Tailwind CSS, `@tailwindcss/vite` y Vite;
 - soporte de TypeScript por `typescript-eslint`;
 - baseline de navegadores de Tailwind;
 - actualizaciones major abiertas por Dependabot;
