@@ -398,14 +398,13 @@ export const Certifications = ({
   ) => {
     const target = event.target as HTMLElement;
 
-    let isFocusVisible = false;
-
-    try {
-      isFocusVisible =
-        target.matches(':focus-visible');
-    } catch {
-      isFocusVisible = false;
-    }
+    const isFocusVisible = (() => {
+      try {
+        return target.matches(':focus-visible');
+      } catch {
+        return false;
+      }
+    })();
 
     /*
      * Mouse clicks also create focus, but they should
