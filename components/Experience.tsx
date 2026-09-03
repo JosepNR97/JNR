@@ -25,7 +25,10 @@ export const Experience = () => {
         </Reveal>
 
         <div className="relative">
-          <div className="absolute bottom-0 left-4 top-2 w-0.5 bg-slate-200 md:left-4" aria-hidden="true" />
+          <div
+            className="absolute bottom-0 left-4 top-2 w-0.5 bg-slate-200 md:left-4"
+            aria-hidden="true"
+          />
 
           <div className="space-y-8 md:space-y-12">
             {t.experience.items.map((item) => {
@@ -40,14 +43,18 @@ export const Experience = () => {
                   className="group relative scroll-mt-24 pl-12 md:pl-24"
                 >
                   <div
-                    className={`absolute left-4 top-0 z-10 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full border-4 border-white shadow transition-colors duration-300 ${
-                      isExpanded ? 'bg-brand-600' : 'bg-slate-300 group-hover:bg-brand-500'
+                    className={`absolute left-4 top-0 z-10 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full border-4 border-white shadow-sm transition-colors duration-300 ${
+                      isExpanded
+                        ? 'bg-brand-600'
+                        : 'bg-slate-300 group-hover:bg-brand-500'
                     }`}
                     aria-hidden="true"
                   >
                     <BriefcaseIcon
                       className={`h-4 w-4 transition-colors duration-300 ${
-                        isExpanded ? 'text-white' : 'text-slate-700 group-hover:text-white'
+                        isExpanded
+                          ? 'text-white'
+                          : 'text-slate-700 group-hover:text-white'
                       }`}
                     />
                   </div>
@@ -71,12 +78,16 @@ export const Experience = () => {
                         <span className="flex-1">
                           <span
                             className={`block text-xl font-bold transition-colors md:text-2xl ${
-                              isExpanded ? 'text-brand-700' : 'text-slate-900 group-hover:text-brand-700'
+                              isExpanded
+                                ? 'text-brand-700'
+                                : 'text-slate-900 group-hover:text-brand-700'
                             }`}
                           >
                             {item.role}
                           </span>
-                          <span className="mt-1 block text-lg font-medium text-slate-600">{item.company}</span>
+                          <span className="mt-1 block text-lg font-medium text-slate-600">
+                            {item.company}
+                          </span>
                         </span>
 
                         <span className="flex shrink-0 flex-row-reverse items-center justify-between gap-3 md:flex-col md:items-end md:justify-start">
@@ -102,7 +113,9 @@ export const Experience = () => {
                       <span className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 transition-colors group-hover:border-brand-100">
                         <span
                           className={`text-sm font-semibold transition-colors ${
-                            isExpanded ? 'text-brand-700' : 'text-slate-400 group-hover:text-brand-700'
+                            isExpanded
+                              ? 'text-brand-700'
+                              : 'text-slate-400 group-hover:text-brand-700'
                           }`}
                         >
                           {isExpanded ? t.experience.collapse : t.experience.expand}
@@ -116,13 +129,19 @@ export const Experience = () => {
                           aria-hidden="true"
                         >
                           <ChevronDownIcon
-                            className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                            className={`h-5 w-5 transition-transform ${
+                              isExpanded ? 'rotate-180' : ''
+                            }`}
                           />
                         </span>
                       </span>
                     </button>
 
-                    <div className={`expandable-panel ${isExpanded ? 'is-expanded' : ''}`}>
+                    <div
+                      className={`expandable-panel ${
+                        isExpanded ? 'is-expanded' : ''
+                      }`}
+                    >
                       <div className="min-h-0 overflow-hidden">
                         <div
                           id={panelId}
@@ -142,7 +161,7 @@ export const Experience = () => {
                               >
                                 <div className="mb-2 flex flex-wrap items-center gap-2">
                                   {achievement.year ? (
-                                    <span className="rounded bg-slate-800 px-2 py-0.5 font-mono text-xs font-bold text-white">
+                                    <span className="rounded-sm bg-slate-800 px-2 py-0.5 font-mono text-xs font-bold text-white">
                                       {achievement.year}
                                     </span>
                                   ) : null}
