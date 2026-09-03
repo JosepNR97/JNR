@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { CERTIFICATION_LOGOS } from '../constants';
 import { useLanguage } from '../context/LanguageContext';
@@ -7,37 +7,32 @@ interface CertificationsProps {
   onSelectVendor: (vendorId: string) => void;
 }
 
-const AUTO_SCROLL_SPEED = 28;
+const AUTO_SCROLL_PX_PER_SECOND = 52;
 const DRAG_THRESHOLD = 6;
-const CAROUSEL_COPIES = 5;
-const MIDDLE_COPY_INDEX = Math.floor(CAROUSEL_COPIES / 2);
+const CAROUSEL_COPIES = 3;
+const INTERACTIVE_COPY_INDEX = 1;
 
-const getSegmentWidth = (container: HTMLDivElement) =>
-  container.scrollWidth / CAROUSEL_COPIES;
+const normalizeOffset = (offset: number, segmentWidth: number) => {
+  if (segmentWidth <= 0) return offset;
 
-const normalizeScrollPosition = (
-  container: HTMLDivElement,
-  pointer?: { startScroll: number },
-) => {
-  const segmentWidth = getSegmentWidth(container);
-  if (!segmentWidth) return;
+  let normalizedOffset = offset;
 
-  const lowerBoundary = segmentWidth * (MIDDLE_COPY_INDEX - 1);
-  const upperBoundary = segmentWidth * (MIDDLE_COPY_INDEX + 1);
-
-  if (container.scrollLeft >= upperBoundary) {
-    container.scrollLeft -= segmentWidth;
-
-    if (pointer) {
-      pointer.startScroll -= segmentWidth;
-    }
-  } else if (container.scrollLeft <= lowerBoundary) {
-    container.scrollLeft += segmentWidth;
-
-    if (pointer) {
-      pointer.startScroll += segmentWidth;
-    }
+  while (normalizedOffset <= -2 * segmentWidth) {
+    normalizedOffset += segmentWidth;
   }
+
+  while (normalizedOffset > -segmentWidth) {
+    normalizedOffset -= segmentWidth;
+  }
+
+  return normalizedOffset;
+};
+
+const applyTrackOffset = (
+  track: HTMLDivElement,
+  offset: number,
+) => {
+  track.style.transform = `translate3d(${offset}px, 0, 0)`;
 };
 
 export const Certifications = ({
@@ -45,20 +40,109 @@ export const Certifications = ({
 }: CertificationsProps) => {
   const { t } = useLanguage();
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const requestRef = useRef(0);
-  const pauseRef = useRef(false);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const segmentRef = useRef<HTMLDivElement>(null);
+
+  const animationFrameRef = useRef(0);
+  const previousFrameTimeRef = useRef<number | null>(null);
+
+  const segmentWidthRef = useRef(0);
+  const offsetRef = useRef(0);
+
+  const hoverPausedRef = useRef(false);
+  const keyboardFocusPausedRef = useRef(false);
+  const draggingRef = useRef(false);
   const reducedMotionRef = useRef(false);
+
   const dragResetTimeoutRef = useRef<number | null>(null);
 
   const pointerRef = useRef({
     active: false,
+    pointerId: -1,
     startX: 0,
-    startScroll: 0,
+    lastX: 0,
     moved: false,
   });
 
   const [isDragging, setIsDragging] = useState(false);
+
+  useLayoutEffect(() => {
+    const segment = segmentRef.current;
+    const track = trackRef.current;
+
+    if (!segment || !track) return undefined;
+
+    const measureSegment = () => {
+      const nextSegmentWidth =
+        segment.getBoundingClientRect().width;
+
+      if (
+        !Number.isFinite(nextSegmentWidth) ||
+        nextSegmentWidth <= 0
+      ) {
+        return;
+      }
+
+      const previousSegmentWidth =
+        segmentWidthRef.current;
+
+      let progress = 0;
+
+      if (previousSegmentWidth > 0) {
+        const previousOffset = normalizeOffset(
+          offsetRef.current,
+          previousSegmentWidth,
+        );
+
+        progress =
+          (-previousOffset - previousSegmentWidth) /
+          previousSegmentWidth;
+
+        progress = Math.max(
+          0,
+          Math.min(progress, 0.999999),
+        );
+      }
+
+      segmentWidthRef.current = nextSegmentWidth;
+
+      offsetRef.current =
+        -nextSegmentWidth * (1 + progress);
+
+      applyTrackOffset(
+        track,
+        offsetRef.current,
+      );
+    };
+
+    measureSegment();
+
+    let resizeObserver: ResizeObserver | undefined;
+
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(
+        measureSegment,
+      );
+
+      resizeObserver.observe(segment);
+    }
+
+    window.addEventListener(
+      'resize',
+      measureSegment,
+      { passive: true },
+    );
+
+    return () => {
+      resizeObserver?.disconnect();
+
+      window.removeEventListener(
+        'resize',
+        measureSegment,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(
@@ -66,53 +150,78 @@ export const Certifications = ({
     );
 
     const updateMotionPreference = () => {
-      reducedMotionRef.current = mediaQuery.matches;
+      reducedMotionRef.current =
+        mediaQuery.matches;
     };
 
     updateMotionPreference();
 
-    const container = containerRef.current;
+    mediaQuery.addEventListener(
+      'change',
+      updateMotionPreference,
+    );
 
-    if (container) {
-      container.scrollLeft =
-        getSegmentWidth(container) * MIDDLE_COPY_INDEX;
-    }
-
-    mediaQuery.addEventListener('change', updateMotionPreference);
-
-    let previousFrameTime: number | null = null;
+    previousFrameTimeRef.current = null;
 
     const animate = (frameTime: number) => {
-      const currentContainer = containerRef.current;
+      const track = trackRef.current;
+      const segmentWidth =
+        segmentWidthRef.current;
 
-      if (previousFrameTime === null) {
-        previousFrameTime = frameTime;
+      if (
+        previousFrameTimeRef.current === null
+      ) {
+        previousFrameTimeRef.current =
+          frameTime;
       }
 
       const elapsedSeconds = Math.min(
-        Math.max(frameTime - previousFrameTime, 0) / 1000,
+        Math.max(
+          frameTime -
+            previousFrameTimeRef.current,
+          0,
+        ) / 1000,
         0.05,
       );
 
-      previousFrameTime = frameTime;
+      previousFrameTimeRef.current =
+        frameTime;
+
+      const isPaused =
+        hoverPausedRef.current ||
+        keyboardFocusPausedRef.current ||
+        draggingRef.current ||
+        reducedMotionRef.current;
 
       if (
-        currentContainer &&
-        !pauseRef.current &&
-        !reducedMotionRef.current
+        track &&
+        segmentWidth > 0 &&
+        !isPaused
       ) {
-        currentContainer.scrollLeft +=
-          AUTO_SCROLL_SPEED * elapsedSeconds;
+        offsetRef.current =
+          normalizeOffset(
+            offsetRef.current -
+              AUTO_SCROLL_PX_PER_SECOND *
+                elapsedSeconds,
+            segmentWidth,
+          );
 
-        normalizeScrollPosition(currentContainer);
+        applyTrackOffset(
+          track,
+          offsetRef.current,
+        );
       }
 
-      requestRef.current =
-        window.requestAnimationFrame(animate);
+      animationFrameRef.current =
+        window.requestAnimationFrame(
+          animate,
+        );
     };
 
-    requestRef.current =
-      window.requestAnimationFrame(animate);
+    animationFrameRef.current =
+      window.requestAnimationFrame(
+        animate,
+      );
 
     return () => {
       mediaQuery.removeEventListener(
@@ -120,10 +229,16 @@ export const Certifications = ({
         updateMotionPreference,
       );
 
-      window.cancelAnimationFrame(requestRef.current);
+      window.cancelAnimationFrame(
+        animationFrameRef.current,
+      );
 
-      if (dragResetTimeoutRef.current !== null) {
-        window.clearTimeout(dragResetTimeoutRef.current);
+      if (
+        dragResetTimeoutRef.current !== null
+      ) {
+        window.clearTimeout(
+          dragResetTimeoutRef.current,
+        );
       }
     };
   }, []);
@@ -133,83 +248,203 @@ export const Certifications = ({
   ) => {
     if (event.button !== 0) return;
 
-    const container = containerRef.current;
-    if (!container) return;
+    if (
+      dragResetTimeoutRef.current !== null
+    ) {
+      window.clearTimeout(
+        dragResetTimeoutRef.current,
+      );
 
-    if (dragResetTimeoutRef.current !== null) {
-      window.clearTimeout(dragResetTimeoutRef.current);
       dragResetTimeoutRef.current = null;
     }
 
+    /*
+     * A mouse click may leave the clicked button focused.
+     * That focus must not permanently pause autoplay once
+     * the pointer leaves the carousel. Keyboard focus is
+     * handled separately with :focus-visible.
+     */
+    keyboardFocusPausedRef.current = false;
+
     pointerRef.current = {
       active: true,
+      pointerId: event.pointerId,
       startX: event.clientX,
-      startScroll: container.scrollLeft,
+      lastX: event.clientX,
       moved: false,
     };
 
-    pauseRef.current = true;
+    draggingRef.current = true;
     setIsDragging(true);
   };
 
   const handlePointerMove = (
     event: ReactPointerEvent<HTMLDivElement>,
   ) => {
-    const container = containerRef.current;
     const pointer = pointerRef.current;
-
-    if (!container || !pointer.active) return;
-
-    const distance = event.clientX - pointer.startX;
+    const track = trackRef.current;
+    const segmentWidth =
+      segmentWidthRef.current;
 
     if (
-      Math.abs(distance) > DRAG_THRESHOLD &&
-      !pointer.moved
+      !pointer.active ||
+      pointer.pointerId !== event.pointerId ||
+      !track ||
+      segmentWidth <= 0
     ) {
-      pointer.moved = true;
-      container.setPointerCapture?.(event.pointerId);
+      return;
     }
 
-    container.scrollLeft =
-      pointer.startScroll - distance;
+    const distanceFromStart =
+      event.clientX - pointer.startX;
 
-    normalizeScrollPosition(container, pointer);
+    let deltaX =
+      event.clientX - pointer.lastX;
+
+    if (!pointer.moved) {
+      if (
+        Math.abs(distanceFromStart) <=
+        DRAG_THRESHOLD
+      ) {
+        return;
+      }
+
+      pointer.moved = true;
+
+      /*
+       * Include the first few pixels consumed by the
+       * drag threshold so the movement feels immediate.
+       */
+      deltaX = distanceFromStart;
+
+      event.currentTarget.setPointerCapture?.(
+        event.pointerId,
+      );
+    }
+
+    pointer.lastX = event.clientX;
+
+    event.preventDefault();
+
+    offsetRef.current = normalizeOffset(
+      offsetRef.current + deltaX,
+      segmentWidth,
+    );
+
+    applyTrackOffset(
+      track,
+      offsetRef.current,
+    );
   };
 
   const handlePointerEnd = (
     event: ReactPointerEvent<HTMLDivElement>,
   ) => {
-    const container = containerRef.current;
-    const moved = pointerRef.current.moved;
-
-    pointerRef.current.active = false;
-    setIsDragging(false);
-
-    // Mouse/touch interaction should resume automatic movement.
-    // Keyboard focus still pauses it through onFocus/onBlur.
-    pauseRef.current = false;
+    const pointer = pointerRef.current;
 
     if (
-      container?.hasPointerCapture?.(event.pointerId)
+      !pointer.active ||
+      pointer.pointerId !== event.pointerId
     ) {
-      container.releasePointerCapture?.(event.pointerId);
+      return;
     }
 
+    const moved = pointer.moved;
+
+    pointer.active = false;
+
+    draggingRef.current = false;
+    setIsDragging(false);
+
+    if (
+      event.currentTarget.hasPointerCapture?.(
+        event.pointerId,
+      )
+    ) {
+      event.currentTarget.releasePointerCapture?.(
+        event.pointerId,
+      );
+    }
+
+    /*
+     * A real click is emitted immediately after pointerup.
+     * Keep "moved" alive until that click has had a chance
+     * to be suppressed, then reset it for future clicks.
+     */
     if (moved) {
-      dragResetTimeoutRef.current = window.setTimeout(() => {
-        pointerRef.current.moved = false;
-        dragResetTimeoutRef.current = null;
-      }, 0);
+      dragResetTimeoutRef.current =
+        window.setTimeout(() => {
+          pointerRef.current.moved = false;
+          dragResetTimeoutRef.current = null;
+        }, 0);
+    } else {
+      pointerRef.current.moved = false;
     }
   };
 
-  const handleLogoClick = (vendorId: string) => {
+  const handleLogoClick = (
+    vendorId: string,
+  ) => {
     if (pointerRef.current.moved) {
       pointerRef.current.moved = false;
       return;
     }
 
     onSelectVendor(vendorId);
+  };
+
+  const handleFocusCapture = (
+    event: React.FocusEvent<HTMLDivElement>,
+  ) => {
+    const target = event.target as HTMLElement;
+
+    const isFocusVisible = (() => {
+      try {
+        return target.matches(':focus-visible');
+      } catch {
+        return false;
+      }
+    })();
+
+    /*
+     * Mouse clicks also create focus, but they should
+     * only pause the carousel while the mouse is hovering.
+     * Keyboard focus, on the other hand, should keep the
+     * carousel still while the user navigates its buttons.
+     */
+    if (!isFocusVisible) return;
+
+    keyboardFocusPausedRef.current = true;
+
+    const track = trackRef.current;
+    const segmentWidth =
+      segmentWidthRef.current;
+
+    /*
+     * Bring the accessible middle copy back into view
+     * before keyboard navigation starts.
+     */
+    if (track && segmentWidth > 0) {
+      offsetRef.current = -segmentWidth;
+
+      applyTrackOffset(
+        track,
+        offsetRef.current,
+      );
+    }
+  };
+
+  const handleBlurCapture = (
+    event: React.FocusEvent<HTMLDivElement>,
+  ) => {
+    if (
+      !event.currentTarget.contains(
+        event.relatedTarget,
+      )
+    ) {
+      keyboardFocusPausedRef.current =
+        false;
+    }
   };
 
   return (
@@ -221,8 +456,9 @@ export const Certifications = ({
       </div>
 
       <div
-        ref={containerRef}
-        className={`scrollbar-none w-full touch-pan-y select-none overflow-x-auto ${
+        ref={viewportRef}
+        data-testid="certifications-viewport"
+        className={`w-full touch-pan-y select-none overflow-hidden ${
           isDragging
             ? 'cursor-grabbing'
             : 'cursor-grab'
@@ -231,53 +467,73 @@ export const Certifications = ({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
-        onFocus={() => {
-          pauseRef.current = true;
+        onMouseEnter={() => {
+          hoverPausedRef.current = true;
         }}
-        onBlur={(event) => {
-          if (
-            !event.currentTarget.contains(event.relatedTarget)
-          ) {
-            pauseRef.current = false;
-          }
+        onMouseLeave={() => {
+          hoverPausedRef.current = false;
         }}
+        onFocusCapture={handleFocusCapture}
+        onBlurCapture={handleBlurCapture}
       >
-        <div className="inline-flex min-w-max items-center py-4">
+        <div
+          ref={trackRef}
+          data-testid="certifications-track"
+          className="flex w-max items-center py-4 will-change-transform"
+        >
           {Array.from(
             { length: CAROUSEL_COPIES },
             (_, copyIndex) => (
               <div
                 key={copyIndex}
-                className="inline-flex items-center gap-16 px-8"
+                ref={
+                  copyIndex ===
+                  INTERACTIVE_COPY_INDEX
+                    ? segmentRef
+                    : undefined
+                }
+                data-carousel-segment={
+                  copyIndex ===
+                  INTERACTIVE_COPY_INDEX
+                    ? 'true'
+                    : undefined
+                }
+                className="flex shrink-0 items-center gap-12 pr-12"
                 aria-hidden={
-                  copyIndex !== MIDDLE_COPY_INDEX
+                  copyIndex !==
+                  INTERACTIVE_COPY_INDEX
                 }
               >
-                {CERTIFICATION_LOGOS.map((logo) => (
-                  <button
-                    key={`${copyIndex}-${logo.name}`}
-                    type="button"
-                    tabIndex={
-                      copyIndex === MIDDLE_COPY_INDEX
-                        ? 0
-                        : -1
-                    }
-                    aria-label={`${t.certifications.openVendor} ${logo.name}`}
-                    onClick={() =>
-                      handleLogoClick(logo.educationId)
-                    }
-                    className="group grid h-20 w-40 shrink-0 place-items-center p-2 transition-transform duration-300 hover:scale-110 focus-visible:scale-110"
-                  >
-                    <img
-                      src={logo.url}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      draggable="false"
-                      className="max-h-14 max-w-full object-contain opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
-                    />
-                  </button>
-                ))}
+                {CERTIFICATION_LOGOS.map(
+                  (logo) => (
+                    <button
+                      key={`${copyIndex}-${logo.name}`}
+                      type="button"
+                      tabIndex={
+                        copyIndex ===
+                        INTERACTIVE_COPY_INDEX
+                          ? 0
+                          : -1
+                      }
+                      aria-label={`${t.certifications.openVendor} ${logo.name}`}
+                      onClick={() =>
+                        handleLogoClick(
+                          logo.educationId,
+                        )
+                      }
+                      className="group grid h-20 w-40 shrink-0 place-items-center p-2 transition-transform duration-300 hover:scale-110 focus-visible:scale-110"
+                    >
+                      <img
+                        src={logo.url}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        draggable="false"
+                        className="max-h-14 max-w-full object-contain opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
+                      />
+                    </button>
+                  ),
+                )}
               </div>
             ),
           )}
