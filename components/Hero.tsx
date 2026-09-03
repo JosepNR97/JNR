@@ -104,7 +104,7 @@ export const Hero = () => {
 
       <div className="relative z-10 mx-auto max-w-4xl px-4 pb-20 pt-16 text-center">
         <span
-          className={`${entranceClassName} mb-6 inline-block rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white shadow-sm backdrop-blur-sm`}
+          className={`${entranceClassName} mb-6 inline-block rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white shadow-xs backdrop-blur-xs`}
           style={{ transitionDelay: '0ms' }}
         >
           {t.hero.badge}
@@ -146,7 +146,7 @@ export const Hero = () => {
           </a>
           <a
             href="#about"
-            className="inline-flex min-h-12 items-center rounded-full border border-white/30 bg-transparent px-8 py-4 font-medium text-white backdrop-blur-sm transition-all hover:border-white hover:bg-white/10"
+            className="inline-flex min-h-12 items-center rounded-full border border-white/30 bg-transparent px-8 py-4 font-medium text-white backdrop-blur-xs transition-all hover:border-white hover:bg-white/10"
           >
             {t.hero.portfolio}
           </a>
