@@ -185,7 +185,7 @@ export const Header = () => {
       <header
         className={`fixed top-0 z-50 w-full transition-all duration-300 ${
           scrolledHeader
-            ? 'bg-white/95 py-3 shadow-sm backdrop-blur-md'
+            ? 'bg-white/95 py-3 shadow-xs backdrop-blur-md'
             : 'bg-transparent py-6'
         }`}
       >
