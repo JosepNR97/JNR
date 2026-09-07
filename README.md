@@ -4,45 +4,45 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 
 ## 🌐 Portfolio publicado
 
-🔗 **[https://josepnr97.github.io/JNR/](https://josepnr97.github.io/JNR/)**
+🔗 **https://josepnr97.github.io/JNR/**
 
 ## ✨ Funcionalidades
 
-- 🌍 Contenido disponible en catalán, castellano e inglés.
-- 📱 Interfaz responsive y accesible mediante teclado.
-- 💼 Trayectoria profesional con proyectos desplegables.
-- 🎓 Formación académica y certificaciones agrupadas por proveedor.
-- 🏅 Carrusel continuo e interactivo de organizaciones acreditadoras, con navegación mediante clic y arrastre manual.
-- ♿ Animaciones respetuosas con la preferencia `prefers-reduced-motion`.
-- ♿ Accessibility smoke automatizado con Axe sobre estados reales de Chromium para detectar regresiones WCAG A/AA de alto impacto.
-- 🖼️ Recursos visuales servidos localmente, sin depender de URLs externas para los elementos gráficos de la interfaz.
-- 📄 CV descargable en el idioma activo, generado automáticamente desde los datos del portfolio.
-- 🔎 Metadatos SEO, Open Graph y datos estructurados de tipo `Person`.
-- 📊 Google Analytics inicializado al cargar la web.
-- 🧪 Smoke tests E2E con Chromium para validar interacción, layout y comportamiento real de navegador.
-- ✅ Integración continua para validar pull requests antes de integrarlas.
-- ⚙️ Despliegue automatizado mediante GitHub Actions y GitHub Pages.
+* 🌍 Contenido disponible en catalán, castellano e inglés.
+* 📱 Interfaz responsive y accesible mediante teclado.
+* 💼 Trayectoria profesional con proyectos desplegables.
+* 🎓 Formación académica y certificaciones agrupadas por proveedor.
+* 🏅 Carrusel continuo e interactivo de organizaciones acreditadoras, con navegación mediante clic y arrastre manual.
+* ♿ Animaciones respetuosas con la preferencia `prefers-reduced-motion`.
+* ♿ Accessibility smoke automatizado con Axe sobre estados reales de Chromium para detectar regresiones WCAG A/AA de alto impacto.
+* 🖼️ Recursos visuales servidos localmente, sin depender de URLs externas para los elementos gráficos de la interfaz.
+* 📄 CV descargable en el idioma activo, generado automáticamente desde los datos del portfolio.
+* 🔎 Metadatos SEO, Open Graph y datos estructurados de tipo `Person`.
+* 📊 Google Analytics inicializado al cargar la web.
+* 🧪 Smoke tests E2E con Chromium para validar interacción, layout y comportamiento real de navegador.
+* ✅ Integración continua para validar pull requests antes de integrarlas.
+* ⚙️ Despliegue automatizado mediante GitHub Actions y GitHub Pages.
 
 ## 🧰 Stack tecnológico
 
-- **React 19** y **React DOM 19**.
-- **TypeScript 6** en modo estricto.
-- **Vite 8** para desarrollo y build.
-- **Tailwind CSS 4** integrado directamente en Vite mediante `@tailwindcss/vite`.
-- **Lucide React 1** para la iconografía de interfaz, complementado con SVG local cuando un icono deja de formar parte de la librería.
-- **React PDF** para generar los CV en catalán, castellano e inglés.
-- **Vitest 5** y **Testing Library 16** para pruebas unitarias y de componentes sobre jsdom.
-- **Playwright 1.63** con **Chromium** para smoke tests E2E en navegador real.
-- **Axe 4.13** mediante `@axe-core/playwright` para accessibility smoke automatizado sobre la misma infraestructura E2E.
-- **ESLint 10** y **Prettier** para mantener la calidad y consistencia del código.
+* **React 19** y **React DOM 19**.
+* **TypeScript 6** en modo estricto.
+* **Vite 8** para desarrollo y build.
+* **Tailwind CSS 4** integrado directamente en Vite mediante `@tailwindcss/vite`.
+* **Lucide React 1** para la iconografía de interfaz, complementado con SVG local cuando un icono deja de formar parte de la librería.
+* **React PDF** para generar los CV en catalán, castellano e inglés.
+* **Vitest 5** y **Testing Library 16** para pruebas unitarias y de componentes sobre jsdom.
+* **Playwright 1.63** con **Chromium** para smoke tests E2E en navegador real.
+* **Axe 4.13** mediante `@axe-core/playwright` para accessibility smoke automatizado sobre la misma infraestructura E2E.
+* **ESLint 10** y **Prettier** para mantener la calidad y consistencia del código.
 
 ## 🖥️ Requisitos de desarrollo
 
 El proyecto declara como entorno soportado:
 
-- **Node.js:** `>=24.15.0 <25` — únicamente la rama Node 24.
-- **npm:** `>=11.19.0 <12`.
-- **Package manager de referencia:** `npm@11.19.0`.
+* **Node.js:** `>=24.15.0 <25` — únicamente la rama Node 24.
+* **npm:** `>=11.19.0 <12`.
+* **Package manager de referencia:** `npm@11.19.0`.
 
 `package.json` utiliza `devEngines` para rechazar con error los comandos npm relevantes cuando el runtime Node o la versión de npm no cumplen estos rangos.
 
@@ -56,16 +56,16 @@ npm install --global npm@11.19.0
 
 Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del framework es:
 
-- Safari 16.4+
-- Chrome 111+
-- Firefox 128+
+* Safari 16.4+
+* Chrome 111+
+* Firefox 128+
 
 ## 🗂️ Estructura del proyecto
 
 ```text
 .
 ├── .github/
-│   └── workflows/              CI, auditoría y despliegue
+│   └── workflows/              CI, auditoría, CodeQL y despliegue
 ├── components/                 Componentes de interfaz y sus pruebas
 ├── context/                    Estado y persistencia de idioma
 ├── e2e/                        Smoke tests E2E y accessibility smoke con Chromium
@@ -210,6 +210,8 @@ El mismo job requerido `validate` cubre tanto la validación rápida como la smo
 
 No existe un job ni un required check independiente para accessibility.
 
+CodeQL se ejecuta mediante un workflow de seguridad independiente y no forma parte del required check `validate`; durante su adopción inicial se mantiene como señal adicional no requerida.
+
 Si Playwright falla en CI, se conservan temporalmente los artefactos de fallo disponibles en `test-results/`, como screenshots y trazas generadas por la política configurada.
 
 La política de actualización y mantenimiento de dependencias se documenta en [docs/dependency-maintenance.md](docs/dependency-maintenance.md).
@@ -239,13 +241,13 @@ para ocultar conflictos entre dependencias o saltarse el contrato de entorno.
 
 Las actualizaciones major deben revisarse de manera independiente cuando puedan implicar:
 
-- cambios de API;
-- cambios en peer dependencies;
-- modificaciones de tipos;
-- migraciones de configuración;
-- diferencias visuales;
-- cambios en compatibilidad de navegadores;
-- regresiones funcionales.
+* cambios de API;
+* cambios en peer dependencies;
+* modificaciones de tipos;
+* migraciones de configuración;
+* diferencias visuales;
+* cambios en compatibilidad de navegadores;
+* regresiones funcionales.
 
 Dependabot revisa periódicamente tanto dependencias npm como GitHub Actions.
 
@@ -281,6 +283,16 @@ para evitar la ejecución indiscriminada de scripts de instalación de dependenc
 
 Los browsers de Playwright se instalan explícitamente mediante su CLI; no se añaden paquetes de browsers ni se relaja la política de scripts del proyecto para descargarlos durante `npm ci`.
 
+## 🔎 Seguridad estática
+
+CodeQL analiza JavaScript/TypeScript como una capa independiente de análisis estático de seguridad, complementaria a los controles de dependencias basados en `npm audit` y Dependabot.
+
+El workflow se ejecuta en pull requests hacia `main`, pushes a `main`, semanalmente y bajo demanda. Utiliza la query suite `default` de CodeQL para priorizar resultados de alta precisión y no repite la instalación, el build ni la suite funcional del proyecto.
+
+Los hallazgos se publican en **Security → Code scanning** y, cuando proceda, aparecen asociados a los checks y annotations de las pull requests.
+
+CodeQL complementa TypeScript, ESLint, tests y controles de dependencias; no garantiza la ausencia de vulnerabilidades ni sustituye una revisión de seguridad específica cuando sea necesaria.
+
 ## 🖼️ Gestión de imágenes
 
 Todos los recursos visuales utilizados directamente por la interfaz están almacenados en `public/assets/` y se referencian mediante `assetPath()`.
@@ -301,20 +313,20 @@ prefers-reduced-motion: reduce
 
 Cuando el usuario solicita movimiento reducido:
 
-- se eliminan las animaciones decorativas;
-- se eliminan transiciones no esenciales;
-- el carrusel de acreditadores no se desplaza automáticamente;
-- el contenido sigue siendo completamente accesible mediante navegación manual.
+* se eliminan las animaciones decorativas;
+* se eliminan transiciones no esenciales;
+* el carrusel de acreditadores no se desplaza automáticamente;
+* el contenido sigue siendo completamente accesible mediante navegación manual.
 
 Playwright valida este comportamiento utilizando la preferencia de movimiento reducido del contexto real de Chromium, sin mockear `matchMedia`.
 
 La capa de accessibility smoke utiliza `@axe-core/playwright` sobre el mismo Chromium y cubre como mínimo:
 
-- la página principal desktop en catalán, castellano e inglés;
-- la correspondencia entre el idioma activo y `document.documentElement.lang`;
-- el menú móvil después de abrirlo realmente;
-- el carrusel de certificaciones en un estado interactivo con foco de teclado;
-- las copias `aria-hidden` del carrusel, que deben permanecer fuera del tab order.
+* la página principal desktop en catalán, castellano e inglés;
+* la correspondencia entre el idioma activo y `document.documentElement.lang`;
+* el menú móvil después de abrirlo realmente;
+* el carrusel de certificaciones en un estado interactivo con foco de teclado;
+* las copias `aria-hidden` del carrusel, que deben permanecer fuera del tab order.
 
 Los scans se limitan a reglas WCAG A/AA etiquetadas por Axe mediante:
 
