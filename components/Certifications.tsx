@@ -567,7 +567,11 @@ export const Certifications = ({
                           logo.educationId,
                         )
                       }
-                      className="group grid h-20 w-40 shrink-0 place-items-center p-2 transition-transform duration-300 hover:scale-110 focus-visible:scale-110"
+                      className={`group grid h-20 w-40 shrink-0 place-items-center p-2 transition-transform duration-300 hover:scale-110 focus-visible:scale-110 ${
+                        isDragging
+                          ? 'cursor-grabbing'
+                          : 'cursor-pointer'
+                      }`}
                     >
                       <img
                         src={logo.url}

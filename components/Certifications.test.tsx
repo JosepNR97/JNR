@@ -147,6 +147,45 @@ describe('Certifications', () => {
     });
   });
 
+  it('advertises draggable space and clickable logos with distinct idle cursors', () => {
+    render(
+      <LanguageProvider>
+        <Certifications
+          onSelectVendor={vi.fn()}
+        />
+      </LanguageProvider>,
+    );
+
+    const viewport =
+      screen.getByTestId(
+        'certifications-viewport',
+      );
+
+    const awsButton =
+      screen.getByRole(
+        'button',
+        {
+          name: /AWS/i,
+        },
+      );
+
+    expect(viewport).toHaveClass(
+      'cursor-grab',
+    );
+
+    expect(viewport).not.toHaveClass(
+      'cursor-grabbing',
+    );
+
+    expect(awsButton).toHaveClass(
+      'cursor-pointer',
+    );
+
+    expect(awsButton).not.toHaveClass(
+      'cursor-grabbing',
+    );
+  });
+
   it('selects the certification vendor on a regular click', async () => {
     const user = userEvent.setup();
     const onSelectVendor = vi.fn();
@@ -312,6 +351,18 @@ describe('Certifications', () => {
       track.style.transform,
     ).not.toBe(initialTransform);
 
+    expect(viewport).toHaveClass(
+      'cursor-grabbing',
+    );
+
+    expect(awsButton).toHaveClass(
+      'cursor-grabbing',
+    );
+
+    expect(awsButton).not.toHaveClass(
+      'cursor-pointer',
+    );
+
     fireEvent.pointerUp(
       viewport,
       {
@@ -319,6 +370,14 @@ describe('Certifications', () => {
         button: 0,
         clientX: 420,
       },
+    );
+
+    expect(viewport).toHaveClass(
+      'cursor-grab',
+    );
+
+    expect(awsButton).toHaveClass(
+      'cursor-pointer',
     );
 
     /*
