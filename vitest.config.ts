@@ -11,6 +11,7 @@ export default defineConfig({
     setupFiles: ['./test/setup.ts'],
     css: true,
     globals: true,
+    pool: 'vmThreads',
     maxWorkers: 2,
     exclude: [
       ...configDefaults.exclude,
