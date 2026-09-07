@@ -15,13 +15,63 @@ updates:
     commit-message:
       prefix: 'deps'
     groups:
-      runtime-minor-patch:
-        dependency-type: 'production'
+      react-minor-patch:
+        applies-to: 'version-updates'
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
         update-types:
           - 'minor'
           - 'patch'
-      tooling-minor-patch:
-        dependency-type: 'development'
+
+      tailwind-minor-patch:
+        applies-to: 'version-updates'
+        patterns:
+          - 'tailwindcss'
+          - '@tailwindcss/vite'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+      testing-library-minor-patch:
+        applies-to: 'version-updates'
+        patterns:
+          - '@testing-library/dom'
+          - '@testing-library/jest-dom'
+          - '@testing-library/react'
+          - '@testing-library/user-event'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+      eslint-minor-patch:
+        applies-to: 'version-updates'
+        patterns:
+          - 'eslint'
+          - '@eslint/js'
+          - 'eslint-plugin-react-hooks'
+          - 'eslint-plugin-react-refresh'
+          - 'typescript-eslint'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+      vite-minor-patch:
+        applies-to: 'version-updates'
+        patterns:
+          - 'vite'
+          - '@vitejs/plugin-react'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+      fontsource-minor-patch:
+        applies-to: 'version-updates'
+        patterns:
+          - '@fontsource/inter'
+          - '@fontsource/playfair-display'
         update-types:
           - 'minor'
           - 'patch'
@@ -41,3 +91,6 @@ updates:
       github-actions:
         patterns:
           - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
