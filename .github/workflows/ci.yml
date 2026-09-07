@@ -36,3 +36,18 @@ jobs:
 
       - name: Validate and build
         run: npm run check
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E smoke tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-failure-artifacts
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

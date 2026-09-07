@@ -4,7 +4,7 @@ Este documento define las reglas de mantenimiento, actualización y validación 
 
 ## Baseline tecnológico actual
 
-Baseline revisado tras la migración major realizada en septiembre de 2026 y el endurecimiento posterior del contrato Node/npm.
+Baseline revisado tras la migración major realizada en septiembre de 2026, el endurecimiento posterior del contrato Node/npm y la incorporación de smoke testing E2E en navegador real.
 
 | Componente | Baseline actual |
 | --- | --- |
@@ -23,6 +23,8 @@ Baseline revisado tras la migración major realizada en septiembre de 2026 y el 
 | Testing Library React | `16.3.x` |
 | Testing Library DOM | `10.4.x` |
 | Vitest | `5.0.x` |
+| Playwright | `@playwright/test` `1.63.x` |
+| Navegador E2E | Chromium gestionado por Playwright |
 | ESLint | `10.x` |
 
 `package.json` y `package-lock.json` son la fuente de verdad para las versiones concretas instaladas.
@@ -184,14 +186,15 @@ Cuando se evalúe una futura migración a Node 26 deberá revisarse como mínimo
 
 1. compatibilidad real de todas las dependencias y herramientas directas;
 2. ejecución completa de lint, tests, generación de CV y build;
-3. versión mínima concreta de Node 26 que se quiera soportar;
-4. actualización de `engines.node` con un rango acotado que no incluya Node 27 automáticamente;
-5. actualización equivalente de `devEngines.runtime`;
-6. estrategia de GitHub Actions para la nueva rama de Node;
-7. migración de `@types/node` a la major 26 cuando el runtime oficial cambie;
-8. revisión de la versión de npm soportada y de referencia;
-9. regeneración controlada de `package-lock.json`;
-10. actualización de README y de este documento.
+3. ejecución de la smoke suite E2E con la versión de Playwright soportada;
+4. versión mínima concreta de Node 26 que se quiera soportar;
+5. actualización de `engines.node` con un rango acotado que no incluya Node 27 automáticamente;
+6. actualización equivalente de `devEngines.runtime`;
+7. estrategia de GitHub Actions para la nueva rama de Node;
+8. migración de `@types/node` a la major 26 cuando el runtime oficial cambie;
+9. revisión de la versión de npm soportada y de referencia;
+10. regeneración controlada de `package-lock.json`;
+11. actualización de README y de este documento.
 
 Si se decide mantener temporalmente más de una major de Node, cada major deberá aparecer mediante un rango explícitamente acotado.
 
@@ -213,8 +216,12 @@ El repositorio dispone de varios controles complementarios:
 - CI instala explícitamente `npm@11.19.0` antes de los comandos del proyecto.
 - El workflow de CI instala las dependencias mediante `npm ci`.
 - La auditoría de seguridad se ejecuta antes de lint, tests y build.
-- El check de validación debe superar todos los controles antes del merge.
+- `npm run check` ejecuta la validación rápida basada en ESLint, Vitest, TypeScript y Vite.
+- CI instala únicamente Chromium mediante el Playwright incluido en `node_modules`.
+- La smoke suite E2E se ejecuta mediante `npm run test:e2e` dentro del mismo job `validate`.
+- El check de validación debe superar tanto los controles rápidos como los E2E antes del merge.
 - Los pushes a `main` vuelven a ejecutar instalación, auditoría, validación y build antes del despliegue en GitHub Pages.
+- El workflow de despliegue no instala Chromium ni ejecuta Playwright.
 - Existe además un workflow periódico específico para auditar vulnerabilidades.
 - Las vulnerabilidades de severidad `high` o `critical` bloquean los pipelines.
 - `strict-allow-scripts=true` restringe la ejecución de scripts de instalación de dependencias.
@@ -238,6 +245,19 @@ Después de cualquier modificación de dependencias o de metadata reproducida en
 npm ci
 npm run audit:security
 npm run check
+```
+
+Cuando el cambio pueda afectar a UI, CSS, eventos de navegador, Playwright o sus dependencias debe ejecutarse además:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+En CI y en entornos Linux que necesiten las dependencias del sistema se utiliza:
+
+```bash
+npx playwright install --with-deps chromium
 ```
 
 No utilizar:
@@ -265,17 +285,26 @@ Cuando se modifique `package.json`:
 6. ejecutar una instalación limpia mediante `npm ci`;
 7. ejecutar la auditoría de seguridad;
 8. ejecutar el pipeline completo de validación;
-9. versionar conjuntamente `package.json` y `package-lock.json`.
+9. instalar Chromium cuando el cambio afecte al baseline E2E;
+10. ejecutar `npm run test:e2e`;
+11. versionar conjuntamente `package.json` y `package-lock.json`.
 
-Los cambios actuales de contrato afectan a la metadata raíz `engines` reproducida en el lockfile.
+Cuando se añade una dependencia directa nueva, como `@playwright/test`, es esperable que `package-lock.json` incorpore:
 
-No deben cambiar como consecuencia de este ajuste:
+- la nueva dependencia directa en la metadata raíz;
+- el paquete Playwright correspondiente;
+- las dependencias transitivas requeridas por Playwright;
+- sus campos `resolved` e `integrity` generados por npm.
 
-- versiones de dependencias;
-- `resolved`;
-- `integrity`;
-- árbol de dependencias;
-- `lockfileVersion`.
+Estos cambios deben proceder exclusivamente de npm.
+
+No se deben:
+
+- escribir manualmente valores `integrity`;
+- inventar URLs `resolved`;
+- construir manualmente nodos del árbol;
+- copiar entradas de un lockfile de otra versión de Playwright;
+- modificar `lockfileVersion` sin que npm lo requiera.
 
 Si no se dispone de un entorno local compatible, puede utilizarse temporalmente un workflow aislado de GitHub Actions que:
 
@@ -285,12 +314,14 @@ Si no se dispone de un entorno local compatible, puede utilizarse temporalmente 
 4. preserve copias de los manifests relevantes;
 5. regenere el lockfile mediante npm;
 6. compruebe que `package.json` no cambió;
-7. compruebe que el lockfile solo cambió en la metadata esperada;
-8. ejecute `npm ci`;
-9. ejecute `npm run audit:security`;
-10. ejecute `npm run check`;
-11. haga commit únicamente de `package-lock.json`;
-12. sea eliminado antes de integrar la pull request.
+7. ejecute `npm ci`;
+8. ejecute `npm run audit:security`;
+9. ejecute `npm run check`;
+10. instale únicamente Chromium y sus dependencias mediante Playwright;
+11. ejecute `npm run test:e2e`;
+12. compruebe que únicamente `package-lock.json` ha cambiado como resultado de la regeneración;
+13. haga commit únicamente de `package-lock.json`;
+14. sea eliminado antes de integrar la pull request.
 
 ## Familias de dependencias que deben mantenerse alineadas
 
@@ -333,6 +364,72 @@ El baseline actual utiliza:
 `@testing-library/dom` debe permanecer declarado explícitamente mientras sea una peer dependency requerida por los paquetes utilizados.
 
 Al actualizar cualquiera de estos paquetes debe revisarse también su matriz de peer dependencies.
+
+### Playwright
+
+El baseline E2E utiliza:
+
+```text
+@playwright/test 1.63.x
+```
+
+con **Chromium como único navegador E2E soportado inicialmente**.
+
+Playwright complementa a Vitest; no lo sustituye.
+
+La separación de responsabilidades es:
+
+```text
+Vitest + Testing Library + jsdom
+  → lógica, estado, componentes y semántica rápida
+
+Playwright + Chromium
+  → navegador real, layout, CSS, rAF, hover,
+    pointer events, drag y responsive behavior
+```
+
+Los specs de Playwright se almacenan en `e2e/` y están excluidos expresamente del discovery de Vitest.
+
+Cada versión de Playwright requiere browser binaries compatibles con esa versión. Por tanto, después de actualizar `@playwright/test` debe ejecutarse nuevamente:
+
+```bash
+npx playwright install chromium
+```
+
+y en CI:
+
+```bash
+npx playwright install --with-deps chromium
+```
+
+No se instalan Firefox ni WebKit mientras no exista una decisión explícita de ampliar el baseline de navegadores E2E.
+
+No añadir paquetes como:
+
+```text
+@playwright/browser-chromium
+@playwright/browser-firefox
+@playwright/browser-webkit
+```
+
+únicamente para convertir la descarga de browsers en un efecto lateral de `npm ci`.
+
+El browser debe seguir instalándose explícitamente mediante el Playwright local del proyecto.
+
+La smoke suite debe permanecer reducida y centrada en:
+
+- carga real de la aplicación;
+- idiomas y estado DOM real;
+- navegación principal crítica;
+- menú responsive;
+- autoplay del carrusel;
+- hover;
+- drag;
+- diferenciación entre click y drag;
+- cobertura ultrawide;
+- reduced motion.
+
+No convertir Playwright en una duplicación exhaustiva de todos los tests de componentes.
 
 ### TypeScript y typescript-eslint
 
@@ -459,6 +556,8 @@ El baseline de navegador de referencia de Tailwind CSS 4 es:
 
 Si en el futuro fuera necesario soportar navegadores anteriores, deberá revisarse expresamente la elección de Tailwind CSS 4.
 
+La utilización inicial de Chromium como único navegador E2E no modifica este baseline de compatibilidad de producto. Significa únicamente que la primera capa automatizada de navegador real está deliberadamente limitada a Chromium.
+
 ## Scripts de instalación
 
 El repositorio utiliza:
@@ -482,6 +581,20 @@ Cuando una actualización introduzca o modifique un script de instalación:
 9. ejecutar el pipeline completo de validación.
 
 No se deben autorizar indiscriminadamente todos los scripts para eliminar un warning de npm.
+
+La instalación de los browser binaries de Playwright permanece separada de `npm ci` y se realiza explícitamente mediante:
+
+```bash
+npx playwright install chromium
+```
+
+o, en CI:
+
+```bash
+npx playwright install --with-deps chromium
+```
+
+No debe relajarse `strict-allow-scripts` para convertir la descarga del browser en un efecto lateral de la instalación npm.
 
 ## Auditoría de seguridad
 
@@ -532,6 +645,8 @@ npm run audit:security
 npm run check
 ```
 
+Si el cambio afecta al tooling de navegador o a comportamiento de UI debe ejecutarse además la smoke suite E2E.
+
 ## Actualizaciones major
 
 Las actualizaciones major no deben tratarse como simples cambios de versión.
@@ -555,7 +670,18 @@ Antes de aceptar una major de Dependabot:
 15. ejecutar el build;
 16. realizar una revisión visual si afecta a UI, CSS o iconografía;
 17. comprobar comportamiento interactivo si afecta a eventos o APIs del navegador;
-18. integrar únicamente cuando el CI esté completamente en verde.
+18. ejecutar Playwright cuando el cambio pueda afectar al comportamiento real del navegador;
+19. integrar únicamente cuando el CI esté completamente en verde.
+
+Una actualización major de Playwright debe revisar además:
+
+- requisitos de Node;
+- cambios de configuración;
+- browser version incorporada;
+- cambios en APIs de locators, assertions y mouse/pointer;
+- cambios en los requisitos de sistema de Chromium;
+- regeneración del lockfile;
+- reinstalación explícita de Chromium.
 
 ## Lecciones de la migración de septiembre de 2026
 
@@ -598,6 +724,8 @@ IntersectionObserver
 
 incorporó requisitos de tipos que obligaron a actualizar los mocks utilizados en las pruebas.
 
+La existencia de Playwright reduce el riesgo de depender únicamente de mocks para comportamientos que realmente necesitan layout o APIs implementadas por el browser, pero no elimina la utilidad de los unit tests existentes.
+
 ### Las librerías pueden eliminar exports
 
 Una major puede eliminar APIs aunque el resto de la librería siga funcionando correctamente.
@@ -623,6 +751,8 @@ Tailwind CSS 4 modificó varias escalas y comportamientos, por lo que después d
 - responsive behavior;
 - estados hover y focus.
 
+Los smoke tests Playwright proporcionan una red de seguridad adicional para una parte limitada de estos comportamientos sin convertirse en una suite de visual regression pixel-perfect.
+
 ### Separar framework e integración de build
 
 La versión de Tailwind y el mecanismo mediante el que se integra en el bundler son decisiones distintas.
@@ -645,6 +775,8 @@ vite
 
 y mantener alineadas las versiones de los dos paquetes de Tailwind.
 
+Si el cambio puede afectar al layout o a las transforms utilizadas por el carrusel debe ejecutarse también `npm run test:e2e`.
+
 ## CI y protección de main
 
 Las pull requests hacia `main` deben superar el workflow de CI antes del merge.
@@ -657,6 +789,10 @@ npm ci
 npm run audit:security
   ↓
 npm run check
+  ↓
+npx playwright install --with-deps chromium
+  ↓
+npm run test:e2e
 ```
 
 `npm run check` incluye:
@@ -673,9 +809,25 @@ TypeScript
 Vite build
 ```
 
+La smoke suite Playwright permanece fuera de `npm run check`.
+
+Esto es intencionado porque `npm run check` también se utiliza durante el workflow de despliegue. Mantener E2E separado evita que el deploy tenga que instalar Chromium y ejecutar por segunda vez los tests de navegador.
+
+El job `validate` del workflow `CI` ejecuta ambos niveles de control:
+
+```text
+Validación rápida
+  +
+Smoke E2E Chromium
+```
+
 La rama `main` debe mantener configurado como obligatorio el check asociado al job `validate` del workflow `CI`.
 
+No se crea un required check independiente para Playwright.
+
 No debe integrarse una pull request simplemente porque GitHub permita técnicamente el merge si el check requerido no corresponde al workflow real o permanece en estado `Expected`.
+
+Los artefactos Playwright de una ejecución fallida pueden conservarse temporalmente mediante la Action de upload configurada en el mismo job. Esa Action debe permanecer pinneada a un SHA completo, igual que el resto de Actions del repositorio.
 
 ## Revisión periódica
 
@@ -685,7 +837,10 @@ Ejecutar al menos trimestralmente:
 npm outdated
 npm run audit:security
 npm run check
+npm run test:e2e
 ```
+
+Antes de `npm run test:e2e`, Chromium debe estar instalado para la versión local de Playwright.
 
 Revisar además:
 
@@ -700,6 +855,10 @@ Revisar además:
 - compatibilidad entre Tailwind CSS, `@tailwindcss/vite` y Vite;
 - soporte de TypeScript por `typescript-eslint`;
 - baseline de navegadores de Tailwind;
+- versión actual de `@playwright/test`;
+- requisitos de sistema actuales de Playwright;
+- versión de Chromium gestionada por la release de Playwright instalada;
+- estabilidad y utilidad de la smoke suite E2E;
 - actualizaciones major abiertas por Dependabot;
 - versiones de GitHub Actions;
 - configuración de branch protection y required checks.
@@ -721,4 +880,5 @@ Cuando pueda abordarse la migración:
 5. revisar generación de CV;
 6. ejecutar toda la suite de tests;
 7. ejecutar el build completo;
-8. integrar únicamente con todos los checks en verde.
+8. ejecutar la smoke suite E2E;
+9. integrar únicamente con todos los checks en verde.
