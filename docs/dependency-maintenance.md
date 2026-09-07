@@ -4,15 +4,18 @@ Este documento define las reglas de mantenimiento, actualización y validación 
 
 ## Baseline tecnológico actual
 
-Baseline revisado tras la migración major realizada en septiembre de 2026.
+Baseline revisado tras la migración major realizada en septiembre de 2026 y el endurecimiento posterior del contrato Node/npm.
 
 | Componente | Baseline actual |
 | --- | --- |
-| Node.js | `^24.15.0 || >=26.0.0` |
-| npm | `11.19.x` |
+| Node.js | `>=24.15.0 <25` |
+| npm | `>=11.19.0 <12` |
+| Package manager de referencia | `npm@11.19.0` |
+| `@types/node` | `24.x` |
 | React | `19.2.x` |
 | React DOM | `19.2.x` |
 | TypeScript | `6.0.x` |
+| typescript-eslint | `8.69.x` |
 | Vite | `8.2.x` |
 | Tailwind CSS | `4.3.x` |
 | Integración Tailwind | `@tailwindcss/vite` `4.3.x` |
@@ -24,12 +27,190 @@ Baseline revisado tras la migración major realizada en septiembre de 2026.
 
 `package.json` y `package-lock.json` son la fuente de verdad para las versiones concretas instaladas.
 
+## Contrato de runtime y desarrollo Node/npm
+
+El proyecto soporta oficialmente una única rama de runtime:
+
+```text
+Node.js >=24.15.0 <25
+```
+
+Esto significa que:
+
+- Node 24.15.0 es el mínimo declarado;
+- se aceptan posteriores minor y patch de Node 24;
+- Node 25 no está soportado;
+- Node 26 no está soportado todavía;
+- ninguna major futura se incorpora automáticamente por existir o por ser compatible con alguna dependencia aislada.
+
+El contrato de npm es:
+
+```text
+npm >=11.19.0 <12
+```
+
+`npm@11.19.0` se mantiene además como versión exacta de referencia para CI, despliegue y regeneración del lockfile.
+
+### `engines`
+
+`engines` expresa el contrato público de compatibilidad del proyecto:
+
+```json
+{
+  "engines": {
+    "node": ">=24.15.0 <25",
+    "npm": ">=11.19.0 <12"
+  }
+}
+```
+
+Por sí solo, `engines` no se utiliza como mecanismo principal de bloqueo del entorno de desarrollo. Sin `engine-strict`, npm lo trata como metadata de compatibilidad y normalmente puede limitarse a advertir.
+
+### `packageManager`
+
+El proyecto declara:
+
+```json
+{
+  "packageManager": "npm@11.19.0"
+}
+```
+
+Este campo identifica npm como package manager de referencia y fija una versión exacta para herramientas que consumen esta metadata.
+
+No debe confundirse con un rango de compatibilidad:
+
+- no sustituye a `engines.npm`;
+- no sustituye a `devEngines.packageManager`;
+- no hace que el binario `npm` instalado globalmente cambie automáticamente de versión;
+- la reproducibilidad de CI se consigue instalando explícitamente `npm@11.19.0` antes de las operaciones del proyecto.
+
+### `devEngines`
+
+El proyecto utiliza `devEngines` para validar de forma estricta el runtime y el package manager en los comandos npm relevantes:
+
+```json
+{
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=24.15.0 <25",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11.19.0 <12",
+      "onFail": "error"
+    }
+  }
+}
+```
+
+La forma correcta para Node es `devEngines.runtime`; no se utiliza un campo arbitrario `devEngines.node`.
+
+La forma correcta para npm es `devEngines.packageManager`.
+
+Con `onFail: "error"`, un entorno incompatible hace fallar los comandos npm que aplican esta validación, entre ellos:
+
+```text
+npm install
+npm ci
+npm run <script>
+```
+
+Esto cubre, dentro del baseline soportado por npm 11, casos como:
+
+- Node 22;
+- Node 26;
+- npm anterior a 11.19.0;
+- npm 12 o posterior.
+
+`devEngines` existe también en versiones recientes de npm 10, pero el proyecto no declara soporte para npm 10. Clientes npm suficientemente antiguos pueden no conocer este campo; no se añade `engine-strict` únicamente para cubrir clientes fuera del baseline soportado.
+
+### Bootstrap de npm
+
+Una instalación de Node 24 compatible puede incluir una versión de npm anterior a 11.19.0.
+
+Antes de ejecutar `npm ci` o cualquier `npm run <script>`, actualizar npm mediante:
+
+```bash
+npm install --global npm@11.19.0
+```
+
+Los workflows del repositorio realizan explícitamente este bootstrap.
+
+### Por qué no se utiliza `engine-strict`
+
+El repositorio mantiene:
+
+```text
+strict-allow-scripts=true
+```
+
+pero no añade:
+
+```text
+engine-strict=true
+```
+
+`devEngines` ya proporciona el bloqueo específico que se necesita para el entorno de desarrollo del proyecto.
+
+Activar `engine-strict` ampliaría el alcance de la política a los `engines` declarados por las dependencias del árbol, alterando la semántica de instalación más allá del objetivo de esta política.
+
+Por tanto, `engine-strict` solo debería considerarse en una decisión separada si existe una necesidad explícita de endurecer también el árbol completo de dependencias.
+
+### Relación entre Node y `@types/node`
+
+Mientras el runtime oficialmente soportado sea Node 24, `@types/node` debe permanecer en la major 24.
+
+La intención es mantener alineación conceptual de major:
+
+```text
+Runtime: Node 24
+Tipos:   @types/node 24.x
+```
+
+No se exige que el patch de `@types/node` coincida con el patch del runtime.
+
+Actualizar `@types/node` a 26 antes de adoptar Node 26 podría hacer disponibles en TypeScript APIs que no forman parte del runtime oficialmente soportado.
+
+Dependabot puede seguir proponiendo actualizaciones minor y patch de `@types/node` dentro de 24.x, pero las actualizaciones semver-major permanecen bloqueadas mientras Node 24 siga siendo el runtime oficial.
+
+### Futuras majors de Node
+
+Una nueva major de Node solo se declarará como soportada después de una validación deliberada.
+
+Cuando se evalúe una futura migración a Node 26 deberá revisarse como mínimo:
+
+1. compatibilidad real de todas las dependencias y herramientas directas;
+2. ejecución completa de lint, tests, generación de CV y build;
+3. versión mínima concreta de Node 26 que se quiera soportar;
+4. actualización de `engines.node` con un rango acotado que no incluya Node 27 automáticamente;
+5. actualización equivalente de `devEngines.runtime`;
+6. estrategia de GitHub Actions para la nueva rama de Node;
+7. migración de `@types/node` a la major 26 cuando el runtime oficial cambie;
+8. revisión de la versión de npm soportada y de referencia;
+9. regeneración controlada de `package-lock.json`;
+10. actualización de README y de este documento.
+
+Si se decide mantener temporalmente más de una major de Node, cada major deberá aparecer mediante un rango explícitamente acotado.
+
+No utilizar un tramo abierto como:
+
+```text
+>=26.0.0
+```
+
+La migración de Node y la migración de TypeScript son decisiones independientes. Adoptar Node 26 no implica adoptar TypeScript 7.
+
 ## Controles automáticos
 
 El repositorio dispone de varios controles complementarios:
 
 - Dependabot revisa periódicamente paquetes npm y GitHub Actions.
 - Las pull requests dirigidas a `main` ejecutan el workflow de CI.
+- El workflow de CI utiliza una release actual de la rama Node 24.
+- CI instala explícitamente `npm@11.19.0` antes de los comandos del proyecto.
 - El workflow de CI instala las dependencias mediante `npm ci`.
 - La auditoría de seguridad se ejecuta antes de lint, tests y build.
 - El check de validación debe superar todos los controles antes del merge.
@@ -37,10 +218,11 @@ El repositorio dispone de varios controles complementarios:
 - Existe además un workflow periódico específico para auditar vulnerabilidades.
 - Las vulnerabilidades de severidad `high` o `critical` bloquean los pipelines.
 - `strict-allow-scripts=true` restringe la ejecución de scripts de instalación de dependencias.
+- `devEngines` rechaza los entornos Node/npm incompatibles en los comandos npm relevantes.
 
 ## Instalaciones reproducibles
 
-El proyecto utiliza npm como package manager y mantiene `package-lock.json` versionado.
+El proyecto utiliza npm como único package manager soportado y mantiene `package-lock.json` versionado.
 
 La instalación utilizada por CI y despliegue es:
 
@@ -50,7 +232,7 @@ npm ci
 
 `package.json` y `package-lock.json` deben permanecer sincronizados.
 
-Después de cualquier modificación de dependencias debe comprobarse como mínimo:
+Después de cualquier modificación de dependencias o de metadata reproducida en el lockfile debe comprobarse como mínimo:
 
 ```bash
 npm ci
@@ -65,7 +247,7 @@ npm ci --force
 npm ci --legacy-peer-deps
 ```
 
-para ocultar conflictos de peer dependencies.
+para ocultar conflictos de peer dependencies o saltarse controles del entorno.
 
 Un conflicto debe resolverse alineando correctamente las versiones de los paquetes afectados.
 
@@ -75,23 +257,40 @@ Un conflicto debe resolverse alineando correctamente las versiones de los paquet
 
 Cuando se modifique `package.json`:
 
-1. Utilizar la versión de Node compatible con el proyecto.
-2. Utilizar la versión de npm declarada en `packageManager`.
-3. Regenerar `package-lock.json`.
-4. Ejecutar una instalación limpia mediante `npm ci`.
-5. Ejecutar la auditoría de seguridad.
-6. Ejecutar el pipeline completo de validación.
-7. Versionar conjuntamente `package.json` y `package-lock.json`.
+1. utilizar Node 24 dentro de `>=24.15.0 <25`;
+2. utilizar `npm@11.19.0` para regenerar el lockfile;
+3. preservar una copia de `package.json` cuando se quiera comprobar que npm no lo modifica inesperadamente;
+4. regenerar `package-lock.json` mediante npm;
+5. revisar el diff del lockfile;
+6. ejecutar una instalación limpia mediante `npm ci`;
+7. ejecutar la auditoría de seguridad;
+8. ejecutar el pipeline completo de validación;
+9. versionar conjuntamente `package.json` y `package-lock.json`.
+
+Los cambios actuales de contrato afectan a la metadata raíz `engines` reproducida en el lockfile.
+
+No deben cambiar como consecuencia de este ajuste:
+
+- versiones de dependencias;
+- `resolved`;
+- `integrity`;
+- árbol de dependencias;
+- `lockfileVersion`.
 
 Si no se dispone de un entorno local compatible, puede utilizarse temporalmente un workflow aislado de GitHub Actions que:
 
-1. utilice las versiones de Node y npm declaradas por el proyecto;
-2. regenere el lockfile;
-3. compruebe que `npm ci` funciona;
-4. ejecute `npm audit`;
-5. ejecute el pipeline completo de validación;
-6. haga commit únicamente del lockfile esperado;
-7. sea eliminado antes de integrar la pull request.
+1. se ejecute únicamente en la rama de la migración;
+2. utilice Node 24 compatible con el contrato;
+3. instale `npm@11.19.0`;
+4. preserve copias de los manifests relevantes;
+5. regenere el lockfile mediante npm;
+6. compruebe que `package.json` no cambió;
+7. compruebe que el lockfile solo cambió en la metadata esperada;
+8. ejecute `npm ci`;
+9. ejecute `npm run audit:security`;
+10. ejecute `npm run check`;
+11. haga commit únicamente de `package-lock.json`;
+12. sea eliminado antes de integrar la pull request.
 
 ## Familias de dependencias que deben mantenerse alineadas
 
@@ -139,7 +338,7 @@ Al actualizar cualquiera de estos paquetes debe revisarse también su matriz de 
 
 El proyecto mantiene actualmente TypeScript en la rama `6.0.x`.
 
-La versión de `typescript-eslint` utilizada por el proyecto no soporta todavía TypeScript 7 dentro de su rango oficialmente compatible.
+La versión `8.69.x` de `typescript-eslint` utilizada por el proyecto no soporta TypeScript 7 dentro de su rango oficialmente compatible actual.
 
 Por este motivo `typescript` permanece deliberadamente restringido a:
 
@@ -154,20 +353,38 @@ No actualizar a TypeScript 7 utilizando:
 --legacy-peer-deps
 ```
 
-ni ignorando warnings de compatibilidad.
+ni ignorando warnings o errores de compatibilidad.
 
-La migración podrá realizarse cuando el tooling relacionado declare soporte adecuado.
+La migración podrá realizarse cuando el tooling relacionado declare soporte oficial adecuado y deberá tratarse en una pull request independiente del contrato de Node.
 
 ## Tailwind CSS 4
 
-La migración a Tailwind CSS 4 está completada.
+La migración a Tailwind CSS 4 está completada, incluida la configuración CSS-first nativa.
 
-La entrada CSS utiliza:
+La entrada `styles.css` utiliza:
 
 ```css
 @import "tailwindcss";
-@config "./tailwind.config.js";
+
+@theme {
+  --font-sans: Inter, "Segoe UI", system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, Cambria, "Times New Roman", serif;
+
+  --color-brand-50: #f0f9ff;
+  --color-brand-100: #e0f2fe;
+  --color-brand-200: #bae6fd;
+  --color-brand-300: #7dd3fc;
+  --color-brand-400: #38bdf8;
+  --color-brand-500: #0ea5e9;
+  --color-brand-600: #0284c7;
+  --color-brand-700: #0369a1;
+  --color-brand-800: #075985;
+  --color-brand-900: #0c4a6e;
+  --color-brand-950: #082f49;
+}
 ```
+
+El proyecto ya no utiliza `@config` y no mantiene `tailwind.config.js`.
 
 Tailwind está integrado directamente en el pipeline de Vite mediante:
 
@@ -179,6 +396,8 @@ y se registra en `vite.config.ts` mediante:
 
 ```ts
 import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [tailwindcss(), react()],
@@ -186,7 +405,7 @@ export default defineConfig({
 });
 ```
 
-El proyecto no mantiene un `postcss.config.js` propio y ya no declara como dependencias directas:
+El proyecto no mantiene un `postcss.config.js` propio y no declara como dependencias directas:
 
 ```text
 @tailwindcss/postcss
@@ -197,18 +416,6 @@ autoprefixer
 Esto no significa que `postcss` deba desaparecer necesariamente de `package-lock.json`.
 
 Vite puede mantener PostCSS como dependencia transitiva para su propio pipeline CSS. La ausencia relevante es la de `postcss` como dependencia directa del proyecto y la de `@tailwindcss/postcss` como mecanismo de integración de Tailwind.
-
-### Configuración JavaScript legacy
-
-`tailwind.config.js` continúa utilizándose para la configuración del theme y se carga explícitamente desde `styles.css` mediante:
-
-```css
-@config "./tailwind.config.js";
-```
-
-Tailwind CSS 4 permite mantener configuraciones JavaScript existentes mediante `@config`, aunque el enfoque nativo de la versión 4 es la configuración CSS-first.
-
-Una eventual migración desde `tailwind.config.js` a `@theme` deberá realizarse en una pull request independiente para separar claramente cambios de configuración visual de cambios de tooling.
 
 ### Compatibilidad visual con Tailwind CSS 3
 
@@ -482,8 +689,10 @@ npm run check
 
 Revisar además:
 
-- versiones soportadas de Node;
-- versión de npm;
+- versión mínima y major soportada de Node;
+- versión soportada y de referencia de npm;
+- alineación de `engines`, `packageManager` y `devEngines`;
+- alineación de `@types/node` con la major de runtime;
 - dependencias directas obsoletas;
 - dependencias transitivas vulnerables;
 - peer dependencies;
@@ -499,7 +708,9 @@ Revisar además:
 
 ### TypeScript 7
 
-TypeScript 7 permanece deliberadamente fuera del baseline mientras el ecosistema utilizado por el proyecto no declare compatibilidad adecuada.
+TypeScript 7 permanece deliberadamente fuera del baseline mientras el ecosistema utilizado por el proyecto no declare compatibilidad oficial adecuada.
+
+Esta decisión es independiente de la major de Node utilizada por el proyecto.
 
 Cuando pueda abordarse la migración:
 
