@@ -13,7 +13,7 @@ export default defineConfig(
     files: ['**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}'],
     extends: [
       js.configs.recommended,
-      tseslint.configs.recommended,
+      tseslint.configs.recommendedTypeChecked,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite(),
     ],
@@ -24,7 +24,15 @@ export default defineConfig(
         ...globals.browser,
         ...globals.nodeBuiltin,
       },
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
+  },
+  {
+    files: ['**/*.{js,cjs,mjs,jsx}'],
+    extends: [tseslint.configs.disableTypeChecked],
   },
   {
     files: ['components/Icons.tsx', 'context/LanguageContext.tsx'],

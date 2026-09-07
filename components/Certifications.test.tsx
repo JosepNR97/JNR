@@ -94,7 +94,7 @@ describe('Certifications', () => {
         bottom: height,
         left: 0,
         toJSON: () => ({}),
-      } as DOMRect;
+      };
     });
   });
 
