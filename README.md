@@ -14,6 +14,7 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 - 🎓 Formación académica y certificaciones agrupadas por proveedor.
 - 🏅 Carrusel continuo e interactivo de organizaciones acreditadoras, con navegación mediante clic y arrastre manual.
 - ♿ Animaciones respetuosas con la preferencia `prefers-reduced-motion`.
+- ♿ Accessibility smoke automatizado con Axe sobre estados reales de Chromium para detectar regresiones WCAG A/AA de alto impacto.
 - 🖼️ Recursos visuales servidos localmente, sin depender de URLs externas para los elementos gráficos de la interfaz.
 - 📄 CV descargable en el idioma activo, generado automáticamente desde los datos del portfolio.
 - 🔎 Metadatos SEO, Open Graph y datos estructurados de tipo `Person`.
@@ -32,6 +33,7 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 - **React PDF** para generar los CV en catalán, castellano e inglés.
 - **Vitest 5** y **Testing Library 16** para pruebas unitarias y de componentes sobre jsdom.
 - **Playwright 1.63** con **Chromium** para smoke tests E2E en navegador real.
+- **Axe 4.13** mediante `@axe-core/playwright` para accessibility smoke automatizado sobre la misma infraestructura E2E.
 - **ESLint 10** y **Prettier** para mantener la calidad y consistencia del código.
 
 ## 🖥️ Requisitos de desarrollo
@@ -66,7 +68,7 @@ Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del fram
 │   └── workflows/              CI, auditoría y despliegue
 ├── components/                 Componentes de interfaz y sus pruebas
 ├── context/                    Estado y persistencia de idioma
-├── e2e/                        Smoke tests E2E con Chromium
+├── e2e/                        Smoke tests E2E y accessibility smoke con Chromium
 ├── hooks/                      Hooks reutilizables
 ├── public/
 │   ├── assets/
@@ -83,7 +85,7 @@ Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del fram
 ├── aboutMe.ts                  Contenido personal y textos base
 ├── constants.ts                Formación, certificaciones, recursos y enlaces
 ├── experienceInfo.ts           Trayectoria profesional
-├── playwright.config.ts        Configuración de Playwright
+├── playwright.config.ts        Configuración única de Playwright
 ├── translations.ts             Construcción de traducciones
 ├── types.ts                    Contratos TypeScript
 ├── styles.css                  Estilos globales y entrada de Tailwind
@@ -131,15 +133,25 @@ En Linux, si el entorno necesita además las dependencias del sistema:
 npx playwright install --with-deps chromium
 ```
 
-Ejecuta la smoke suite mediante:
+Ejecuta toda la smoke suite mediante:
 
 ```bash
 npm run test:e2e
 ```
 
-`npm run test:e2e` construye el artefacto de producción mediante Vite, levanta automáticamente `vite preview` en `127.0.0.1:4173`, ejecuta los tests con Chromium en modo headless y detiene el servidor al finalizar.
+`npm run test:e2e` construye el artefacto de producción mediante Vite, levanta automáticamente `vite preview` en `127.0.0.1:4173`, ejecuta todos los specs E2E —incluido accessibility smoke— con Chromium en modo headless y detiene el servidor al finalizar.
 
-Los tests E2E validan únicamente comportamientos para los que un navegador real aporta señal adicional, como layout, `requestAnimationFrame`, transforms CSS, hover, pointer events, drag, responsive behavior y `prefers-reduced-motion`.
+Para ejecutar únicamente la capa de accessibility smoke:
+
+```bash
+npm run test:a11y
+```
+
+`npm run test:a11y` reutiliza el mismo `playwright.config.ts`, el mismo build, el mismo servidor y el mismo Chromium; únicamente limita la ejecución a `e2e/accessibility.spec.ts`.
+
+Los tests E2E funcionales validan únicamente comportamientos para los que un navegador real aporta señal adicional, como layout, `requestAnimationFrame`, transforms CSS, hover, pointer events, drag, responsive behavior y `prefers-reduced-motion`.
+
+La capa Axe complementa esos tests comprobando problemas de accesibilidad automáticamente detectables sobre estados reales de la interfaz.
 
 ## ✅ Controles de calidad
 
@@ -151,13 +163,16 @@ npm run test
 npm run build
 npm run check
 npm run test:e2e
+npm run test:a11y
 npm run audit:security
 npm run format:check
 ```
 
 `npm run test` ejecuta la suite rápida de Vitest sobre jsdom.
 
-`npm run test:e2e` ejecuta la smoke suite de Playwright con Chromium sobre el build de producción.
+`npm run test:e2e` ejecuta la smoke suite completa de Playwright con Chromium sobre el build de producción, incluyendo accessibility smoke.
+
+`npm run test:a11y` ejecuta únicamente los accessibility smoke tests basados en Axe.
 
 `npm run check` ejecuta secuencialmente:
 
@@ -191,7 +206,9 @@ npm run test:e2e
 
 La instalación de CI utiliza únicamente Chromium y sus dependencias del sistema.
 
-El mismo job requerido `validate` cubre tanto la validación rápida como la smoke suite E2E. El check debe finalizar correctamente antes de integrar cambios en `main`.
+El mismo job requerido `validate` cubre tanto la validación rápida como la smoke suite E2E completa, incluida la capa Axe. El check debe finalizar correctamente antes de integrar cambios en `main`.
+
+No existe un job ni un required check independiente para accessibility.
 
 Si Playwright falla en CI, se conservan temporalmente los artefactos de fallo disponibles en `test-results/`, como screenshots y trazas generadas por la política configurada.
 
@@ -233,6 +250,8 @@ Las actualizaciones major deben revisarse de manera independiente cuando puedan 
 Dependabot revisa periódicamente tanto dependencias npm como GitHub Actions.
 
 Cuando se actualice Playwright debe regenerarse el lockfile y volver a instalarse el Chromium correspondiente a la nueva versión antes de ejecutar la smoke suite.
+
+Cuando se actualice `@axe-core/playwright` debe revisarse también el cambio de reglas y tags de Axe porque puede modificar qué problemas de accesibilidad detecta la suite.
 
 ## 🔐 Seguridad de dependencias
 
@@ -288,6 +307,39 @@ Cuando el usuario solicita movimiento reducido:
 - el contenido sigue siendo completamente accesible mediante navegación manual.
 
 Playwright valida este comportamiento utilizando la preferencia de movimiento reducido del contexto real de Chromium, sin mockear `matchMedia`.
+
+La capa de accessibility smoke utiliza `@axe-core/playwright` sobre el mismo Chromium y cubre como mínimo:
+
+- la página principal desktop en catalán, castellano e inglés;
+- la correspondencia entre el idioma activo y `document.documentElement.lang`;
+- el menú móvil después de abrirlo realmente;
+- el carrusel de certificaciones en un estado interactivo con foco de teclado;
+- las copias `aria-hidden` del carrusel, que deben permanecer fuera del tab order.
+
+Los scans se limitan a reglas WCAG A/AA etiquetadas por Axe mediante:
+
+```text
+wcag2a
+wcag2aa
+wcag21a
+wcag21aa
+wcag22aa
+```
+
+Axe 4.13 no expone un tag `wcag22a` independiente. No se inventa ese tag ni se habilitan reglas experimentales manualmente.
+
+La baseline inicial bloquea violations Axe con impacto:
+
+```text
+critical
+serious
+```
+
+Las violations `moderate` y `minor` no bloquean CI en esta baseline inicial, pero tampoco se desactivan reglas para conseguir un resultado verde.
+
+No se excluyen globalmente componentes como el carrusel o el menú móvil. Cuando un estado está oculto por defecto, Playwright lo activa antes de ejecutar Axe para analizar el DOM interactivo real.
+
+Axe automatiza únicamente una parte de la evaluación de accesibilidad. Esta capa **no sustituye** revisiones manuales de teclado, foco, lector de pantalla, contenido, zoom, reflow ni una auditoría WCAG completa.
 
 ## 🚢 Despliegue
 
