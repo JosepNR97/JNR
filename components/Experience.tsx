@@ -115,7 +115,7 @@ export const Experience = () => {
                           className={`text-sm font-semibold transition-colors ${
                             isExpanded
                               ? 'text-brand-700'
-                              : 'text-slate-400 group-hover:text-brand-700'
+                              : 'text-slate-500 group-hover:text-brand-700'
                           }`}
                         >
                           {isExpanded ? t.experience.collapse : t.experience.expand}

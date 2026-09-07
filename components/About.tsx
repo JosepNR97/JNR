@@ -63,7 +63,7 @@ export const About: React.FC = () => {
                 <GlobeIcon className="w-5 h-5" />
               </div>
               <div>
-                <span className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-0.5">
+                <span className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-0.5">
                   {t.about.languagesTitle}
                 </span>
                 <span className="font-medium text-sm md:text-base">

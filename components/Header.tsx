@@ -35,6 +35,7 @@ interface LanguageSelectorProps {
   onChange: (language: Language) => void;
   mobile?: boolean;
   inactiveClassName: string;
+  lightBackground?: boolean;
 }
 
 const LanguageSelector = ({
@@ -42,6 +43,7 @@ const LanguageSelector = ({
   onChange,
   mobile = false,
   inactiveClassName,
+  lightBackground = false,
 }: LanguageSelectorProps) => {
   const getButtonClassName = (code: Language) => {
     const sharedClassName =
@@ -52,6 +54,14 @@ const LanguageSelector = ({
         language === code
           ? 'bg-white/10 text-brand-300 hover:bg-white/20 hover:text-brand-200 focus-visible:bg-white/20 focus-visible:text-brand-200'
           : `${inactiveClassName} hover:bg-white/10 hover:text-brand-200 focus-visible:bg-white/10 focus-visible:text-brand-200`
+      }`;
+    }
+
+    if (lightBackground) {
+      return `${sharedClassName} ${
+        language === code
+          ? 'bg-brand-700/10 text-brand-700 hover:bg-brand-700/20 hover:text-brand-800 focus-visible:bg-brand-700/20 focus-visible:text-brand-800'
+          : `${inactiveClassName} hover:bg-brand-700/10 hover:text-brand-700 focus-visible:bg-brand-700/10 focus-visible:text-brand-700`
       }`;
     }
 
@@ -195,6 +205,10 @@ export const Header = () => {
     ? 'text-slate-600'
     : 'text-slate-200';
 
+  const navLinkInteractionClass = scrolledHeader
+    ? 'hover:text-brand-700 focus-visible:text-brand-700'
+    : 'hover:text-brand-400 focus-visible:text-brand-400';
+
   return (
     <>
       <header
@@ -213,7 +227,12 @@ export const Header = () => {
             }`}
             aria-label={`${t.nav.home} - JNR`}
           >
-            JNR<span className="text-brand-500">.</span>
+            JNR
+            <span
+              className={scrolledHeader ? 'text-brand-700' : 'text-brand-500'}
+            >
+              .
+            </span>
           </a>
 
           <nav
@@ -224,7 +243,7 @@ export const Header = () => {
               <a
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors hover:text-brand-500 ${navLinkClass}`}
+                className={`text-sm font-medium transition-colors ${navLinkInteractionClass} ${navLinkClass}`}
               >
                 {link.name}
               </a>
@@ -234,6 +253,7 @@ export const Header = () => {
               language={language}
               onChange={setLanguage}
               inactiveClassName={navLinkClass}
+              lightBackground={scrolledHeader}
             />
 
             <a

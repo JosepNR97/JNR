@@ -57,10 +57,28 @@ const formatImpactSummary = (violations: AxeViolation[]) => {
   return entries.join(', ');
 };
 
+const indentMultiline = (value: string, indentation: string) =>
+  value.replace(/\n/g, `\n${indentation}`);
+
+const formatViolationNode = (node: AxeViolation['nodes'][number]) => {
+  const details = [
+    `    - Target: ${formatTarget(node.target)}`,
+    `      HTML: ${node.html}`,
+  ];
+
+  if (node.failureSummary) {
+    details.push(
+      `      Failure: ${indentMultiline(node.failureSummary, '      ')}`,
+    );
+  }
+
+  return details.join('\n');
+};
+
 const formatViolation = (violation: AxeViolation) => {
   const targets = violation.nodes
     .slice(0, MAX_TARGETS_PER_RULE)
-    .map((node) => `    - ${formatTarget(node.target)}`);
+    .map(formatViolationNode);
 
   const remainingTargets = violation.nodes.length - targets.length;
 
@@ -118,11 +136,14 @@ const openPortfolio = async (page: Page, language: Language) => {
   await expect(page.locator('#root')).not.toBeEmpty();
   await expect(page.getByRole('main')).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', language);
+  await expect(page.locator('#top .reveal').last()).toHaveClass(/is-visible/);
 
   await page.evaluate(async () => {
     await document.fonts.ready;
   });
 };
+
+test.use({ reducedMotion: 'reduce' });
 
 test.describe('accessibility smoke', () => {
   for (const { code, name } of LANGUAGES) {
@@ -178,6 +199,7 @@ test.describe('accessibility smoke', () => {
 
     await viewport.scrollIntoViewIfNeeded();
     await expect(viewport).toBeVisible();
+    await expect(page.locator('header')).toHaveClass(/bg-white\/95/);
 
     await firstLogoButton.focus();
     await expect(firstLogoButton).toBeFocused();
