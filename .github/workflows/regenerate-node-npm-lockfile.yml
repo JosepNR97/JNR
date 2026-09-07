@@ -1,0 +1,123 @@
+name: Regenerate Node/npm lockfile
+
+on:
+  push:
+    branches:
+      - 'chore/node-npm-runtime-contract'
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/regenerate-node-npm-lockfile.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate-lockfile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Setup npm
+        run: npm install --global npm@11.19.0
+
+      - name: Preserve manifests
+        run: |
+          cp package.json "$RUNNER_TEMP/package.json.before"
+          cp package-lock.json "$RUNNER_TEMP/package-lock.json.before"
+
+      - name: Regenerate package-lock.json
+        run: npm install --package-lock-only
+
+      - name: Verify package.json was not modified
+        shell: bash
+        run: |
+          if ! cmp --silent "$RUNNER_TEMP/package.json.before" package.json; then
+            echo 'package.json changed unexpectedly during lockfile regeneration.' >&2
+            diff -u "$RUNNER_TEMP/package.json.before" package.json || true
+            exit 1
+          fi
+
+      - name: Verify lockfile metadata change
+        shell: bash
+        run: |
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          const fs = require('node:fs');
+
+          const before = JSON.parse(
+            fs.readFileSync(`${process.env.RUNNER_TEMP}/package-lock.json.before`, 'utf8'),
+          );
+          const after = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+
+          if (!before.packages?.[''] || !after.packages?.['']) {
+            throw new Error('Root package metadata is missing from package-lock.json.');
+          }
+
+          const normalizedBefore = structuredClone(before);
+          normalizedBefore.packages[''].engines.node = '>=24.15.0 <25';
+
+          assert.equal(after.packages[''].engines.node, '>=24.15.0 <25');
+          assert.equal(after.packages[''].engines.npm, '>=11.19.0 <12');
+
+          assert.deepStrictEqual(
+            after,
+            normalizedBefore,
+            'package-lock.json changed beyond the expected root engines.node metadata update',
+          );
+          NODE
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm run audit:security
+
+      - name: Validate and build
+        run: npm run check
+
+      - name: Verify only package-lock.json changed
+        shell: bash
+        run: |
+          changed_files="$(git diff --name-only)"
+          unexpected_files="$(printf '%s\n' "$changed_files" | grep -v '^package-lock\.json$' || true)"
+
+          if [ -n "$unexpected_files" ]; then
+            echo 'Unexpected tracked files changed:' >&2
+            printf '%s\n' "$unexpected_files" >&2
+            exit 1
+          fi
+
+      - name: Commit regenerated lockfile
+        shell: bash
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo 'package-lock.json is already synchronized.'
+            exit 0
+          fi
+
+          git add package-lock.json
+
+          staged_files="$(git diff --cached --name-only)"
+          if [ "$staged_files" != 'package-lock.json' ]; then
+            echo 'Refusing to commit files other than package-lock.json.' >&2
+            printf '%s\n' "$staged_files" >&2
+            exit 1
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore: regenerate package-lock with npm 11.19.0'
+          git push

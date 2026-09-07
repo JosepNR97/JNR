@@ -29,16 +29,26 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 - **Tailwind CSS 4** integrado directamente en Vite mediante `@tailwindcss/vite`.
 - **Lucide React 1** para la iconografía de interfaz, complementado con SVG local cuando un icono deja de formar parte de la librería.
 - **React PDF** para generar los CV en catalán, castellano e inglés.
-- **Vitest 4** y **Testing Library 16** para pruebas.
+- **Vitest 5** y **Testing Library 16** para pruebas.
 - **ESLint 10** y **Prettier** para mantener la calidad y consistencia del código.
 
 ## 🖥️ Requisitos de desarrollo
 
 El proyecto declara como entorno soportado:
 
-- **Node.js:** `^24.15.0 || >=26.0.0`
-- **npm:** `>=11.19.0 <12`
-- **Package manager de referencia:** `npm@11.19.0`
+- **Node.js:** `>=24.15.0 <25` — únicamente la rama Node 24.
+- **npm:** `>=11.19.0 <12`.
+- **Package manager de referencia:** `npm@11.19.0`.
+
+`package.json` utiliza `devEngines` para rechazar con error los comandos npm relevantes cuando el runtime Node o la versión de npm no cumplen estos rangos.
+
+El proyecto utiliza **npm** como único package manager soportado. No se declara soporte para pnpm ni Yarn.
+
+La versión exacta `npm@11.19.0` es la referencia reproducible utilizada por CI y despliegue. Si una instalación compatible de Node 24 incluye una versión anterior de npm, puede actualizarse antes de instalar las dependencias mediante:
+
+```bash
+npm install --global npm@11.19.0
+```
 
 Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del framework es:
 
@@ -144,7 +154,9 @@ La política de actualización y mantenimiento de dependencias se documenta en [
 
 ## 📦 Gestión de dependencias
 
-El proyecto utiliza **npm** como package manager.
+El proyecto utiliza **npm** como único package manager soportado.
+
+`packageManager` fija `npm@11.19.0` como versión de referencia, mientras que `engines.npm` y `devEngines.packageManager` permiten cualquier npm compatible dentro de `>=11.19.0 <12`.
 
 `package.json` y `package-lock.json` deben permanecer siempre sincronizados.
 
@@ -161,7 +173,7 @@ npm ci --force
 npm ci --legacy-peer-deps
 ```
 
-para ocultar conflictos entre dependencias.
+para ocultar conflictos entre dependencias o saltarse el contrato de entorno.
 
 Las actualizaciones major deben revisarse de manera independiente cuando puedan implicar:
 
