@@ -3,7 +3,7 @@ name: Regenerate Node/npm lockfile
 on:
   push:
     branches:
-      - 'chore/node-npm-runtime-contract'
+      - 'Mejoras'
     paths:
       - 'package.json'
       - 'package-lock.json'
