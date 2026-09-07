@@ -42,37 +42,52 @@ const LanguageSelector = ({
   onChange,
   mobile = false,
   inactiveClassName,
-}: LanguageSelectorProps) => (
-  <div
-    className={
-      mobile
-        ? 'flex items-center gap-3'
-        : 'flex items-center gap-1 border-l border-current/20 pl-4'
+}: LanguageSelectorProps) => {
+  const getButtonClassName = (code: Language) => {
+    const sharedClassName =
+      'min-h-10 min-w-10 cursor-pointer rounded-md px-2 text-xs font-bold transition-colors duration-200';
+
+    if (mobile) {
+      return `${sharedClassName} ${
+        language === code
+          ? 'bg-white/10 text-brand-300 hover:bg-white/20 hover:text-brand-200 focus-visible:bg-white/20 focus-visible:text-brand-200'
+          : `${inactiveClassName} hover:bg-white/10 hover:text-brand-200 focus-visible:bg-white/10 focus-visible:text-brand-200`
+      }`;
     }
-    aria-label="Language"
-    role="group"
-  >
-    {LANGUAGES.map(({ code, label }) => (
-      <button
-        key={code}
-        type="button"
-        lang={code}
-        aria-label={label}
-        aria-pressed={language === code}
-        onClick={() => onChange(code)}
-        className={`min-h-10 min-w-10 px-2 text-xs font-bold transition-colors ${
-          language === code
-            ? mobile
-              ? 'text-brand-300'
-              : 'text-brand-500'
-            : inactiveClassName
-        }`}
-      >
-        {code.toUpperCase()}
-      </button>
-    ))}
-  </div>
-);
+
+    return `${sharedClassName} ${
+      language === code
+        ? 'bg-brand-500/10 text-brand-500 hover:bg-brand-500/20 focus-visible:bg-brand-500/20'
+        : `${inactiveClassName} hover:bg-brand-500/10 hover:text-brand-500 focus-visible:bg-brand-500/10 focus-visible:text-brand-500`
+    }`;
+  };
+
+  return (
+    <div
+      className={
+        mobile
+          ? 'flex items-center gap-3'
+          : 'flex items-center gap-1 border-l border-current/20 pl-4'
+      }
+      aria-label="Language"
+      role="group"
+    >
+      {LANGUAGES.map(({ code, label }) => (
+        <button
+          key={code}
+          type="button"
+          lang={code}
+          aria-label={label}
+          aria-pressed={language === code}
+          onClick={() => onChange(code)}
+          className={getButtonClassName(code)}
+        >
+          {code.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 export const Header = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -223,10 +238,10 @@ export const Header = () => {
 
             <a
               href="#contact"
-              className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
+              className={`cursor-pointer rounded-full px-5 py-2 text-sm font-medium transition-[background-color,box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md focus-visible:-translate-y-0.5 focus-visible:shadow-md ${
                 scrolledHeader
-                  ? 'bg-brand-900 text-white hover:bg-brand-800'
-                  : 'bg-white text-brand-900 hover:bg-slate-100'
+                  ? 'bg-brand-900 text-white hover:bg-brand-800 focus-visible:bg-brand-800'
+                  : 'bg-white text-brand-900 hover:bg-slate-100 focus-visible:bg-slate-100'
               }`}
             >
               {t.nav.contact}
@@ -295,7 +310,7 @@ export const Header = () => {
           <a
             href="#contact"
             onClick={() => setMobileMenuOpen(false)}
-            className="mt-2 rounded-full border-2 border-white px-8 py-3 text-lg font-medium text-white transition-colors hover:bg-white hover:text-brand-900"
+            className="mt-2 cursor-pointer rounded-full border-2 border-white px-8 py-3 text-lg font-medium text-white transition-[background-color,box-shadow,color,transform] duration-200 ease-out hover:-translate-y-0.5 hover:bg-white hover:text-brand-900 hover:shadow-md focus-visible:-translate-y-0.5 focus-visible:bg-white focus-visible:text-brand-900 focus-visible:shadow-md"
           >
             {t.nav.contact}
           </a>
