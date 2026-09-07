@@ -512,20 +512,31 @@ test.describe(
       async ({ page }) => {
         await page.goto('/');
 
-        let viewport =
+        /*
+         * A real mouse user enters the carousel
+         * before clicking a moving logo. Entering
+         * the viewport pauses autoplay and gives
+         * Playwright a stable target.
+         */
+        const clickViewport =
           page.getByTestId(
             'certifications-viewport',
           );
 
-        let awsLogo =
-          viewport.getByRole(
+        const clickTrack =
+          page.getByTestId(
+            'certifications-track',
+          );
+
+        const clickAwsLogo =
+          clickViewport.getByRole(
             'button',
             {
               name: /AWS/i,
             },
           );
 
-        let awsEducationTrigger =
+        const clickAwsEducationTrigger =
           page.getByRole(
             'button',
             {
@@ -534,16 +545,43 @@ test.describe(
           );
 
         await expect(
-          awsEducationTrigger,
+          clickAwsEducationTrigger,
         ).toHaveAttribute(
           'aria-expanded',
           'false',
         );
 
-        await awsLogo.click();
+        await clickViewport.scrollIntoViewIfNeeded();
+
+        /*
+         * Hover over static viewport space first.
+         * This triggers the real mouseenter pause
+         * without requiring Playwright to target
+         * a logo while the track is still moving.
+         */
+        await clickViewport.hover({
+          position: {
+            x: 8,
+            y: 8,
+          },
+        });
+
+        await expectTrackToStayStill(
+          page,
+          clickTrack,
+        );
+
+        /*
+         * The track is now paused. Hovering the
+         * logo can safely activate its normal
+         * CSS affordance before the real click.
+         */
+        await clickAwsLogo.hover();
+
+        await clickAwsLogo.click();
 
         await expect(
-          awsEducationTrigger,
+          clickAwsEducationTrigger,
         ).toHaveAttribute(
           'aria-expanded',
           'true',
@@ -552,29 +590,30 @@ test.describe(
         /*
          * Reload to obtain a clean application
          * state before validating that a drag
-         * does not trigger the same selection.
+         * starting on the same logo does not
+         * trigger vendor selection.
          */
         await page.goto('/');
 
-        viewport =
+        const dragViewport =
           page.getByTestId(
             'certifications-viewport',
           );
 
-        const track =
+        const dragTrack =
           page.getByTestId(
             'certifications-track',
           );
 
-        awsLogo =
-          viewport.getByRole(
+        const dragAwsLogo =
+          dragViewport.getByRole(
             'button',
             {
               name: /AWS/i,
             },
           );
 
-        awsEducationTrigger =
+        const dragAwsEducationTrigger =
           page.getByRole(
             'button',
             {
@@ -583,17 +622,33 @@ test.describe(
           );
 
         await expect(
-          awsEducationTrigger,
+          dragAwsEducationTrigger,
         ).toHaveAttribute(
           'aria-expanded',
           'false',
         );
 
-        await awsLogo.scrollIntoViewIfNeeded();
-        await awsLogo.hover();
+        await dragViewport.scrollIntoViewIfNeeded();
+
+        /*
+         * Pause autoplay using the static
+         * viewport before resolving the real
+         * geometry of the draggable logo.
+         */
+        await dragViewport.hover({
+          position: {
+            x: 8,
+            y: 8,
+          },
+        });
+
+        await expectTrackToStayStill(
+          page,
+          dragTrack,
+        );
 
         const logoBox =
-          await awsLogo.boundingBox();
+          await dragAwsLogo.boundingBox();
 
         expect(
           logoBox,
@@ -614,7 +669,9 @@ test.describe(
           logoBox.height / 2;
 
         const initialX =
-          await getTrackX(track);
+          await getTrackX(
+            dragTrack,
+          );
 
         await page.mouse.move(
           startX,
@@ -634,7 +691,9 @@ test.describe(
         await page.mouse.up();
 
         const draggedX =
-          await getTrackX(track);
+          await getTrackX(
+            dragTrack,
+          );
 
         expect(
           Math.abs(
@@ -643,7 +702,7 @@ test.describe(
         ).toBeGreaterThan(30);
 
         await expect(
-          awsEducationTrigger,
+          dragAwsEducationTrigger,
         ).toHaveAttribute(
           'aria-expanded',
           'false',
