@@ -18,6 +18,7 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 - 📄 CV descargable en el idioma activo, generado automáticamente desde los datos del portfolio.
 - 🔎 Metadatos SEO, Open Graph y datos estructurados de tipo `Person`.
 - 📊 Google Analytics inicializado al cargar la web.
+- 🧪 Smoke tests E2E con Chromium para validar interacción, layout y comportamiento real de navegador.
 - ✅ Integración continua para validar pull requests antes de integrarlas.
 - ⚙️ Despliegue automatizado mediante GitHub Actions y GitHub Pages.
 
@@ -29,7 +30,8 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 - **Tailwind CSS 4** integrado directamente en Vite mediante `@tailwindcss/vite`.
 - **Lucide React 1** para la iconografía de interfaz, complementado con SVG local cuando un icono deja de formar parte de la librería.
 - **React PDF** para generar los CV en catalán, castellano e inglés.
-- **Vitest 5** y **Testing Library 16** para pruebas.
+- **Vitest 5** y **Testing Library 16** para pruebas unitarias y de componentes sobre jsdom.
+- **Playwright 1.63** con **Chromium** para smoke tests E2E en navegador real.
 - **ESLint 10** y **Prettier** para mantener la calidad y consistencia del código.
 
 ## 🖥️ Requisitos de desarrollo
@@ -64,6 +66,7 @@ Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del fram
 │   └── workflows/              CI, auditoría y despliegue
 ├── components/                 Componentes de interfaz y sus pruebas
 ├── context/                    Estado y persistencia de idioma
+├── e2e/                        Smoke tests E2E con Chromium
 ├── hooks/                      Hooks reutilizables
 ├── public/
 │   ├── assets/
@@ -80,6 +83,7 @@ Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del fram
 ├── aboutMe.ts                  Contenido personal y textos base
 ├── constants.ts                Formación, certificaciones, recursos y enlaces
 ├── experienceInfo.ts           Trayectoria profesional
+├── playwright.config.ts        Configuración de Playwright
 ├── translations.ts             Construcción de traducciones
 ├── types.ts                    Contratos TypeScript
 ├── styles.css                  Estilos globales y entrada de Tailwind
@@ -111,6 +115,32 @@ npm run generate:cv
 
 Los PDF de `public/assets/documents/` se ignoran en Git y se recrean antes de cada build.
 
+### Smoke E2E en navegador real
+
+Playwright utiliza únicamente Chromium como navegador E2E del proyecto.
+
+Después de `npm ci`, instala el browser gestionado por la versión local de Playwright:
+
+```bash
+npx playwright install chromium
+```
+
+En Linux, si el entorno necesita además las dependencias del sistema:
+
+```bash
+npx playwright install --with-deps chromium
+```
+
+Ejecuta la smoke suite mediante:
+
+```bash
+npm run test:e2e
+```
+
+`npm run test:e2e` construye el artefacto de producción mediante Vite, levanta automáticamente `vite preview` en `127.0.0.1:4173`, ejecuta los tests con Chromium en modo headless y detiene el servidor al finalizar.
+
+Los tests E2E validan únicamente comportamientos para los que un navegador real aporta señal adicional, como layout, `requestAnimationFrame`, transforms CSS, hover, pointer events, drag, responsive behavior y `prefers-reduced-motion`.
+
 ## ✅ Controles de calidad
 
 Los principales comandos disponibles son:
@@ -120,9 +150,14 @@ npm run lint
 npm run test
 npm run build
 npm run check
+npm run test:e2e
 npm run audit:security
 npm run format:check
 ```
+
+`npm run test` ejecuta la suite rápida de Vitest sobre jsdom.
+
+`npm run test:e2e` ejecuta la smoke suite de Playwright con Chromium sobre el build de producción.
 
 `npm run check` ejecuta secuencialmente:
 
@@ -138,7 +173,9 @@ TypeScript
 Vite build
 ```
 
-Toda pull request dirigida a `main` ejecuta además el workflow de CI desde una instalación limpia:
+Playwright no forma parte de `npm run check`. Esta separación mantiene rápido el control utilizado también durante el despliegue y evita instalar un browser en el workflow de GitHub Pages.
+
+Toda pull request dirigida a `main` ejecuta el workflow de CI desde una instalación limpia:
 
 ```text
 npm ci
@@ -146,9 +183,17 @@ npm ci
 npm run audit:security
   ↓
 npm run check
+  ↓
+Instalación de Chromium
+  ↓
+npm run test:e2e
 ```
 
-El check de validación debe finalizar correctamente antes de integrar cambios en `main`.
+La instalación de CI utiliza únicamente Chromium y sus dependencias del sistema.
+
+El mismo job requerido `validate` cubre tanto la validación rápida como la smoke suite E2E. El check debe finalizar correctamente antes de integrar cambios en `main`.
+
+Si Playwright falla en CI, se conservan temporalmente los artefactos de fallo disponibles en `test-results/`, como screenshots y trazas generadas por la política configurada.
 
 La política de actualización y mantenimiento de dependencias se documenta en [docs/dependency-maintenance.md](docs/dependency-maintenance.md).
 
@@ -187,6 +232,8 @@ Las actualizaciones major deben revisarse de manera independiente cuando puedan 
 
 Dependabot revisa periódicamente tanto dependencias npm como GitHub Actions.
 
+Cuando se actualice Playwright debe regenerarse el lockfile y volver a instalarse el Chromium correspondiente a la nueva versión antes de ejecutar la smoke suite.
+
 ## 🔐 Seguridad de dependencias
 
 La auditoría utilizada por el proyecto es:
@@ -213,6 +260,8 @@ strict-allow-scripts=true
 
 para evitar la ejecución indiscriminada de scripts de instalación de dependencias.
 
+Los browsers de Playwright se instalan explícitamente mediante su CLI; no se añaden paquetes de browsers ni se relaja la política de scripts del proyecto para descargarlos durante `npm ci`.
+
 ## 🖼️ Gestión de imágenes
 
 Todos los recursos visuales utilizados directamente por la interfaz están almacenados en `public/assets/` y se referencian mediante `assetPath()`.
@@ -220,6 +269,8 @@ Todos los recursos visuales utilizados directamente por la interfaz están almac
 Esto evita que logos, insignias o fotografías desaparezcan por cambios, bloqueos o caducidad de servidores externos.
 
 Los enlaces de credenciales, LinkedIn, Analytics y otros destinos de navegación pueden seguir siendo URLs externas porque no son recursos gráficos necesarios para renderizar la interfaz.
+
+La smoke suite E2E no depende de Google Analytics ni de otros recursos externos para determinar su resultado.
 
 ## ♿ Accesibilidad y movimiento
 
@@ -235,6 +286,8 @@ Cuando el usuario solicita movimiento reducido:
 - se eliminan transiciones no esenciales;
 - el carrusel de acreditadores no se desplaza automáticamente;
 - el contenido sigue siendo completamente accesible mediante navegación manual.
+
+Playwright valida este comportamiento utilizando la preferencia de movimiento reducido del contexto real de Chromium, sin mockear `matchMedia`.
 
 ## 🚢 Despliegue
 
@@ -259,6 +312,8 @@ Deploy GitHub Pages
 ```
 
 Esto garantiza que el código desplegado se valida nuevamente desde una instalación limpia, incluso aunque la pull request ya haya superado el CI.
+
+La smoke suite Playwright permanece deliberadamente fuera de `npm run check`. El workflow de deploy no instala Chromium ni vuelve a ejecutar E2E; esa responsabilidad pertenece al job requerido `validate` de la pull request.
 
 ## ©️ Licencia
 
