@@ -9,19 +9,20 @@ export const useCountUp = (
   duration = 1200,
 ) => {
   const [currentValue, setCurrentValue] = useState(0);
+  const [prefersReducedMotion] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+
+  const safeTarget = Math.max(0, target);
+  const showTargetImmediately =
+    isVisible &&
+    (safeTarget === 0 || duration <= 0 || prefersReducedMotion);
 
   useEffect(() => {
-    if (!isVisible) return undefined;
-
-    const safeTarget = Math.max(0, target);
-    const prefersReducedMotion =
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (safeTarget === 0 || duration <= 0 || prefersReducedMotion) {
-      setCurrentValue(safeTarget);
-      return undefined;
-    }
+    if (!isVisible || showTargetImmediately) return undefined;
 
     let animationFrame = 0;
     let startTime: number | null = null;
@@ -36,7 +37,7 @@ export const useCountUp = (
 
     animationFrame = window.requestAnimationFrame(animate);
     return () => window.cancelAnimationFrame(animationFrame);
-  }, [duration, isVisible, target]);
+  }, [duration, isVisible, safeTarget, showTargetImmediately]);
 
-  return currentValue;
+  return showTargetImmediately ? safeTarget : currentValue;
 };

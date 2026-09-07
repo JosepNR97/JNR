@@ -7,16 +7,13 @@ const REVEAL_OBSERVER_OPTIONS: IntersectionObserverInit = {
 
 export const useRevealOnScroll = <T extends HTMLElement>() => {
   const ref = useRef<T>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(
+    () => typeof IntersectionObserver === 'undefined',
+  );
 
   useEffect(() => {
     const element = ref.current;
-    if (!element) return;
-
-    if (typeof IntersectionObserver === 'undefined') {
-      setIsVisible(true);
-      return;
-    }
+    if (!element || typeof IntersectionObserver === 'undefined') return;
 
     const observer = new IntersectionObserver(([entry]) => {
       if (!entry?.isIntersecting) return;

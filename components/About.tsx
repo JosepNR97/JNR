@@ -7,12 +7,13 @@ import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
 import { GlobeIcon } from './Icons';
 import { Reveal } from './Reveal';
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export const About: React.FC = () => {
   const { t } = useLanguage();
 
   // Cálculos automáticos
-  const currentYear = new Date().getFullYear();
-  const yearsExp = currentYear - CAREER_START_YEAR + 1;
+  const yearsExp = CURRENT_YEAR - CAREER_START_YEAR + 1;
 
   // Calcular proyectos reales sumando los logros listados en la experiencia
   const totalProjects =
