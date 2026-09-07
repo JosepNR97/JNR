@@ -29,7 +29,7 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 - **Tailwind CSS 4** integrado directamente en Vite mediante `@tailwindcss/vite`.
 - **Lucide React 1** para la iconografía de interfaz, complementado con SVG local cuando un icono deja de formar parte de la librería.
 - **React PDF** para generar los CV en catalán, castellano e inglés.
-- **Vitest 4** y **Testing Library 16** para pruebas.
+- **Vitest 5** y **Testing Library 16** para pruebas.
 - **ESLint 10** y **Prettier** para mantener la calidad y consistencia del código.
 
 ## 🖥️ Requisitos de desarrollo
