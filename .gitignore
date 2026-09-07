@@ -37,4 +37,4 @@ public/assets/documents/*.pdf
 *.sw?
 
 # Local project files
-backlog-tool-v3.html
+backlog-tool-v*.html

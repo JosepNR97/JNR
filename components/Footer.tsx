@@ -9,7 +9,7 @@ export const Footer: React.FC = () => {
   return (
     <footer className="py-6 bg-slate-950 text-white border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 text-center">
-        <p className="text-slate-500 text-xs">
+        <p className="text-slate-400 text-xs">
           © {currentYear} {PROFILE_DATA.name}. {t.contact.rights}
         </p>
       </div>

@@ -4,7 +4,7 @@ Este documento define las reglas de mantenimiento, actualización y validación 
 
 ## Baseline tecnológico actual
 
-Baseline revisado tras la migración major realizada en septiembre de 2026, el endurecimiento posterior del contrato Node/npm y la incorporación de smoke testing E2E en navegador real.
+Baseline revisado tras la migración major realizada en septiembre de 2026, el endurecimiento posterior del contrato Node/npm, la incorporación de smoke testing E2E en navegador real y la capa mínima de accessibility smoke automatizado.
 
 | Componente | Baseline actual |
 | --- | --- |
@@ -24,6 +24,7 @@ Baseline revisado tras la migración major realizada en septiembre de 2026, el e
 | Testing Library DOM | `10.4.x` |
 | Vitest | `5.0.x` |
 | Playwright | `@playwright/test` `1.63.x` |
+| Accessibility E2E | `@axe-core/playwright` `4.13.x` |
 | Navegador E2E | Chromium gestionado por Playwright |
 | ESLint | `10.x` |
 
@@ -219,6 +220,11 @@ El repositorio dispone de varios controles complementarios:
 - `npm run check` ejecuta la validación rápida basada en ESLint, Vitest, TypeScript y Vite.
 - CI instala únicamente Chromium mediante el Playwright incluido en `node_modules`.
 - La smoke suite E2E se ejecuta mediante `npm run test:e2e` dentro del mismo job `validate`.
+- `npm run test:e2e` incluye los smoke tests funcionales y `e2e/accessibility.spec.ts`.
+- La capa de accessibility smoke reutiliza el mismo Playwright, Chromium, build, servidor y configuración E2E.
+- Axe analiza estados desktop en catalán, castellano e inglés, el menú móvil abierto y el carrusel en un estado interactivo real.
+- La baseline Axe bloquea violations `critical` y `serious` dentro de los tags WCAG A/AA configurados; `moderate` y `minor` no bloquean inicialmente.
+- No se excluyen componentes completos ni se desactivan reglas para ocultar violations de alto impacto.
 - El check de validación debe superar tanto los controles rápidos como los E2E antes del merge.
 - Los pushes a `main` vuelven a ejecutar instalación, auditoría, validación y build antes del despliegue en GitHub Pages.
 - El workflow de despliegue no instala Chromium ni ejecuta Playwright.
@@ -226,6 +232,8 @@ El repositorio dispone de varios controles complementarios:
 - Las vulnerabilidades de severidad `high` o `critical` bloquean los pipelines.
 - `strict-allow-scripts=true` restringe la ejecución de scripts de instalación de dependencias.
 - `devEngines` rechaza los entornos Node/npm incompatibles en los comandos npm relevantes.
+
+Axe no sustituye la evaluación manual de accesibilidad. Los controles automatizados deben complementarse con revisión de teclado, foco, lector de pantalla, contenido, zoom, reflow y cualquier criterio WCAG que no pueda evaluarse automáticamente.
 
 ## Instalaciones reproducibles
 
@@ -247,11 +255,17 @@ npm run audit:security
 npm run check
 ```
 
-Cuando el cambio pueda afectar a UI, CSS, eventos de navegador, Playwright o sus dependencias debe ejecutarse además:
+Cuando el cambio pueda afectar a UI, CSS, eventos de navegador, Playwright, Axe o sus dependencias debe ejecutarse además:
 
 ```bash
 npx playwright install chromium
 npm run test:e2e
+```
+
+Para aislar específicamente la capa de accessibility smoke puede ejecutarse:
+
+```bash
+npm run test:a11y
 ```
 
 En CI y en entornos Linux que necesiten las dependencias del sistema se utiliza:
@@ -287,13 +301,14 @@ Cuando se modifique `package.json`:
 8. ejecutar el pipeline completo de validación;
 9. instalar Chromium cuando el cambio afecte al baseline E2E;
 10. ejecutar `npm run test:e2e`;
-11. versionar conjuntamente `package.json` y `package-lock.json`.
+11. ejecutar `npm run test:a11y` cuando exista o cambie la capa Axe;
+12. versionar conjuntamente `package.json` y `package-lock.json`.
 
-Cuando se añade una dependencia directa nueva, como `@playwright/test`, es esperable que `package-lock.json` incorpore:
+Cuando se añade una dependencia directa nueva, como `@playwright/test` o `@axe-core/playwright`, es esperable que `package-lock.json` incorpore:
 
 - la nueva dependencia directa en la metadata raíz;
-- el paquete Playwright correspondiente;
-- las dependencias transitivas requeridas por Playwright;
+- el paquete solicitado y sus dependencias transitivas;
+- `axe-core` cuando se añade `@axe-core/playwright`;
 - sus campos `resolved` e `integrity` generados por npm.
 
 Estos cambios deben proceder exclusivamente de npm.
@@ -303,7 +318,7 @@ No se deben:
 - escribir manualmente valores `integrity`;
 - inventar URLs `resolved`;
 - construir manualmente nodos del árbol;
-- copiar entradas de un lockfile de otra versión de Playwright;
+- copiar entradas de un lockfile de otra versión de Playwright o Axe;
 - modificar `lockfileVersion` sin que npm lo requiera.
 
 Si no se dispone de un entorno local compatible, puede utilizarse temporalmente un workflow aislado de GitHub Actions que:
@@ -319,9 +334,10 @@ Si no se dispone de un entorno local compatible, puede utilizarse temporalmente 
 9. ejecute `npm run check`;
 10. instale únicamente Chromium y sus dependencias mediante Playwright;
 11. ejecute `npm run test:e2e`;
-12. compruebe que únicamente `package-lock.json` ha cambiado como resultado de la regeneración;
-13. haga commit únicamente de `package-lock.json`;
-14. sea eliminado antes de integrar la pull request.
+12. ejecute `npm run test:a11y` si existe el script específico;
+13. compruebe que únicamente `package-lock.json` ha cambiado como resultado de la regeneración;
+14. exponga únicamente el lockfile validado como artefacto o haga commit únicamente de `package-lock.json`;
+15. sea eliminado antes de integrar la pull request.
 
 ## Familias de dependencias que deben mantenerse alineadas
 
@@ -386,6 +402,10 @@ Vitest + Testing Library + jsdom
 Playwright + Chromium
   → navegador real, layout, CSS, rAF, hover,
     pointer events, drag y responsive behavior
+
+Axe + Playwright + Chromium
+  → violations de accesibilidad automáticamente detectables
+    sobre estados reales del navegador
 ```
 
 Los specs de Playwright se almacenan en `e2e/` y están excluidos expresamente del discovery de Vitest.
@@ -427,9 +447,87 @@ La smoke suite debe permanecer reducida y centrada en:
 - drag;
 - diferenciación entre click y drag;
 - cobertura ultrawide;
-- reduced motion.
+- reduced motion;
+- accessibility smoke sobre estados representativos de la interfaz.
 
 No convertir Playwright en una duplicación exhaustiva de todos los tests de componentes.
+
+### Axe y accessibility smoke
+
+El baseline utiliza:
+
+```text
+@axe-core/playwright 4.13.x
+```
+
+`package.json` declara `~4.13.0` para mantener la resolución automática dentro de la línea Axe 4.13. El lockfile fija la versión concreta instalada.
+
+`@axe-core/playwright` no sigue Semantic Versioning convencional: su major y minor siguen la versión de `axe-core`. Por ello, una futura actualización a Axe 4.14 o superior debe revisarse deliberadamente porque puede cambiar reglas, tags o resultados del gate aunque la integración de Playwright siga siendo compatible.
+
+La capa Axe reutiliza:
+
+- el mismo `playwright.config.ts`;
+- el mismo Chromium;
+- el mismo build de producción;
+- el mismo `vite preview`;
+- el mismo job `CI / validate`.
+
+No se crea una segunda infraestructura E2E ni otro required check.
+
+El script completo continúa siendo:
+
+```bash
+npm run test:e2e
+```
+
+y ejecuta todos los specs, incluido `e2e/accessibility.spec.ts`.
+
+Para ejecución local focalizada existe:
+
+```bash
+npm run test:a11y
+```
+
+Los scans Axe se limitan a los tags oficiales:
+
+```text
+wcag2a
+wcag2aa
+wcag21a
+wcag21aa
+wcag22aa
+```
+
+Axe 4.13 no expone un tag `wcag22a` independiente. No debe inventarse ni sustituirse por reglas experimentales.
+
+No habilitar manualmente reglas marcadas como experimentales o deshabilitadas por defecto únicamente para ampliar artificialmente la cobertura. La adopción de reglas adicionales debe ser una decisión separada y justificada.
+
+La baseline inicial de CI falla ante violations con impacto:
+
+```text
+critical
+serious
+```
+
+Las violations `moderate` y `minor` se mantienen fuera del criterio de bloqueo inicial para evitar convertir la primera baseline en una suite ruidosa sin haber evaluado previamente su señal. Endurecer el gate para incluir `moderate` requiere comprobar antes que la baseline actual sea estable y no genere ruido injustificado.
+
+No utilizar exclusiones genéricas de Axe ni `disableRules()` para conseguir tests verdes. Si aparece una violation `critical` o `serious`, debe analizarse primero si representa un problema real y corregir la implementación cuando sea razonable.
+
+Los estados mínimos cubiertos son:
+
+- página principal desktop en `ca`;
+- página principal desktop en `es`;
+- página principal desktop en `en`;
+- menú móvil después de abrirlo realmente;
+- carrusel de certificaciones visible y con foco de teclado en su copia accesible.
+
+Cada idioma comprueba además que `document.documentElement.lang` corresponde al idioma activo.
+
+Las copias visuales `aria-hidden` del carrusel permanecen dentro del DOM analizado. Sus controles deben continuar fuera del tab order mediante `tabIndex=-1`; no se excluye el carrusel del scan.
+
+Axe analiza únicamente problemas automáticamente detectables y el estado actual del DOM. Por ello los estados ocultos por defecto, como el menú móvil, deben activarse antes del scan correspondiente.
+
+Axe no sustituye revisión manual ni pruebas con tecnologías de asistencia.
 
 ### TypeScript y typescript-eslint
 
@@ -596,6 +694,8 @@ npx playwright install --with-deps chromium
 
 No debe relajarse `strict-allow-scripts` para convertir la descarga del browser en un efecto lateral de la instalación npm.
 
+`@axe-core/playwright` reutiliza el browser gestionado por Playwright y no justifica añadir otro browser ni relajar esta política.
+
 ## Auditoría de seguridad
 
 El proyecto ejecuta:
@@ -645,7 +745,7 @@ npm run audit:security
 npm run check
 ```
 
-Si el cambio afecta al tooling de navegador o a comportamiento de UI debe ejecutarse además la smoke suite E2E.
+Si el cambio afecta al tooling de navegador, Axe o a comportamiento de UI debe ejecutarse además la smoke suite E2E.
 
 ## Actualizaciones major
 
@@ -671,7 +771,8 @@ Antes de aceptar una major de Dependabot:
 16. realizar una revisión visual si afecta a UI, CSS o iconografía;
 17. comprobar comportamiento interactivo si afecta a eventos o APIs del navegador;
 18. ejecutar Playwright cuando el cambio pueda afectar al comportamiento real del navegador;
-19. integrar únicamente cuando el CI esté completamente en verde.
+19. ejecutar accessibility smoke cuando el cambio pueda afectar a UI, ARIA, foco, contenido o estilos;
+20. integrar únicamente cuando el CI esté completamente en verde.
 
 Una actualización major de Playwright debe revisar además:
 
@@ -682,6 +783,16 @@ Una actualización major de Playwright debe revisar además:
 - cambios en los requisitos de sistema de Chromium;
 - regeneración del lockfile;
 - reinstalación explícita de Chromium.
+
+Una actualización de la línea major/minor utilizada por `@axe-core/playwright` debe revisar además:
+
+- versión de `axe-core` incorporada;
+- reglas añadidas, eliminadas o modificadas;
+- cambios de impacto de las reglas;
+- tags WCAG soportados;
+- posibles cambios legítimos en la baseline;
+- compatibilidad con la versión actual de Playwright;
+- resultado de `npm run test:a11y` y `npm run test:e2e`.
 
 ## Lecciones de la migración de septiembre de 2026
 
@@ -753,6 +864,8 @@ Tailwind CSS 4 modificó varias escalas y comportamientos, por lo que después d
 
 Los smoke tests Playwright proporcionan una red de seguridad adicional para una parte limitada de estos comportamientos sin convertirse en una suite de visual regression pixel-perfect.
 
+La capa Axe añade señal automatizada sobre regresiones de accesibilidad, pero tampoco sustituye una revisión manual de los cambios visuales e interactivos.
+
 ### Separar framework e integración de build
 
 La versión de Tailwind y el mecanismo mediante el que se integra en el bundler son decisiones distintas.
@@ -813,6 +926,14 @@ La smoke suite Playwright permanece fuera de `npm run check`.
 
 Esto es intencionado porque `npm run check` también se utiliza durante el workflow de despliegue. Mantener E2E separado evita que el deploy tenga que instalar Chromium y ejecutar por segunda vez los tests de navegador.
 
+`npm run test:e2e` ejecuta dentro de una única infraestructura Playwright:
+
+```text
+Smoke E2E funcional
+  +
+Accessibility smoke Axe
+```
+
 El job `validate` del workflow `CI` ejecuta ambos niveles de control:
 
 ```text
@@ -823,7 +944,7 @@ Smoke E2E Chromium
 
 La rama `main` debe mantener configurado como obligatorio el check asociado al job `validate` del workflow `CI`.
 
-No se crea un required check independiente para Playwright.
+No se crea un required check independiente para Playwright ni para Axe.
 
 No debe integrarse una pull request simplemente porque GitHub permita técnicamente el merge si el check requerido no corresponde al workflow real o permanece en estado `Expected`.
 
@@ -856,9 +977,12 @@ Revisar además:
 - soporte de TypeScript por `typescript-eslint`;
 - baseline de navegadores de Tailwind;
 - versión actual de `@playwright/test`;
+- versión actual de `@axe-core/playwright` y de `axe-core` incorporada;
+- tags WCAG y severidades que forman la baseline de accessibility smoke;
 - requisitos de sistema actuales de Playwright;
 - versión de Chromium gestionada por la release de Playwright instalada;
 - estabilidad y utilidad de la smoke suite E2E;
+- estabilidad y señal de la capa Axe, incluida la posible adopción futura de `moderate` como severidad bloqueante;
 - actualizaciones major abiertas por Dependabot;
 - versiones de GitHub Actions;
 - configuración de branch protection y required checks.

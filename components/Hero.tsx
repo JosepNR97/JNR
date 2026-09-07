@@ -139,7 +139,7 @@ export const Hero = () => {
             href={PROFILE_DATA.linkedin}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-600 px-8 py-4 font-medium text-white shadow-lg transition-all hover:bg-brand-500 hover:shadow-brand-500/30"
+            className="group inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-700 px-8 py-4 font-medium text-white shadow-lg transition-all hover:bg-brand-800 hover:shadow-brand-500/30 focus-visible:bg-brand-800"
           >
             {t.hero.connect}
             <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />

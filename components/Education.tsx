@@ -39,7 +39,7 @@ export const Education = ({ expandedVendorId, onVendorToggle }: EducationProps) 
     <section id="education" className="scroll-mt-20 bg-white py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal className="mb-16 text-center">
-          <span className="text-sm font-semibold uppercase tracking-wider text-brand-600">
+          <span className="text-sm font-semibold uppercase tracking-wider text-brand-700">
             {t.education.badge}
           </span>
           <h2 className="mb-4 mt-2 font-serif text-3xl font-bold text-slate-900 md:text-4xl">
