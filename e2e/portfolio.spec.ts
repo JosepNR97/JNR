@@ -517,11 +517,6 @@ test.describe(
             'certifications-viewport',
           );
 
-        let track =
-          page.getByTestId(
-            'certifications-track',
-          );
-
         let awsLogo =
           viewport.getByRole(
             'button',
@@ -566,7 +561,7 @@ test.describe(
             'certifications-viewport',
           );
 
-        track =
+        const track =
           page.getByTestId(
             'certifications-track',
           );
