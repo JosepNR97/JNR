@@ -23,7 +23,7 @@ Baseline revisado tras la migración major realizada en septiembre de 2026 y el 
 | Testing Library React | `16.3.x` |
 | Testing Library DOM | `10.4.x` |
 | Vitest | `5.0.x` |
-| ESLint | `10.10.x` |
+| ESLint | `10.x` |
 
 `package.json` y `package-lock.json` son la fuente de verdad para las versiones concretas instaladas.
 
