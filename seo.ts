@@ -1,6 +1,6 @@
-import { HERO_DATA, PROFILE_DATA } from './aboutMe';
-import { SUPPORTED_LANGUAGES } from './localeRouting';
-import type { Language } from './types';
+import { HERO_DATA, PROFILE_DATA } from './aboutMe.ts';
+import { SUPPORTED_LANGUAGES } from './localeRouting.ts';
+import type { Language } from './types.ts';
 
 export const SITE_ORIGIN = 'https://josepnr97.github.io';
 export const SITE_BASE_PATH = '/JNR/';
