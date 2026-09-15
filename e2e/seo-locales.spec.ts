@@ -1,9 +1,26 @@
 import { expect, test } from '@playwright/test';
 
+const LANGUAGE_STORAGE_KEY = 'jnr-language-v1';
+
 const LOCALES = [
-  { code: 'ca', name: 'Català', nextCode: 'es', nextName: 'Español' },
-  { code: 'es', name: 'Español', nextCode: 'en', nextName: 'English' },
-  { code: 'en', name: 'English', nextCode: 'ca', nextName: 'Català' },
+  {
+    code: 'ca',
+    name: 'Català',
+    nextCode: 'es',
+    nextName: 'Español',
+  },
+  {
+    code: 'es',
+    name: 'Español',
+    nextCode: 'en',
+    nextName: 'English',
+  },
+  {
+    code: 'en',
+    name: 'English',
+    nextCode: 'ca',
+    nextName: 'Català',
+  },
 ] as const;
 
 const productionUrl = (locale: string) =>
@@ -15,18 +32,31 @@ test.describe('multilingual SEO routes', () => {
       page,
       request,
     }) => {
-      const response = await request.get(`/${locale.code}/`);
+      const response = await request.get(
+        `/${locale.code}/`,
+      );
+
       expect(response.ok()).toBe(true);
 
       const initialHtml = await response.text();
-      expect(initialHtml).toContain(`<html lang="${locale.code}">`);
+
       expect(initialHtml).toContain(
-        `rel="canonical" href="${productionUrl(locale.code)}"`,
+        `<html lang="${locale.code}">`,
       );
+
+      expect(initialHtml).toContain(
+        `rel="canonical" href="${productionUrl(
+          locale.code,
+        )}"`,
+      );
+
       expect(initialHtml).toContain(
         'name="twitter:card" content="summary"',
       );
-      expect(initialHtml).toContain('type="application/ld+json"');
+
+      expect(initialHtml).toContain(
+        'type="application/ld+json"',
+      );
 
       await page.route(
         'https://www.googletagmanager.com/**',
@@ -35,29 +65,46 @@ test.describe('multilingual SEO routes', () => {
         },
       );
 
-      await page.goto(`/${locale.code}/#about`);
+      await page.goto(
+        `/${locale.code}/#about`,
+      );
 
-      await expect(page.locator('html')).toHaveAttribute(
+      await expect(
+        page.locator('html'),
+      ).toHaveAttribute(
         'lang',
         locale.code,
       );
-      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+
+      await expect(
+        page.locator('link[rel="canonical"]'),
+      ).toHaveAttribute(
         'href',
         productionUrl(locale.code),
       );
 
       const currentLanguageButton = page
         .getByRole('banner')
-        .getByRole('button', { name: locale.name });
+        .getByRole('button', {
+          name: locale.name,
+        });
+
       const nextLanguageButton = page
         .getByRole('banner')
-        .getByRole('button', { name: locale.nextName });
+        .getByRole('button', {
+          name: locale.nextName,
+        });
 
-      await expect(currentLanguageButton).toHaveAttribute(
+      await expect(
+        currentLanguageButton,
+      ).toHaveAttribute(
         'aria-pressed',
         'true',
       );
-      await expect(nextLanguageButton).toHaveAttribute(
+
+      await expect(
+        nextLanguageButton,
+      ).toHaveAttribute(
         'aria-pressed',
         'false',
       );
@@ -65,13 +112,21 @@ test.describe('multilingual SEO routes', () => {
       await nextLanguageButton.click();
 
       await expect(page).toHaveURL(
-        new RegExp(`/${locale.nextCode}/#about$`),
+        new RegExp(
+          `/${locale.nextCode}/#about$`,
+        ),
       );
-      await expect(page.locator('html')).toHaveAttribute(
+
+      await expect(
+        page.locator('html'),
+      ).toHaveAttribute(
         'lang',
         locale.nextCode,
       );
-      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+
+      await expect(
+        page.locator('link[rel="canonical"]'),
+      ).toHaveAttribute(
         'href',
         productionUrl(locale.nextCode),
       );
@@ -82,30 +137,178 @@ test.describe('multilingual SEO routes', () => {
     page,
   }) => {
     await page.addInitScript(() => {
-      window.localStorage.setItem('jnr-language-v1', 'ca');
+      window.localStorage.setItem(
+        LANGUAGE_STORAGE_KEY,
+        'ca',
+      );
     });
 
     await page.goto('/en/');
 
-    await expect(page).toHaveURL(/\/en\/$/);
-    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page).toHaveURL(
+      /\/en\/$/,
+    );
+
+    await expect(
+      page.locator('html'),
+    ).toHaveAttribute(
+      'lang',
+      'en',
+    );
+
     await expect(
       page
         .getByRole('banner')
-        .getByRole('button', { name: 'English' }),
-    ).toHaveAttribute('aria-pressed', 'true');
+        .getByRole('button', {
+          name: 'English',
+        }),
+    ).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (storageKey) =>
+            window.localStorage.getItem(storageKey),
+          LANGUAGE_STORAGE_KEY,
+        ),
+      )
+      .toBe('en');
   });
 
   test('root entry redirects once and preserves the section anchor', async ({
     page,
   }) => {
     await page.addInitScript(() => {
-      window.localStorage.setItem('jnr-language-v1', 'ca');
+      window.localStorage.setItem(
+        LANGUAGE_STORAGE_KEY,
+        'ca',
+      );
     });
 
     await page.goto('/#services');
 
-    await expect(page).toHaveURL(/\/ca\/#services$/);
-    await expect(page.locator('html')).toHaveAttribute('lang', 'ca');
+    await expect(page).toHaveURL(
+      /\/ca\/#services$/,
+    );
+
+    await expect(
+      page.locator('html'),
+    ).toHaveAttribute(
+      'lang',
+      'ca',
+    );
+  });
+
+  test('language selection immediately after reload stays on the selected locale', async ({
+    page,
+  }) => {
+    await page.route(
+      'https://www.googletagmanager.com/**',
+      async (route) => {
+        await route.abort();
+      },
+    );
+
+    await page.goto('/es/');
+
+    await page.reload({
+      waitUntil: 'domcontentloaded',
+    });
+
+    await page
+      .getByRole('banner')
+      .getByRole('button', {
+        name: 'English',
+      })
+      .click();
+
+    await page.waitForLoadState('load');
+
+    await expect(page).toHaveURL(
+      /\/en\/$/,
+    );
+
+    await expect(
+      page.locator('html'),
+    ).toHaveAttribute(
+      'lang',
+      'en',
+    );
+
+    await expect(
+      page
+        .getByRole('banner')
+        .getByRole('button', {
+          name: 'English',
+        }),
+    ).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    await expect(
+      page.locator('link[rel="canonical"]'),
+    ).toHaveAttribute(
+      'href',
+      productionUrl('en'),
+    );
+
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (storageKey) =>
+            window.localStorage.getItem(storageKey),
+          LANGUAGE_STORAGE_KEY,
+        ),
+      )
+      .toBe('en');
+
+    await page.reload({
+      waitUntil: 'domcontentloaded',
+    });
+
+    await page
+      .getByRole('banner')
+      .getByRole('button', {
+        name: 'Català',
+      })
+      .click();
+
+    await page.waitForLoadState('load');
+
+    await expect(page).toHaveURL(
+      /\/ca\/$/,
+    );
+
+    await expect(
+      page.locator('html'),
+    ).toHaveAttribute(
+      'lang',
+      'ca',
+    );
+
+    await expect(
+      page
+        .getByRole('banner')
+        .getByRole('button', {
+          name: 'Català',
+        }),
+    ).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (storageKey) =>
+            window.localStorage.getItem(storageKey),
+          LANGUAGE_STORAGE_KEY,
+        ),
+      )
+      .toBe('ca');
   });
 });
