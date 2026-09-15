@@ -15,6 +15,7 @@ const WCAG_TAGS = [
 const LOCALES = [
   {
     code: 'ca',
+    name: 'Català',
     conflictingStoredLanguage: 'en',
     title: 'Pàgina no trobada | Josep Núñez Riba',
     description:
@@ -26,6 +27,7 @@ const LOCALES = [
   },
   {
     code: 'es',
+    name: 'Español',
     conflictingStoredLanguage: 'ca',
     title: 'Página no encontrada | Josep Núñez Riba',
     description:
@@ -37,6 +39,7 @@ const LOCALES = [
   },
   {
     code: 'en',
+    name: 'English',
     conflictingStoredLanguage: 'es',
     title: 'Page not found | Josep Núñez Riba',
     description:
@@ -48,34 +51,112 @@ const LOCALES = [
   },
 ] as const;
 
+type LocaleCode = (typeof LOCALES)[number]['code'];
+
 let notFoundHtml = '';
+
+const blockAnalytics = async (page: Page) => {
+  await page.route(
+    'https://www.googletagmanager.com/**',
+    async (route) => {
+      await route.abort();
+    },
+  );
+};
+
+const initializeStoredLanguage = async (
+  page: Page,
+  language: LocaleCode,
+) => {
+  await page.addInitScript(
+    ({ storageKey, storedLanguage }) => {
+      window.localStorage.setItem(storageKey, storedLanguage);
+    },
+    {
+      storageKey: LANGUAGE_STORAGE_KEY,
+      storedLanguage: language,
+    },
+  );
+};
 
 const serveNotFoundAt = async (
   page: Page,
   pathname: string,
 ) => {
-  await page.route(`**${pathname}`, async (route) => {
-    await route.fulfill({
-      status: 404,
-      contentType: 'text/html; charset=utf-8',
-      body: notFoundHtml,
-    });
+  await page.route(
+    `**${pathname}`,
+    async (route) => {
+      await route.fulfill({
+        status: 404,
+        contentType:
+          'text/html; charset=utf-8',
+        body: notFoundHtml,
+      });
+    },
+  );
+};
+
+const expectStoredLanguage = async (
+  page: Page,
+  language: LocaleCode,
+) => {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (storageKey) =>
+          window.localStorage.getItem(storageKey),
+        LANGUAGE_STORAGE_KEY,
+      ),
+    )
+    .toBe(language);
+};
+
+const trackMainFramePathnames = (
+  page: Page,
+): string[] => {
+  const pathnames: string[] = [];
+
+  page.on('framenavigated', (frame) => {
+    if (frame !== page.mainFrame()) {
+      return;
+    }
+
+    const url = frame.url();
+
+    if (
+      !url.startsWith('http://') &&
+      !url.startsWith('https://')
+    ) {
+      return;
+    }
+
+    pathnames.push(
+      new URL(url).pathname,
+    );
   });
+
+  return pathnames;
 };
 
 const assertAccessibilityBaseline = async (
   page: Page,
   state: string,
 ) => {
-  const { violations } = await new AxeBuilder({ page })
-    .withTags(WCAG_TAGS)
-    .analyze();
+  const { violations } =
+    await new AxeBuilder({
+      page,
+    })
+      .withTags(WCAG_TAGS)
+      .analyze();
 
-  const blockingViolations = violations.filter(
-    (violation) =>
-      violation.impact === 'critical' ||
-      violation.impact === 'serious',
-  );
+  const blockingViolations =
+    violations.filter(
+      (violation) =>
+        violation.impact ===
+          'critical' ||
+        violation.impact ===
+          'serious',
+    );
 
   expect(
     blockingViolations,
@@ -84,144 +165,314 @@ const assertAccessibilityBaseline = async (
 };
 
 test.beforeAll(async ({ request }) => {
-  const response = await request.get('/404.html');
+  const response =
+    await request.get(
+      '/404.html',
+    );
 
   expect(response.ok()).toBe(true);
 
-  notFoundHtml = await response.text();
+  notFoundHtml =
+    await response.text();
 });
 
-test.describe('localized 404 page', () => {
-  for (const locale of LOCALES) {
-    test(`explicit ${locale.code} URL renders the ${locale.code} 404 and returns to the same locale`, async ({
-      page,
-    }) => {
-      await page.addInitScript(
-        ({ storageKey, storedLanguage }) => {
-          window.localStorage.setItem(
-            storageKey,
-            storedLanguage,
-          );
-        },
-        {
-          storageKey: LANGUAGE_STORAGE_KEY,
-          storedLanguage:
-            locale.conflictingStoredLanguage,
-        },
-      );
-
-      const pathname =
-        `/JNR/${locale.code}/missing-page`;
-
-      await serveNotFoundAt(page, pathname);
-
-      const response = await page.goto(pathname);
-
-      expect(response?.status()).toBe(404);
-
-      await expect(page.locator('html')).toHaveAttribute(
-        'lang',
-        locale.code,
-      );
-
-      await expect(page).toHaveTitle(locale.title);
-
-      await expect(
-        page.locator('meta[name="description"]'),
-      ).toHaveAttribute(
-        'content',
-        locale.description,
-      );
-
-      await expect(
-        page.locator('meta[name="robots"]'),
-      ).toHaveAttribute('content', 'noindex');
-
-      await expect(
-        page.getByRole('heading', {
-          name: locale.heading,
-        }),
-      ).toBeVisible();
-
-      await expect(
-        page.locator('#not-found-message'),
-      ).toHaveText(locale.message);
-
-      const returnLink = page.getByRole('link', {
-        name: locale.returnLabel,
-      });
-
-      await expect(returnLink).toBeVisible();
-
-      await expect(returnLink).toHaveAttribute(
-        'href',
-        `/JNR/${locale.code}/`,
-      );
-
-      await expect(
-        page.locator('script[src]'),
-      ).toHaveCount(0);
-
-      await expect(
-        page.locator('link[rel="stylesheet"]'),
-      ).toHaveCount(0);
-
-      await expect
-        .poll(() =>
-          page.evaluate(
-            (storageKey) =>
-              window.localStorage.getItem(storageKey),
-            LANGUAGE_STORAGE_KEY,
-          ),
-        )
-        .toBe(locale.code);
-
-      await assertAccessibilityBaseline(
+test.describe(
+  'localized 404 page',
+  () => {
+    for (const locale of LOCALES) {
+      test(`explicit ${locale.code} URL renders the ${locale.code} 404 and returns to the same locale`, async ({
         page,
-        `404 (${locale.code})`,
-      );
-    });
-  }
+      }) => {
+        await initializeStoredLanguage(
+          page,
+          locale.conflictingStoredLanguage,
+        );
 
-  test('stored preference is used when the missing URL has no explicit locale', async ({
-    page,
-  }) => {
-    await page.addInitScript(
-      ({ storageKey }) => {
-        window.localStorage.setItem(
-          storageKey,
+        const pathname =
+          `/JNR/${locale.code}/missing-page`;
+
+        await serveNotFoundAt(
+          page,
+          pathname,
+        );
+
+        const response =
+          await page.goto(
+            pathname,
+          );
+
+        expect(
+          response?.status(),
+        ).toBe(404);
+
+        await expect(
+          page.locator('html'),
+        ).toHaveAttribute(
+          'lang',
+          locale.code,
+        );
+
+        await expect(
+          page,
+        ).toHaveTitle(
+          locale.title,
+        );
+
+        await expect(
+          page.locator(
+            'meta[name="description"]',
+          ),
+        ).toHaveAttribute(
+          'content',
+          locale.description,
+        );
+
+        await expect(
+          page.locator(
+            'meta[name="robots"]',
+          ),
+        ).toHaveAttribute(
+          'content',
+          'noindex',
+        );
+
+        await expect(
+          page.getByRole(
+            'heading',
+            {
+              name:
+                locale.heading,
+            },
+          ),
+        ).toBeVisible();
+
+        await expect(
+          page.locator(
+            '#not-found-message',
+          ),
+        ).toHaveText(
+          locale.message,
+        );
+
+        const returnLink =
+          page.getByRole(
+            'link',
+            {
+              name:
+                locale.returnLabel,
+            },
+          );
+
+        await expect(
+          returnLink,
+        ).toBeVisible();
+
+        await expect(
+          returnLink,
+        ).toHaveAttribute(
+          'href',
+          `/JNR/${locale.code}/`,
+        );
+
+        await expect(
+          page.locator(
+            'script[src]',
+          ),
+        ).toHaveCount(0);
+
+        await expect(
+          page.locator(
+            'link[rel="stylesheet"]',
+          ),
+        ).toHaveCount(0);
+
+        await expectStoredLanguage(
+          page,
+          locale.code,
+        );
+
+        await assertAccessibilityBaseline(
+          page,
+          `404 (${locale.code})`,
+        );
+      });
+    }
+
+    test(
+      'stored preference is used when the missing URL has no explicit locale',
+      async ({ page }) => {
+        await initializeStoredLanguage(
+          page,
           'ca',
         );
+
+        const pathname =
+          '/JNR/missing-page';
+
+        await serveNotFoundAt(
+          page,
+          pathname,
+        );
+
+        const response =
+          await page.goto(
+            pathname,
+          );
+
+        expect(
+          response?.status(),
+        ).toBe(404);
+
+        await expect(
+          page.locator('html'),
+        ).toHaveAttribute(
+          'lang',
+          'ca',
+        );
+
+        await expect(
+          page,
+        ).toHaveTitle(
+          'Pàgina no trobada | Josep Núñez Riba',
+        );
+
+        await expect(
+          page.getByRole(
+            'link',
+            {
+              name:
+                'Tornar al portafoli',
+            },
+          ),
+        ).toHaveAttribute(
+          'href',
+          '/JNR/ca/',
+        );
       },
-      {
-        storageKey: LANGUAGE_STORAGE_KEY,
-      },
     );
 
-    const pathname = '/JNR/missing-page';
+    for (const locale of LOCALES) {
+      test(`returning from a ${locale.code} 404 navigates only to ${locale.code}`, async ({
+        page,
+      }) => {
+        await blockAnalytics(page);
 
-    await serveNotFoundAt(page, pathname);
+        /*
+         * Start with a deliberately conflicting stored preference. The 404
+         * URL itself must establish the correct language.
+         */
+        await initializeStoredLanguage(
+          page,
+          locale.conflictingStoredLanguage,
+        );
 
-    const response = await page.goto(pathname);
+        /*
+         * The local preview does not live below /JNR/, so use the equivalent
+         * local path for the roundtrip test. The static 404 supports both
+         * shapes and will therefore generate /<locale>/ as the return URL.
+         */
+        const pathname =
+          `/${locale.code}/missing-page`;
 
-    expect(response?.status()).toBe(404);
+        await serveNotFoundAt(
+          page,
+          pathname,
+        );
 
-    await expect(page.locator('html')).toHaveAttribute(
-      'lang',
-      'ca',
-    );
+        const response =
+          await page.goto(
+            pathname,
+          );
 
-    await expect(page).toHaveTitle(
-      'Pàgina no trobada | Josep Núñez Riba',
-    );
+        expect(
+          response?.status(),
+        ).toBe(404);
 
-    await expect(
-      page.getByRole('link', {
-        name: 'Tornar al portafoli',
-      }),
-    ).toHaveAttribute(
-      'href',
-      '/JNR/ca/',
-    );
-  });
-});
+        await expect(
+          page.locator('html'),
+        ).toHaveAttribute(
+          'lang',
+          locale.code,
+        );
+
+        await expectStoredLanguage(
+          page,
+          locale.code,
+        );
+
+        const returnLink =
+          page.getByRole(
+            'link',
+            {
+              name:
+                locale.returnLabel,
+            },
+          );
+
+        await expect(
+          returnLink,
+        ).toHaveAttribute(
+          'href',
+          `/${locale.code}/`,
+        );
+
+        const navigationPathnames =
+          trackMainFramePathnames(
+            page,
+          );
+
+        await returnLink.click();
+
+        await expect(page).toHaveURL(
+          new RegExp(
+            `/${locale.code}/$`,
+          ),
+        );
+
+        await page.waitForLoadState(
+          'networkidle',
+        );
+
+        await expect(page).toHaveURL(
+          new RegExp(
+            `/${locale.code}/$`,
+          ),
+        );
+
+        await expect(
+          page.locator('html'),
+        ).toHaveAttribute(
+          'lang',
+          locale.code,
+        );
+
+        await expect(
+          page
+            .getByRole('banner')
+            .getByRole('button', {
+              name:
+                locale.name,
+            }),
+        ).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
+
+        await expectStoredLanguage(
+          page,
+          locale.code,
+        );
+
+        /*
+         * No root and no alternative locale may appear between the 404 and
+         * its destination. This assertion is symmetric for CA, ES and EN.
+         */
+        expect(
+          navigationPathnames,
+        ).toEqual([
+          `/${locale.code}/`,
+        ]);
+      });
+    }
+  },
+);
