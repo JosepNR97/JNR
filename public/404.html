@@ -10,6 +10,7 @@
       content="Página no encontrada en el portfolio de Josep Núñez Riba."
     />
     <title>Página no encontrada | Josep Núñez Riba</title>
+
     <style>
       :root {
         color-scheme: light;
@@ -123,20 +124,180 @@
       }
     </style>
   </head>
+
   <body>
     <main>
       <section class="card" aria-labelledby="not-found-title">
-        <p class="brand" aria-label="JNR">JNR<span class="brand-accent">.</span></p>
-        <p class="error-code">Error 404</p>
-        <h1 id="not-found-title">Página no encontrada</h1>
-        <p class="message">
-          La dirección que buscas no está disponible. Vuelve al portfolio para seguir
-          navegando.
+        <p class="brand" aria-label="JNR">
+          JNR<span class="brand-accent">.</span>
         </p>
-        <a class="return-link" href="https://josepnr97.github.io/JNR/">
+
+        <p class="error-code">Error 404</p>
+
+        <h1 id="not-found-title">Página no encontrada</h1>
+
+        <p class="message" id="not-found-message">
+          La dirección que buscas no está disponible. Vuelve al portfolio para
+          seguir navegando.
+        </p>
+
+        <a
+          class="return-link"
+          id="return-link"
+          href="/JNR/es/"
+        >
           Volver al portfolio
         </a>
       </section>
     </main>
+
+    <script>
+      (() => {
+        const storageKey = 'jnr-language-v1';
+        const supportedLanguages = ['ca', 'es', 'en'];
+
+        const translations = {
+          ca: {
+            title: 'Pàgina no trobada | Josep Núñez Riba',
+            description:
+              'Pàgina no trobada al portafoli de Josep Núñez Riba.',
+            heading: 'Pàgina no trobada',
+            message:
+              "L'adreça que busques no està disponible. Torna al portafoli per continuar navegant.",
+            returnLabel: 'Tornar al portafoli',
+          },
+          es: {
+            title: 'Página no encontrada | Josep Núñez Riba',
+            description:
+              'Página no encontrada en el portfolio de Josep Núñez Riba.',
+            heading: 'Página no encontrada',
+            message:
+              'La dirección que buscas no está disponible. Vuelve al portfolio para seguir navegando.',
+            returnLabel: 'Volver al portfolio',
+          },
+          en: {
+            title: 'Page not found | Josep Núñez Riba',
+            description:
+              "Page not found in Josep Núñez Riba's portfolio.",
+            heading: 'Page not found',
+            message:
+              "The address you're looking for isn't available. Return to the portfolio to continue browsing.",
+            returnLabel: 'Return to portfolio',
+          },
+        };
+
+        const getLanguageFromPathname = (pathname) => {
+          const segments = pathname.split('/').filter(Boolean);
+          const projectIndex = segments.indexOf('JNR');
+
+          const candidate =
+            projectIndex >= 0
+              ? segments[projectIndex + 1]
+              : segments[0];
+
+          return supportedLanguages.includes(candidate)
+            ? candidate
+            : null;
+        };
+
+        const getReferrerLanguage = () => {
+          if (!document.referrer) return null;
+
+          try {
+            const referrerUrl = new URL(document.referrer);
+
+            if (referrerUrl.origin !== window.location.origin) {
+              return null;
+            }
+
+            return getLanguageFromPathname(referrerUrl.pathname);
+          } catch {
+            return null;
+          }
+        };
+
+        const getStoredLanguage = () => {
+          try {
+            const storedLanguage =
+              window.localStorage.getItem(storageKey);
+
+            return supportedLanguages.includes(storedLanguage)
+              ? storedLanguage
+              : null;
+          } catch {
+            return null;
+          }
+        };
+
+        const getBrowserLanguage = () => {
+          const browserLanguages =
+            navigator.languages && navigator.languages.length > 0
+              ? navigator.languages
+              : [navigator.language];
+
+          return (
+            browserLanguages
+              .map((language) => language.split('-')[0])
+              .find((language) =>
+                supportedLanguages.includes(language),
+              ) ?? null
+          );
+        };
+
+        const getPortfolioBasePath = () => {
+          const segments = window.location.pathname
+            .split('/')
+            .filter(Boolean);
+
+          const projectIndex = segments.indexOf('JNR');
+
+          if (projectIndex < 0) {
+            return '/';
+          }
+
+          return `/${segments
+            .slice(0, projectIndex + 1)
+            .join('/')}/`;
+        };
+
+        const language =
+          getLanguageFromPathname(window.location.pathname) ??
+          getReferrerLanguage() ??
+          getStoredLanguage() ??
+          getBrowserLanguage() ??
+          'es';
+
+        const copy = translations[language];
+
+        document.documentElement.lang = language;
+        document.title = copy.title;
+
+        document
+          .querySelector('meta[name="description"]')
+          ?.setAttribute('content', copy.description);
+
+        document.getElementById('not-found-title').textContent =
+          copy.heading;
+
+        document.getElementById('not-found-message').textContent =
+          copy.message;
+
+        const returnLink =
+          document.getElementById('return-link');
+
+        returnLink.textContent = copy.returnLabel;
+
+        returnLink.setAttribute(
+          'href',
+          `${getPortfolioBasePath()}${language}/`,
+        );
+
+        try {
+          window.localStorage.setItem(storageKey, language);
+        } catch {
+          // The page still uses the resolved language if storage is unavailable.
+        }
+      })();
+    </script>
   </body>
 </html>
