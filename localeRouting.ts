@@ -1,4 +1,4 @@
-import type { Language } from './types';
+import type { Language } from './types.ts';
 
 export const SUPPORTED_LANGUAGES = ['ca', 'es', 'en'] as const satisfies readonly Language[];
 
