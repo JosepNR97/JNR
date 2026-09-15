@@ -136,12 +136,18 @@ test.describe('multilingual SEO routes', () => {
   test('an explicit locale URL overrides a conflicting stored preference', async ({
     page,
   }) => {
-    await page.addInitScript(() => {
-      window.localStorage.setItem(
-        LANGUAGE_STORAGE_KEY,
-        'ca',
-      );
-    });
+    await page.addInitScript(
+      ({ storageKey, storedLanguage }) => {
+        window.localStorage.setItem(
+          storageKey,
+          storedLanguage,
+        );
+      },
+      {
+        storageKey: LANGUAGE_STORAGE_KEY,
+        storedLanguage: 'ca',
+      },
+    );
 
     await page.goto('/en/');
 
@@ -181,12 +187,18 @@ test.describe('multilingual SEO routes', () => {
   test('root entry redirects once and preserves the section anchor', async ({
     page,
   }) => {
-    await page.addInitScript(() => {
-      window.localStorage.setItem(
-        LANGUAGE_STORAGE_KEY,
-        'ca',
-      );
-    });
+    await page.addInitScript(
+      ({ storageKey, storedLanguage }) => {
+        window.localStorage.setItem(
+          storageKey,
+          storedLanguage,
+        );
+      },
+      {
+        storageKey: LANGUAGE_STORAGE_KEY,
+        storedLanguage: 'ca',
+      },
+    );
 
     await page.goto('/#services');
 
@@ -200,6 +212,16 @@ test.describe('multilingual SEO routes', () => {
       'lang',
       'ca',
     );
+
+    await expect
+      .poll(() =>
+        page.evaluate(
+          (storageKey) =>
+            window.localStorage.getItem(storageKey),
+          LANGUAGE_STORAGE_KEY,
+        ),
+      )
+      .toBe('ca');
   });
 
   test('language selection immediately after reload stays on the selected locale', async ({
