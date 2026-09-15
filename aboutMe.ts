@@ -1,6 +1,5 @@
-
-import { assetPath } from './assetPath';
-import type { MultiLanguageString, ServiceItem } from './types';
+import { assetPath } from './assetPath.ts';
+import type { MultiLanguageString, ServiceItem } from './types.ts';
 
 export const PROFILE_DATA = {
   name: "Josep Núñez Riba",
