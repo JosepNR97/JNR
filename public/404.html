@@ -4,11 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0c4a6e" />
+
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230c4a6e'/%3E%3Ctext x='50' y='66' font-family='Georgia,serif' font-weight='bold' font-size='45' text-anchor='middle'%3E%3Ctspan fill='white'%3EJNR%3C/tspan%3E%3Ctspan fill='%230ea5e9'%3E.%3C/tspan%3E%3C/text%3E%3C/svg%3E"
+    />
+
     <meta name="robots" content="noindex" />
     <meta
       name="description"
       content="Página no encontrada en el portfolio de Josep Núñez Riba."
     />
+
     <title>Página no encontrada | Josep Núñez Riba</title>
 
     <style>
@@ -201,7 +209,9 @@
         };
 
         const getReferrerLanguage = () => {
-          if (!document.referrer) return null;
+          if (!document.referrer) {
+            return null;
+          }
 
           try {
             const referrerUrl = new URL(document.referrer);
@@ -210,7 +220,9 @@
               return null;
             }
 
-            return getLanguageFromPathname(referrerUrl.pathname);
+            return getLanguageFromPathname(
+              referrerUrl.pathname,
+            );
           } catch {
             return null;
           }
@@ -221,7 +233,9 @@
             const storedLanguage =
               window.localStorage.getItem(storageKey);
 
-            return supportedLanguages.includes(storedLanguage)
+            return supportedLanguages.includes(
+              storedLanguage,
+            )
               ? storedLanguage
               : null;
           } catch {
@@ -231,13 +245,17 @@
 
         const getBrowserLanguage = () => {
           const browserLanguages =
-            navigator.languages && navigator.languages.length > 0
+            navigator.languages &&
+            navigator.languages.length > 0
               ? navigator.languages
               : [navigator.language];
 
           return (
             browserLanguages
-              .map((language) => language.split('-')[0])
+              .map(
+                (language) =>
+                  language.split('-')[0],
+              )
               .find((language) =>
                 supportedLanguages.includes(language),
               ) ?? null
@@ -245,11 +263,13 @@
         };
 
         const getPortfolioBasePath = () => {
-          const segments = window.location.pathname
-            .split('/')
-            .filter(Boolean);
+          const segments =
+            window.location.pathname
+              .split('/')
+              .filter(Boolean);
 
-          const projectIndex = segments.indexOf('JNR');
+          const projectIndex =
+            segments.indexOf('JNR');
 
           if (projectIndex < 0) {
             return '/';
@@ -261,7 +281,9 @@
         };
 
         const language =
-          getLanguageFromPathname(window.location.pathname) ??
+          getLanguageFromPathname(
+            window.location.pathname,
+          ) ??
           getReferrerLanguage() ??
           getStoredLanguage() ??
           getBrowserLanguage() ??
@@ -273,19 +295,29 @@
         document.title = copy.title;
 
         document
-          .querySelector('meta[name="description"]')
-          ?.setAttribute('content', copy.description);
+          .querySelector(
+            'meta[name="description"]',
+          )
+          ?.setAttribute(
+            'content',
+            copy.description,
+          );
 
-        document.getElementById('not-found-title').textContent =
-          copy.heading;
+        document.getElementById(
+          'not-found-title',
+        ).textContent = copy.heading;
 
-        document.getElementById('not-found-message').textContent =
-          copy.message;
+        document.getElementById(
+          'not-found-message',
+        ).textContent = copy.message;
 
         const returnLink =
-          document.getElementById('return-link');
+          document.getElementById(
+            'return-link',
+          );
 
-        returnLink.textContent = copy.returnLabel;
+        returnLink.textContent =
+          copy.returnLabel;
 
         returnLink.setAttribute(
           'href',
@@ -293,7 +325,10 @@
         );
 
         try {
-          window.localStorage.setItem(storageKey, language);
+          window.localStorage.setItem(
+            storageKey,
+            language,
+          );
         } catch {
           // The page still uses the resolved language if storage is unavailable.
         }
