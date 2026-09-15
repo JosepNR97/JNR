@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-import { generateLocalizedPages } from './scripts/generate-localized-html';
+import { generateLocalizedPages } from './scripts/generate-localized-html.ts';
 
 const projectRoot = fileURLToPath(new URL('.', import.meta.url));
 
