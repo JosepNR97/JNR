@@ -2,7 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from 'react';
@@ -49,7 +49,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(getInitialLanguage);
   const t = translations[language];
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.lang = language;
 
     try {
@@ -61,19 +61,16 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   const setLanguage = useCallback(
     (nextLanguage: Language) => {
-      if (!SUPPORTED_LANGUAGES.includes(nextLanguage) || nextLanguage === language) {
+      if (
+        !SUPPORTED_LANGUAGES.includes(nextLanguage) ||
+        nextLanguage === language
+      ) {
         return;
       }
 
-      setLanguageState(nextLanguage);
-
-      try {
-        window.localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
-      } catch {
-        // Navigation still works if storage is unavailable.
-      }
-
-      const currentUrlLanguage = getLanguageFromPathname(window.location.pathname);
+      const currentUrlLanguage = getLanguageFromPathname(
+        window.location.pathname,
+      );
 
       if (currentUrlLanguage) {
         window.location.assign(
@@ -84,7 +81,11 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
             window.location.hash,
           ),
         );
+
+        return;
       }
+
+      setLanguageState(nextLanguage);
     },
     [language],
   );
@@ -94,13 +95,19 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     [language, setLanguage, t],
   );
 
-  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+  return (
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
+  );
 };
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
+
   if (context === undefined) {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
+
   return context;
 };
