@@ -5,46 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0c4a6e" />
     <meta name="robots" content="noindex,follow" />
+
     <title>Josep Núñez Riba | Portfolio</title>
+
     <meta
       name="description"
       content="Selecciona automáticamente la versión localizada del portfolio de Josep Núñez Riba."
     />
+
     <link rel="canonical" href="https://josepnr97.github.io/JNR/es/" />
-    <link rel="alternate" hreflang="ca" href="https://josepnr97.github.io/JNR/ca/" />
-    <link rel="alternate" hreflang="es" href="https://josepnr97.github.io/JNR/es/" />
-    <link rel="alternate" hreflang="en" href="https://josepnr97.github.io/JNR/en/" />
-    <link rel="alternate" hreflang="x-default" href="https://josepnr97.github.io/JNR/es/" />
+
+    <link
+      rel="alternate"
+      hreflang="ca"
+      href="https://josepnr97.github.io/JNR/ca/"
+    />
+
+    <link
+      rel="alternate"
+      hreflang="es"
+      href="https://josepnr97.github.io/JNR/es/"
+    />
+
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://josepnr97.github.io/JNR/en/"
+    />
+
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href="https://josepnr97.github.io/JNR/es/"
+    />
+
     <script>
       (() => {
         const supportedLanguages = ['ca', 'es', 'en'];
-        let preferredLanguage = null;
+        const storageKey = 'jnr-language-v1';
 
-        try {
-          const storedLanguage = window.localStorage.getItem('jnr-language-v1');
-          if (supportedLanguages.includes(storedLanguage)) {
-            preferredLanguage = storedLanguage;
+        const getLanguageFromPathname = (pathname) => {
+          const segments = pathname.split('/').filter(Boolean);
+          const projectIndex = segments.indexOf('JNR');
+
+          const candidate =
+            projectIndex >= 0
+              ? segments[projectIndex + 1]
+              : segments[0];
+
+          return supportedLanguages.includes(candidate)
+            ? candidate
+            : null;
+        };
+
+        const getReferrerLanguage = () => {
+          if (!document.referrer) {
+            return null;
           }
-        } catch {
-          // Storage can be unavailable in restrictive browsing modes.
-        }
 
-        if (!preferredLanguage) {
+          try {
+            const referrerUrl = new URL(document.referrer);
+
+            if (referrerUrl.origin !== window.location.origin) {
+              return null;
+            }
+
+            return getLanguageFromPathname(referrerUrl.pathname);
+          } catch {
+            return null;
+          }
+        };
+
+        const getStoredLanguage = () => {
+          try {
+            const storedLanguage =
+              window.localStorage.getItem(storageKey);
+
+            return supportedLanguages.includes(storedLanguage)
+              ? storedLanguage
+              : null;
+          } catch {
+            return null;
+          }
+        };
+
+        const getBrowserLanguage = () => {
           const browserLanguages =
             navigator.languages && navigator.languages.length > 0
               ? navigator.languages
               : [navigator.language];
 
-          preferredLanguage =
+          return (
             browserLanguages
               .map((language) => language.split('-')[0])
-              .find((language) => supportedLanguages.includes(language)) || 'es';
-        }
+              .find((language) =>
+                supportedLanguages.includes(language),
+              ) ?? null
+          );
+        };
 
-        window.location.replace(`./${preferredLanguage}/${window.location.hash}`);
+        /*
+         * Normal locale-to-locale navigation never passes through this page.
+         *
+         * If the root is reached from an existing localized portfolio page,
+         * preserve that explicit locale rather than allowing storage or the
+         * browser language to force a different one.
+         */
+        const preferredLanguage =
+          getReferrerLanguage() ??
+          getStoredLanguage() ??
+          getBrowserLanguage() ??
+          'es';
+
+        window.location.replace(
+          `./${preferredLanguage}/${window.location.hash}`,
+        );
       })();
     </script>
   </head>
+
   <body>
     <main>
       <p>

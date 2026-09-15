@@ -1,336 +1,518 @@
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 const LANGUAGE_STORAGE_KEY = 'jnr-language-v1';
+const NAVIGATION_LANGUAGE_MARKER = 'jnr-e2e-navigation-language';
 
 const LOCALES = [
   {
     code: 'ca',
     name: 'Català',
-    nextCode: 'es',
-    nextName: 'Español',
   },
   {
     code: 'es',
     name: 'Español',
-    nextCode: 'en',
-    nextName: 'English',
   },
   {
     code: 'en',
     name: 'English',
-    nextCode: 'ca',
-    nextName: 'Català',
   },
 ] as const;
 
-const productionUrl = (locale: string) =>
+type LocaleCode = (typeof LOCALES)[number]['code'];
+type Locale = (typeof LOCALES)[number];
+
+const productionUrl = (locale: LocaleCode) =>
   `https://josepnr97.github.io/JNR/${locale}/`;
 
-test.describe('multilingual SEO routes', () => {
-  for (const locale of LOCALES) {
-    test(`${locale.code} has indexable initial metadata and language navigation`, async ({
-      page,
-      request,
-    }) => {
-      const response = await request.get(
-        `/${locale.code}/`,
-      );
+const blockAnalytics = async (page: Page) => {
+  await page.route(
+    'https://www.googletagmanager.com/**',
+    async (route) => {
+      await route.abort();
+    },
+  );
+};
 
-      expect(response.ok()).toBe(true);
+const initializeStoredLanguage = async (
+  page: Page,
+  language: LocaleCode,
+) => {
+  await page.addInitScript(
+    ({ storageKey, storedLanguage }) => {
+      window.localStorage.setItem(storageKey, storedLanguage);
+    },
+    {
+      storageKey: LANGUAGE_STORAGE_KEY,
+      storedLanguage: language,
+    },
+  );
+};
 
-      const initialHtml = await response.text();
+const setStoredLanguage = async (
+  page: Page,
+  language: LocaleCode,
+) => {
+  await page.evaluate(
+    ({ storageKey, storedLanguage }) => {
+      window.localStorage.setItem(storageKey, storedLanguage);
+    },
+    {
+      storageKey: LANGUAGE_STORAGE_KEY,
+      storedLanguage: language,
+    },
+  );
+};
 
-      expect(initialHtml).toContain(
-        `<html lang="${locale.code}">`,
-      );
+const expectStoredLanguage = async (
+  page: Page,
+  language: LocaleCode,
+) => {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (storageKey) =>
+          window.localStorage.getItem(storageKey),
+        LANGUAGE_STORAGE_KEY,
+      ),
+    )
+    .toBe(language);
+};
 
-      expect(initialHtml).toContain(
-        `rel="canonical" href="${productionUrl(
-          locale.code,
-        )}"`,
-      );
+const expectLocaleState = async (
+  page: Page,
+  locale: Locale,
+) => {
+  await expect(page.locator('html')).toHaveAttribute(
+    'lang',
+    locale.code,
+  );
 
-      expect(initialHtml).toContain(
-        'name="twitter:card" content="summary"',
-      );
+  await expect(
+    page
+      .getByRole('banner')
+      .getByRole('button', {
+        name: locale.name,
+      }),
+  ).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
 
-      expect(initialHtml).toContain(
-        'type="application/ld+json"',
-      );
+  await expect(
+    page.locator('link[rel="canonical"]'),
+  ).toHaveAttribute(
+    'href',
+    productionUrl(locale.code),
+  );
 
-      await page.route(
-        'https://www.googletagmanager.com/**',
-        async (route) => {
-          await route.abort();
-        },
-      );
+  await expectStoredLanguage(
+    page,
+    locale.code,
+  );
+};
 
-      await page.goto(
-        `/${locale.code}/#about`,
-      );
+const trackMainFramePathnames = (
+  page: Page,
+): string[] => {
+  const pathnames: string[] = [];
 
-      await expect(
-        page.locator('html'),
-      ).toHaveAttribute(
-        'lang',
-        locale.code,
-      );
+  page.on('framenavigated', (frame) => {
+    if (frame !== page.mainFrame()) {
+      return;
+    }
 
-      await expect(
-        page.locator('link[rel="canonical"]'),
-      ).toHaveAttribute(
-        'href',
-        productionUrl(locale.code),
-      );
+    const url = frame.url();
 
-      const currentLanguageButton = page
-        .getByRole('banner')
-        .getByRole('button', {
-          name: locale.name,
-        });
+    if (
+      !url.startsWith('http://') &&
+      !url.startsWith('https://')
+    ) {
+      return;
+    }
 
-      const nextLanguageButton = page
-        .getByRole('banner')
-        .getByRole('button', {
-          name: locale.nextName,
-        });
+    pathnames.push(
+      new URL(url).pathname,
+    );
+  });
 
-      await expect(
-        currentLanguageButton,
-      ).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      );
+  return pathnames;
+};
 
-      await expect(
-        nextLanguageButton,
-      ).toHaveAttribute(
-        'aria-pressed',
-        'false',
-      );
+const getConflictingLocale = (
+  excludedLanguages: readonly LocaleCode[],
+): Locale => {
+  const locale = LOCALES.find(
+    ({ code }) =>
+      !excludedLanguages.includes(code),
+  );
 
-      await nextLanguageButton.click();
-
-      await expect(page).toHaveURL(
-        new RegExp(
-          `/${locale.nextCode}/#about$`,
-        ),
-      );
-
-      await expect(
-        page.locator('html'),
-      ).toHaveAttribute(
-        'lang',
-        locale.nextCode,
-      );
-
-      await expect(
-        page.locator('link[rel="canonical"]'),
-      ).toHaveAttribute(
-        'href',
-        productionUrl(locale.nextCode),
-      );
-    });
+  if (!locale) {
+    throw new Error(
+      'Expected at least one conflicting locale',
+    );
   }
 
-  test('an explicit locale URL overrides a conflicting stored preference', async ({
-    page,
-  }) => {
-    await page.addInitScript(
-      ({ storageKey, storedLanguage }) => {
-        window.localStorage.setItem(
-          storageKey,
-          storedLanguage,
+  return locale;
+};
+
+const installNavigationLanguageMarker = async (
+  page: Page,
+) => {
+  await page.evaluate(
+    ({ storageKey, markerKey }) => {
+      window.sessionStorage.removeItem(markerKey);
+
+      window.addEventListener(
+        'pagehide',
+        () => {
+          window.sessionStorage.setItem(
+            markerKey,
+            window.localStorage.getItem(storageKey) ?? '',
+          );
+        },
+        {
+          once: true,
+        },
+      );
+    },
+    {
+      storageKey: LANGUAGE_STORAGE_KEY,
+      markerKey: NAVIGATION_LANGUAGE_MARKER,
+    },
+  );
+};
+
+const expectPersistedBeforeNavigation = async (
+  page: Page,
+  language: LocaleCode,
+) => {
+  const persistedLanguage =
+    await page.evaluate(
+      (markerKey) =>
+        window.sessionStorage.getItem(markerKey),
+      NAVIGATION_LANGUAGE_MARKER,
+    );
+
+  expect(persistedLanguage).toBe(language);
+};
+
+test.describe(
+  'multilingual SEO routes',
+  () => {
+    for (const locale of LOCALES) {
+      test(`${locale.code} exposes indexable initial metadata`, async ({
+        page,
+        request,
+      }) => {
+        const response = await request.get(
+          `/${locale.code}/`,
         );
-      },
-      {
-        storageKey: LANGUAGE_STORAGE_KEY,
-        storedLanguage: 'ca',
-      },
-    );
 
-    await page.goto('/en/');
+        expect(response.ok()).toBe(true);
 
-    await expect(page).toHaveURL(
-      /\/en\/$/,
-    );
+        const initialHtml =
+          await response.text();
 
-    await expect(
-      page.locator('html'),
-    ).toHaveAttribute(
-      'lang',
-      'en',
-    );
-
-    await expect(
-      page
-        .getByRole('banner')
-        .getByRole('button', {
-          name: 'English',
-        }),
-    ).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-
-    await expect
-      .poll(() =>
-        page.evaluate(
-          (storageKey) =>
-            window.localStorage.getItem(storageKey),
-          LANGUAGE_STORAGE_KEY,
-        ),
-      )
-      .toBe('en');
-  });
-
-  test('root entry redirects once and preserves the section anchor', async ({
-    page,
-  }) => {
-    await page.addInitScript(
-      ({ storageKey, storedLanguage }) => {
-        window.localStorage.setItem(
-          storageKey,
-          storedLanguage,
+        expect(initialHtml).toContain(
+          `<html lang="${locale.code}">`,
         );
-      },
-      {
-        storageKey: LANGUAGE_STORAGE_KEY,
-        storedLanguage: 'ca',
-      },
-    );
 
-    await page.goto('/#services');
+        expect(initialHtml).toContain(
+          `rel="canonical" href="${productionUrl(
+            locale.code,
+          )}"`,
+        );
 
-    await expect(page).toHaveURL(
-      /\/ca\/#services$/,
-    );
+        expect(initialHtml).toContain(
+          'name="twitter:card" content="summary"',
+        );
 
-    await expect(
-      page.locator('html'),
-    ).toHaveAttribute(
-      'lang',
-      'ca',
-    );
+        expect(initialHtml).toContain(
+          'type="application/ld+json"',
+        );
 
-    await expect
-      .poll(() =>
-        page.evaluate(
-          (storageKey) =>
-            window.localStorage.getItem(storageKey),
-          LANGUAGE_STORAGE_KEY,
-        ),
-      )
-      .toBe('ca');
-  });
+        await blockAnalytics(page);
 
-  test('language selection immediately after reload stays on the selected locale', async ({
-    page,
-  }) => {
-    await page.route(
-      'https://www.googletagmanager.com/**',
-      async (route) => {
-        await route.abort();
-      },
-    );
+        await page.goto(
+          `/${locale.code}/#about`,
+        );
 
-    await page.goto('/es/');
+        await expect(page).toHaveURL(
+          new RegExp(
+            `/${locale.code}/#about$`,
+          ),
+        );
 
-    await page.reload({
-      waitUntil: 'domcontentloaded',
-    });
+        await expectLocaleState(
+          page,
+          locale,
+        );
+      });
+    }
 
-    await page
-      .getByRole('banner')
-      .getByRole('button', {
-        name: 'English',
-      })
-      .click();
+    for (const locale of LOCALES) {
+      for (const storedLocale of LOCALES) {
+        if (
+          storedLocale.code ===
+          locale.code
+        ) {
+          continue;
+        }
 
-    await page.waitForLoadState('load');
+        test(`explicit ${locale.code} URL overrides stored ${storedLocale.code}`, async ({
+          page,
+        }) => {
+          await blockAnalytics(page);
 
-    await expect(page).toHaveURL(
-      /\/en\/$/,
-    );
+          await initializeStoredLanguage(
+            page,
+            storedLocale.code,
+          );
 
-    await expect(
-      page.locator('html'),
-    ).toHaveAttribute(
-      'lang',
-      'en',
-    );
+          await page.goto(
+            `/${locale.code}/`,
+          );
 
-    await expect(
-      page
-        .getByRole('banner')
-        .getByRole('button', {
-          name: 'English',
-        }),
-    ).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+          await expect(page).toHaveURL(
+            new RegExp(
+              `/${locale.code}/$`,
+            ),
+          );
 
-    await expect(
-      page.locator('link[rel="canonical"]'),
-    ).toHaveAttribute(
-      'href',
-      productionUrl('en'),
-    );
+          await expectLocaleState(
+            page,
+            locale,
+          );
+        });
+      }
+    }
 
-    await expect
-      .poll(() =>
-        page.evaluate(
-          (storageKey) =>
-            window.localStorage.getItem(storageKey),
-          LANGUAGE_STORAGE_KEY,
-        ),
-      )
-      .toBe('en');
+    for (const originLocale of LOCALES) {
+      for (const targetLocale of LOCALES) {
+        if (
+          originLocale.code ===
+          targetLocale.code
+        ) {
+          continue;
+        }
 
-    await page.reload({
-      waitUntil: 'domcontentloaded',
-    });
+        const conflictingLocale =
+          getConflictingLocale([
+            originLocale.code,
+            targetLocale.code,
+          ]);
 
-    await page
-      .getByRole('banner')
-      .getByRole('button', {
-        name: 'Català',
-      })
-      .click();
+        test(`${originLocale.code} -> ${targetLocale.code} navigates directly to the selected locale`, async ({
+          page,
+        }) => {
+          await blockAnalytics(page);
 
-    await page.waitForLoadState('load');
+          await page.goto(
+            `/${originLocale.code}/`,
+          );
 
-    await expect(page).toHaveURL(
-      /\/ca\/$/,
-    );
+          /*
+           * Exercise the harder case reported in the browser: make the
+           * selection immediately after a full reload.
+           */
+          await page.reload({
+            waitUntil:
+              'domcontentloaded',
+          });
 
-    await expect(
-      page.locator('html'),
-    ).toHaveAttribute(
-      'lang',
-      'ca',
-    );
+          await expect(page).toHaveURL(
+            new RegExp(
+              `/${originLocale.code}/$`,
+            ),
+          );
 
-    await expect(
-      page
-        .getByRole('banner')
-        .getByRole('button', {
-          name: 'Català',
-        }),
-    ).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+          await expectLocaleState(
+            page,
+            originLocale,
+          );
 
-    await expect
-      .poll(() =>
-        page.evaluate(
-          (storageKey) =>
-            window.localStorage.getItem(storageKey),
-          LANGUAGE_STORAGE_KEY,
-        ),
-      )
-      .toBe('ca');
-  });
-});
+          /*
+           * Deliberately inject the third language as a conflicting stored
+           * preference. The explicit selection must still be the only
+           * navigation destination.
+           */
+          await setStoredLanguage(
+            page,
+            conflictingLocale.code,
+          );
+
+          await expectStoredLanguage(
+            page,
+            conflictingLocale.code,
+          );
+
+          /*
+           * Capture which language was persisted by the old document before
+           * it was actually unloaded. This distinguishes persistence before
+           * navigation from the destination page merely correcting storage
+           * after it has already loaded.
+           */
+          await installNavigationLanguageMarker(
+            page,
+          );
+
+          const navigationPathnames =
+            trackMainFramePathnames(
+              page,
+            );
+
+          await page
+            .getByRole('banner')
+            .getByRole('button', {
+              name:
+                targetLocale.name,
+            })
+            .click();
+
+          await expect(page).toHaveURL(
+            new RegExp(
+              `/${targetLocale.code}/$`,
+            ),
+          );
+
+          await page.waitForLoadState(
+            'networkidle',
+          );
+
+          await expect(page).toHaveURL(
+            new RegExp(
+              `/${targetLocale.code}/$`,
+            ),
+          );
+
+          await expectLocaleState(
+            page,
+            targetLocale,
+          );
+
+          await expectPersistedBeforeNavigation(
+            page,
+            targetLocale.code,
+          );
+
+          /*
+           * This is the core invariant:
+           *
+           * no root entry,
+           * no third locale,
+           * no temporary wrong locale.
+           *
+           * The only main-frame navigation allowed after the click is the
+           * explicitly selected destination.
+           */
+          expect(
+            navigationPathnames,
+          ).toEqual([
+            `/${targetLocale.code}/`,
+          ]);
+        });
+      }
+    }
+
+    for (const locale of LOCALES) {
+      test(`root entry respects stored ${locale.code} preference and preserves the section anchor`, async ({
+        page,
+      }) => {
+        await blockAnalytics(page);
+
+        await initializeStoredLanguage(
+          page,
+          locale.code,
+        );
+
+        await page.goto(
+          '/#services',
+        );
+
+        await expect(page).toHaveURL(
+          new RegExp(
+            `/${locale.code}/#services$`,
+          ),
+        );
+
+        await expectLocaleState(
+          page,
+          locale,
+        );
+      });
+    }
+
+    for (const locale of LOCALES) {
+      const conflictingLocale =
+        getConflictingLocale([
+          locale.code,
+        ]);
+
+      test(`unexpected root visit from ${locale.code} preserves the explicit referrer locale`, async ({
+        page,
+      }) => {
+        await blockAnalytics(page);
+
+        await page.goto(
+          `/${locale.code}/`,
+        );
+
+        await expectLocaleState(
+          page,
+          locale,
+        );
+
+        /*
+         * Make storage deliberately disagree with the current explicit URL.
+         * If the root is reached from this localized page, the explicit
+         * same-origin referrer must win.
+         */
+        await setStoredLanguage(
+          page,
+          conflictingLocale.code,
+        );
+
+        await expectStoredLanguage(
+          page,
+          conflictingLocale.code,
+        );
+
+        const navigationPathnames =
+          trackMainFramePathnames(
+            page,
+          );
+
+        await page.evaluate(() => {
+          window.location.assign('/');
+        });
+
+        await expect(page).toHaveURL(
+          new RegExp(
+            `/${locale.code}/$`,
+          ),
+        );
+
+        await page.waitForLoadState(
+          'networkidle',
+        );
+
+        await expectLocaleState(
+          page,
+          locale,
+        );
+
+        /*
+         * In this test the root navigation is intentional, so the expected
+         * recovery sequence is precisely root -> original explicit locale.
+         */
+        expect(
+          navigationPathnames,
+        ).toEqual([
+          '/',
+          `/${locale.code}/`,
+        ]);
+      });
+    }
+  },
+);

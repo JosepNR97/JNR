@@ -4,6 +4,7 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
@@ -23,7 +24,9 @@ interface LanguageContextType {
   t: TranslationStructure;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined,
+);
 
 const getInitialLanguage = (): Language => {
   if (typeof window === 'undefined') return 'es';
@@ -45,25 +48,30 @@ const getInitialLanguage = (): Language => {
   return browserLanguage ?? 'es';
 };
 
+const persistLanguage = (language: Language): void => {
+  try {
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  } catch {
+    // The explicit URL remains authoritative if storage is unavailable.
+  }
+};
+
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(getInitialLanguage);
+  const navigationInProgressRef = useRef(false);
   const t = translations[language];
 
   useLayoutEffect(() => {
     document.documentElement.lang = language;
-
-    try {
-      window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-    } catch {
-      // The explicit URL remains authoritative if storage is unavailable.
-    }
+    persistLanguage(language);
   }, [language]);
 
   const setLanguage = useCallback(
     (nextLanguage: Language) => {
       if (
         !SUPPORTED_LANGUAGES.includes(nextLanguage) ||
-        nextLanguage === language
+        nextLanguage === language ||
+        navigationInProgressRef.current
       ) {
         return;
       }
@@ -73,6 +81,16 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       );
 
       if (currentUrlLanguage) {
+        navigationInProgressRef.current = true;
+
+        /*
+         * Persist the explicit user choice before leaving the current
+         * document. The destination URL remains authoritative, but an
+         * intermediate document can no longer fall back to an older
+         * preference or to the browser language.
+         */
+        persistLanguage(nextLanguage);
+
         window.location.assign(
           getLocalizedHref(
             window.location.pathname,
@@ -85,13 +103,21 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      /*
+       * This fallback is only relevant if the provider is rendered without
+       * an explicit locale URL. Normal localized pages navigate by URL.
+       */
       setLanguageState(nextLanguage);
     },
     [language],
   );
 
   const value = useMemo(
-    () => ({ language, setLanguage, t }),
+    () => ({
+      language,
+      setLanguage,
+      t,
+    }),
     [language, setLanguage, t],
   );
 

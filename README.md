@@ -6,9 +6,17 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 
 🔗 **https://josepnr97.github.io/JNR/**
 
+El portfolio dispone de URLs estables e indexables para cada idioma:
+
+- 🇨🇦 Català: **https://josepnr97.github.io/JNR/ca/**
+- 🇪🇸 Español: **https://josepnr97.github.io/JNR/es/**
+- 🇬🇧 English: **https://josepnr97.github.io/JNR/en/**
+
+La raíz `/JNR/` actúa como punto de entrada de idioma. Redirige a la preferencia almacenada cuando existe, a un idioma compatible del navegador en caso contrario y finalmente a español como fallback.
+
 ## ✨ Funcionalidades
 
-* 🌍 Contenido disponible en catalán, castellano e inglés.
+* 🌍 Contenido disponible en catalán, castellano e inglés mediante URLs estables `/ca/`, `/es/` y `/en/`.
 * 📱 Interfaz responsive y accesible mediante teclado.
 * 💼 Trayectoria profesional con proyectos desplegables.
 * 🎓 Formación académica y certificaciones agrupadas por proveedor.
@@ -17,9 +25,11 @@ Portfolio profesional multilingüe centrado en **estrategia**, **tecnología** e
 * ♿ Accessibility smoke automatizado con Axe sobre estados reales de Chromium para detectar regresiones WCAG A/AA de alto impacto.
 * 🖼️ Recursos visuales servidos localmente, sin depender de URLs externas para los elementos gráficos de la interfaz.
 * 📄 CV descargable en el idioma activo, generado automáticamente desde los datos del portfolio.
-* 🔎 Metadatos SEO, Open Graph y datos estructurados de tipo `Person`.
+* 🔎 SEO multilingüe indexable con metadata localizada disponible antes de cargar React: `lang`, title, description, canonical, hreflang, Open Graph, Twitter Cards y datos estructurados `Person`.
+* 🗺️ Sitemap multilingüe con alternates `hreflang` recíprocos y `x-default`.
+* 🚧 Página 404 estática y multilingüe que conserva el contexto de idioma y devuelve directamente al portfolio en el locale correspondiente.
 * 📊 Google Analytics inicializado al cargar la web.
-* 🧪 Smoke tests E2E con Chromium para validar interacción, layout y comportamiento real de navegador.
+* 🧪 Smoke tests E2E con Chromium para validar interacción, layout, navegación multilingüe y comportamiento real de navegador.
 * ✅ Integración continua para validar pull requests antes de integrarlas.
 * ⚙️ Despliegue automatizado mediante GitHub Actions y GitHub Pages.
 
@@ -67,8 +77,11 @@ Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del fram
 ├── .github/
 │   └── workflows/              CI, auditoría, CodeQL y despliegue
 ├── components/                 Componentes de interfaz y sus pruebas
-├── context/                    Estado y persistencia de idioma
-├── e2e/                        Smoke tests E2E y accessibility smoke con Chromium
+├── context/                    Estado y navegación de idioma
+├── docs/
+│   ├── dependency-maintenance.md
+│   └── multilingual-seo.md     Arquitectura SEO y URLs multilingües
+├── e2e/                        Smoke tests E2E, SEO, 404 y accessibility
 ├── hooks/                      Hooks reutilizables
 ├── public/
 │   ├── assets/
@@ -78,18 +91,25 @@ Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del fram
 │   │   ├── employers/          Empresas y organizaciones
 │   │   ├── documents/          CV generados durante dev y build
 │   │   └── people/             Fotografías personales
+│   ├── 404.html                Página 404 estática y localizada
 │   ├── robots.txt
-│   └── sitemap.xml
-├── scripts/                    Modelo, generador y pruebas de los CV
+│   └── sitemap.xml             URLs canónicas y hreflang
+├── scripts/
+│   ├── generate-cv.tsx         Generador de CV
+│   └── generate-localized-html.ts
 ├── test/                       Configuración global de pruebas
 ├── aboutMe.ts                  Contenido personal y textos base
+├── assetPath.ts                Resolución de assets para root y locales
 ├── constants.ts                Formación, certificaciones, recursos y enlaces
 ├── experienceInfo.ts           Trayectoria profesional
+├── localeRouting.ts            Contrato de rutas CA/ES/EN
 ├── playwright.config.ts        Configuración única de Playwright
+├── seo.ts                      Metadata SEO localizada
 ├── translations.ts             Construcción de traducciones
 ├── types.ts                    Contratos TypeScript
+├── vite.config.ts              Vite multipage y entradas localizadas
 ├── styles.css                  Estilos globales y entrada de Tailwind
-└── index.tsx                   Punto de entrada de la aplicación
+└── index.tsx                   Punto de entrada React compartido
 ```
 
 ## ▶️ Desarrollo local
@@ -106,6 +126,18 @@ Vite mostrará la URL local, normalmente:
 ```text
 http://localhost:5173
 ```
+
+La raíz local aplica la misma política de selección de idioma que el despliegue en GitHub Pages. También pueden abrirse directamente las entradas localizadas:
+
+```text
+http://localhost:5173/ca/
+http://localhost:5173/es/
+http://localhost:5173/en/
+```
+
+Las tres rutas utilizan la misma aplicación React y los mismos datos de traducción, pero cada locale dispone de un documento HTML inicial específico con su propia metadata SEO.
+
+La URL localizada es la fuente de verdad del idioma activo. Al cambiar de idioma desde `/ca/`, `/es/` o `/en/` se realiza una navegación de documento a la URL equivalente y se conservan la query string y el section hash cuando existen.
 
 Antes de iniciar Vite se generan los tres CV mediante el script `predev`.
 
@@ -141,6 +173,8 @@ npm run test:e2e
 
 `npm run test:e2e` construye el artefacto de producción mediante Vite, levanta automáticamente `vite preview` en `127.0.0.1:4173`, ejecuta todos los specs E2E —incluido accessibility smoke— con Chromium en modo headless y detiene el servidor al finalizar.
 
+La suite valida también el contrato multilingüe en navegador real: URLs localizadas, cambio de idioma, persistencia de la preferencia, conservación de anchors y comportamiento de la página 404.
+
 Para ejecutar únicamente la capa de accessibility smoke:
 
 ```bash
@@ -149,7 +183,7 @@ npm run test:a11y
 
 `npm run test:a11y` reutiliza el mismo `playwright.config.ts`, el mismo build, el mismo servidor y el mismo Chromium; únicamente limita la ejecución a `e2e/accessibility.spec.ts`.
 
-Los tests E2E funcionales validan únicamente comportamientos para los que un navegador real aporta señal adicional, como layout, `requestAnimationFrame`, transforms CSS, hover, pointer events, drag, responsive behavior y `prefers-reduced-motion`.
+Los tests E2E funcionales validan únicamente comportamientos para los que un navegador real aporta señal adicional, como layout, `requestAnimationFrame`, transforms CSS, hover, pointer events, drag, responsive behavior, navegación entre documentos y `prefers-reduced-motion`.
 
 La capa Axe complementa esos tests comprobando problemas de accesibilidad automáticamente detectables sobre estados reales de la interfaz.
 
@@ -187,6 +221,8 @@ TypeScript
   ↓
 Vite build
 ```
+
+Durante la configuración de Vite se generan también las entradas HTML localizadas utilizadas por el build multipage.
 
 Playwright no forma parte de `npm run check`. Esta separación mantiene rápido el control utilizado también durante el despliegue y evita instalar un browser en el workflow de GitHub Pages.
 
@@ -297,7 +333,9 @@ CodeQL complementa TypeScript, ESLint, tests y controles de dependencias; no gar
 
 Todos los recursos visuales utilizados directamente por la interfaz están almacenados en `public/assets/` y se referencian mediante `assetPath()`.
 
-Esto evita que logos, insignias o fotografías desaparezcan por cambios, bloqueos o caducidad de servidores externos.
+`assetPath()` tiene en cuenta las entradas localizadas para que los recursos sigan resolviéndose desde `public/assets/` tanto desde la raíz como desde `/ca/`, `/es/` y `/en/`.
+
+Esto evita que logos, insignias o fotografías desaparezcan por cambios, bloqueos o caducidad de servidores externos y evita que las URLs localizadas intenten resolver incorrectamente los recursos dentro de sus propios subdirectorios.
 
 Los enlaces de credenciales, LinkedIn, Analytics y otros destinos de navegación pueden seguir siendo URLs externas porque no son recursos gráficos necesarios para renderizar la interfaz.
 
@@ -353,6 +391,46 @@ No se excluyen globalmente componentes como el carrusel o el menú móvil. Cuand
 
 Axe automatiza únicamente una parte de la evaluación de accesibilidad. Esta capa **no sustituye** revisiones manuales de teclado, foco, lector de pantalla, contenido, zoom, reflow ni una auditoría WCAG completa.
 
+## 🌍 Arquitectura multilingüe y SEO
+
+El portfolio utiliza tres URLs canónicas e indexables:
+
+```text
+/JNR/ca/
+/JNR/es/
+/JNR/en/
+```
+
+Cada locale es una entrada HTML real de Vite y comparte la misma aplicación React, los mismos componentes y los mismos datos tipados.
+
+Los documentos localizados incluyen antes de cargar React su `lang`, title, description, canonical, hreflang, Open Graph, Twitter Cards y JSON-LD de tipo `Person`.
+
+La raíz `/JNR/` no es una copia indexable adicional del portfolio. Funciona como entrada `noindex,follow`, utiliza la preferencia almacenada o el idioma compatible del navegador y emplea español como fallback.
+
+Dentro de una URL localizada, el locale de la propia URL es siempre autoritativo. La preferencia almacenada no puede sustituir un `/ca/`, `/es/` o `/en/` explícito.
+
+Cambiar de idioma navega directamente al documento localizado equivalente sin aplicar primero un estado React transitorio. La nueva página sincroniza después el locale explícito con `localStorage`.
+
+GitHub Pages utiliza un único `404.html` estático. La página 404 determina su idioma mediante esta prioridad:
+
+```text
+locale explícito en la URL solicitada
+  ↓
+referrer localizado del propio portfolio
+  ↓
+preferencia almacenada
+  ↓
+idioma compatible del navegador
+  ↓
+español
+```
+
+La 404 localiza su título, descripción, contenido y acción de retorno, mantiene el mismo favicon del portfolio y devuelve directamente a la URL del locale resuelto.
+
+El sitemap publica únicamente las tres URLs canónicas e incluye alternates `hreflang` recíprocos y `x-default`.
+
+La arquitectura completa se documenta en [docs/multilingual-seo.md](docs/multilingual-seo.md).
+
 ## 🚢 Despliegue
 
 Las pull requests se validan mediante el workflow de CI antes del merge.
@@ -376,6 +454,14 @@ Deploy GitHub Pages
 ```
 
 Esto garantiza que el código desplegado se valida nuevamente desde una instalación limpia, incluso aunque la pull request ya haya superado el CI.
+
+El build genera las entradas localizadas que terminan desplegadas como:
+
+```text
+dist/ca/index.html
+dist/es/index.html
+dist/en/index.html
+```
 
 La smoke suite Playwright permanece deliberadamente fuera de `npm run check`. El workflow de deploy no instala Chromium ni vuelve a ejecutar E2E; esa responsabilidad pertenece al job requerido `validate` de la pull request.
 
