@@ -4,67 +4,54 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0c4a6e" />
-
-    <title>Josep Núñez Riba | Estrategia tecnológica</title>
+    <meta name="robots" content="noindex,follow" />
+    <title>Josep Núñez Riba | Portfolio</title>
     <meta
       name="description"
-      content="Consultor de estrategia tecnológica especializado en transformación digital, arquitectura empresarial, cloud e inteligencia artificial."
+      content="Selecciona automáticamente la versión localizada del portfolio de Josep Núñez Riba."
     />
-    <link rel="canonical" href="https://josepnr97.github.io/JNR/" />
+    <link rel="canonical" href="https://josepnr97.github.io/JNR/es/" />
+    <link rel="alternate" hreflang="ca" href="https://josepnr97.github.io/JNR/ca/" />
+    <link rel="alternate" hreflang="es" href="https://josepnr97.github.io/JNR/es/" />
+    <link rel="alternate" hreflang="en" href="https://josepnr97.github.io/JNR/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://josepnr97.github.io/JNR/es/" />
+    <script>
+      (() => {
+        const supportedLanguages = ['ca', 'es', 'en'];
+        let preferredLanguage = null;
 
-    <meta property="og:type" content="profile" />
-    <meta property="og:url" content="https://josepnr97.github.io/JNR/" />
-    <meta property="og:locale" content="es_ES" />
-    <meta property="og:locale:alternate" content="ca_ES" />
-    <meta property="og:locale:alternate" content="en_GB" />
-    <meta property="og:title" content="Josep Núñez Riba | Estrategia tecnológica" />
-    <meta
-      property="og:description"
-      content="Transformación digital, arquitectura empresarial, cloud e inteligencia artificial con foco en resultados de negocio."
-    />
-    <meta
-      property="og:image"
-      content="https://josepnr97.github.io/JNR/assets/people/josep-nunez-riba.webp"
-    />
-    <meta property="og:image:alt" content="Retrato profesional de Josep Núñez Riba" />
-
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Josep Núñez Riba | Estrategia tecnológica" />
-    <meta
-      name="twitter:description"
-      content="Transformación digital, arquitectura empresarial, cloud e inteligencia artificial con foco en resultados de negocio."
-    />
-    <meta
-      name="twitter:image"
-      content="https://josepnr97.github.io/JNR/assets/people/josep-nunez-riba.webp"
-    />
-
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230c4a6e'/%3E%3Ctext x='50' y='66' font-family='Georgia,serif' font-weight='bold' font-size='45' text-anchor='middle'%3E%3Ctspan fill='white'%3EJNR%3C/tspan%3E%3Ctspan fill='%230ea5e9'%3E.%3C/tspan%3E%3C/text%3E%3C/svg%3E"
-    />
-
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "Josep Núñez Riba",
-        "url": "https://josepnr97.github.io/JNR/",
-        "image": "https://josepnr97.github.io/JNR/assets/people/josep-nunez-riba.webp",
-        "jobTitle": "Technology Strategy Consultant",
-        "sameAs": ["https://www.linkedin.com/in/josep-nunez-riba"],
-        "address": {
-          "@type": "PostalAddress",
-          "addressLocality": "Barcelona",
-          "addressCountry": "ES"
+        try {
+          const storedLanguage = window.localStorage.getItem('jnr-language-v1');
+          if (supportedLanguages.includes(storedLanguage)) {
+            preferredLanguage = storedLanguage;
+          }
+        } catch {
+          // Storage can be unavailable in restrictive browsing modes.
         }
-      }
+
+        if (!preferredLanguage) {
+          const browserLanguages =
+            navigator.languages && navigator.languages.length > 0
+              ? navigator.languages
+              : [navigator.language];
+
+          preferredLanguage =
+            browserLanguages
+              .map((language) => language.split('-')[0])
+              .find((language) => supportedLanguages.includes(language)) || 'es';
+        }
+
+        window.location.replace(`./${preferredLanguage}/${window.location.hash}`);
+      })();
     </script>
   </head>
   <body>
-    <div id="root"></div>
-    <noscript>Esta web necesita JavaScript para mostrar el contenido.</noscript>
-    <script type="module" src="./index.tsx"></script>
+    <main>
+      <p>
+        Si la redirección automática no funciona, abre el portfolio en
+        <a href="./es/">español</a>, <a href="./ca/">català</a> o
+        <a href="./en/">English</a>.
+      </p>
+    </main>
   </body>
 </html>
