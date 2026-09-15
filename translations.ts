@@ -10,11 +10,31 @@ import { EDUCATION_DATA } from './constants';
 import { EXPERIENCE_DATA } from './experienceInfo';
 import type { Language, TranslationStructure } from './types';
 
+const ACCESSIBILITY_COPY: Record<
+  Language,
+  TranslationStructure['accessibility']
+> = {
+  ca: {
+    skipToContent: 'Saltar al contingut principal',
+  },
+  es: {
+    skipToContent: 'Saltar al contenido principal',
+  },
+  en: {
+    skipToContent: 'Skip to main content',
+  },
+};
+
 const EDUCATION_COPY: Record<
   Language,
   Pick<
     TranslationStructure['education'],
-    'badge' | 'title' | 'subtitle' | 'academicTitle' | 'professionalTitle' | 'viewCredential'
+    | 'badge'
+    | 'title'
+    | 'subtitle'
+    | 'academicTitle'
+    | 'professionalTitle'
+    | 'viewCredential'
   >
 > = {
   ca: {
@@ -38,7 +58,8 @@ const EDUCATION_COPY: Record<
   en: {
     badge: 'Continuous Learning',
     title: 'Education & Certifications',
-    subtitle: 'Commitment to technical excellence through constant learning and industry validation.',
+    subtitle:
+      'Commitment to technical excellence through constant learning and industry validation.',
     academicTitle: 'Academic Background',
     professionalTitle: 'Professional Certifications',
     viewCredential: 'View credential',
@@ -47,7 +68,10 @@ const EDUCATION_COPY: Record<
 
 const EXPERIENCE_COPY: Record<
   Language,
-  Pick<TranslationStructure['experience'], 'title' | 'subtitle' | 'detailTitle' | 'expand' | 'collapse'>
+  Pick<
+    TranslationStructure['experience'],
+    'title' | 'subtitle' | 'detailTitle' | 'expand' | 'collapse'
+  >
 > = {
   ca: {
     title: 'Trajectòria professional',
@@ -73,6 +97,7 @@ const EXPERIENCE_COPY: Record<
 };
 
 const createTranslation = (language: Language): TranslationStructure => ({
+  accessibility: ACCESSIBILITY_COPY[language],
   nav: {
     home: NAV_DATA.home[language],
     about: NAV_DATA.about[language],
