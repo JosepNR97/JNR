@@ -1,12 +1,12 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { SUPPORTED_LANGUAGES } from '../localeRouting';
+import { SUPPORTED_LANGUAGES } from '../localeRouting.ts';
 import {
   getLocalizedUrl,
   getPersonJsonLd,
   getSeoLocaleData,
-} from '../seo';
-import type { Language } from '../types';
+} from '../seo.ts';
+import type { Language } from '../types.ts';
 
 const FAVICON =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230c4a6e'/%3E%3Ctext x='50' y='66' font-family='Georgia,serif' font-weight='bold' font-size='45' text-anchor='middle'%3E%3Ctspan fill='white'%3EJNR%3C/tspan%3E%3Ctspan fill='%230ea5e9'%3E.%3C/tspan%3E%3C/text%3E%3C/svg%3E";
