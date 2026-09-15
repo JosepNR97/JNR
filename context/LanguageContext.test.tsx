@@ -17,11 +17,32 @@ const LanguageProbe = () => {
 describe('LanguageProvider', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.history.replaceState({}, '', '/');
     document.documentElement.lang = 'es';
   });
 
-  it('restores the stored language and updates the document language', async () => {
+  afterEach(() => {
+    window.history.replaceState({}, '', '/');
+  });
+
+  it('uses an explicit locale URL before a stored preference', async () => {
+    window.localStorage.setItem('jnr-language-v1', 'ca');
+    window.history.replaceState({}, '', '/JNR/en/');
+
+    render(
+      <LanguageProvider>
+        <LanguageProbe />
+      </LanguageProvider>,
+    );
+
+    expect(screen.getByLabelText('current-language')).toHaveTextContent('en');
+    await waitFor(() => expect(document.documentElement).toHaveAttribute('lang', 'en'));
+    await waitFor(() => expect(window.localStorage.getItem('jnr-language-v1')).toBe('en'));
+  });
+
+  it('restores the stored language when no locale is present in the URL', async () => {
     window.localStorage.setItem('jnr-language-v1', 'en');
+
     render(
       <LanguageProvider>
         <LanguageProbe />
@@ -32,9 +53,10 @@ describe('LanguageProvider', () => {
     await waitFor(() => expect(document.documentElement).toHaveAttribute('lang', 'en'));
   });
 
-  it('persists a new language selection', async () => {
+  it('persists a new language selection when rendered without an explicit locale', async () => {
     window.localStorage.setItem('jnr-language-v1', 'es');
     const user = userEvent.setup();
+
     render(
       <LanguageProvider>
         <LanguageProbe />
