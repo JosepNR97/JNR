@@ -29,19 +29,12 @@ test('skip link is the first keyboard stop and moves focus to main content', asy
   });
   const mainContent = page.locator('#main-content');
 
-  const hiddenBox = await skipLink.boundingBox();
-
-  expect(hiddenBox).not.toBeNull();
-  expect(hiddenBox!.y + hiddenBox!.height).toBeLessThanOrEqual(0);
+  await expect(skipLink).not.toBeInViewport();
 
   await page.keyboard.press('Tab');
 
   await expect(skipLink).toBeFocused();
-
-  const focusedBox = await skipLink.boundingBox();
-
-  expect(focusedBox).not.toBeNull();
-  expect(focusedBox!.y).toBeGreaterThanOrEqual(0);
+  await expect(skipLink).toBeInViewport();
 
   await page.keyboard.press('Enter');
 
