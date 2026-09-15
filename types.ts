@@ -51,6 +51,9 @@ export interface VendorItem {
 }
 
 export interface TranslationStructure {
+  accessibility: {
+    skipToContent: string;
+  };
   nav: {
     home: string;
     about: string;
