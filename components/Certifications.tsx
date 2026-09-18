@@ -800,8 +800,8 @@ export const Certifications =
                           loading="eager"
                           decoding="async"
                           draggable="false"
-                          pictureClassName="contents"
-                          className="max-h-14 max-w-full object-contain opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
+                          pictureClassName="grid h-full w-full place-items-center"
+                          className="max-h-14 max-w-full object-contain object-center opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
                         />
                       </button>
                     ),
