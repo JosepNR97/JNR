@@ -22,6 +22,10 @@ import {
   readLanguageNavigationState,
   restoreLanguageNavigationPosition,
 } from './languageNavigationState';
+import {
+  readPortfolioSessionState,
+  updatePortfolioSessionState,
+} from './portfolioSessionState';
 import { scrollToElementAfterLayout } from './scrollToElement';
 
 const restoreHashPositionAfterMount =
@@ -86,10 +90,10 @@ const Portfolio = () => {
   } = useLanguage();
 
   /*
-   * Reading does not consume the snapshot. This is important for React
-   * StrictMode, which can invoke initial render logic more than once in
-   * development. The snapshot is cleared only after the mounted application
-   * has accepted it.
+   * The locale-transition snapshot is one-shot and has priority when present.
+   * The longer-lived portfolio session state survives reloads in the same tab
+   * and keeps meaningful accordion state available after that snapshot has
+   * already been consumed.
    */
   const [
     languageNavigationState,
@@ -101,6 +105,18 @@ const Portfolio = () => {
   );
 
   const [
+    initialPortfolioSessionState,
+  ] = useState(
+    readPortfolioSessionState,
+  );
+
+  const initialExpandedExperienceId =
+    languageNavigationState
+      ?.expandedExperienceId ??
+    initialPortfolioSessionState
+      .expandedExperienceId;
+
+  const [
     expandedVendorId,
     setExpandedVendorId,
   ] =
@@ -108,7 +124,8 @@ const Portfolio = () => {
       () =>
         languageNavigationState
           ?.expandedVendorId ??
-        null,
+        initialPortfolioSessionState
+          .expandedVendorId,
     );
 
   useLayoutEffect(() => {
@@ -118,6 +135,11 @@ const Portfolio = () => {
       /*
        * Normal entry, reload or shared URL: no locale-transition snapshot
        * exists, so the explicit URL fragment remains authoritative.
+       *
+       * With no fragment, the browser remains free to apply its native
+       * history/reload scroll restoration. Accordion state has already been
+       * restored during the initial React render, so the document geometry
+       * matches the state the user was browsing before the reload.
        */
       restoreHashPositionAfterMount();
 
@@ -221,9 +243,6 @@ const Portfolio = () => {
     /*
      * The document load event provides a second deterministic settlement
      * point for resources that can complete after the initial React commit.
-     * Images that affect layout already reserve their dimensions, but this
-     * final pass makes the hand-off resilient to any remaining initial
-     * document layout work.
      */
     const restoreAfterLoad =
       () => {
@@ -251,9 +270,9 @@ const Portfolio = () => {
     }
 
     /*
-     * The sessionStorage hand-off is one-shot. The in-memory state retained
-     * by this mounted component is enough for the remaining corrective
-     * passes, so the persisted snapshot can be removed immediately.
+     * The language-navigation hand-off itself remains one-shot. Expanded
+     * content is persisted independently in portfolioSessionState, so it can
+     * survive later reloads without preserving stale scroll coordinates.
      */
     clearLanguageNavigationState();
 
@@ -289,10 +308,20 @@ const Portfolio = () => {
           expandedVendorId !==
           vendorId;
 
-        setExpandedVendorId(
+        const nextExpandedVendorId =
           shouldExpand
             ? vendorId
-            : null,
+            : null;
+
+        setExpandedVendorId(
+          nextExpandedVendorId,
+        );
+
+        updatePortfolioSessionState(
+          {
+            expandedVendorId:
+              nextExpandedVendorId,
+          },
         );
 
         if (shouldExpand) {
@@ -311,6 +340,13 @@ const Portfolio = () => {
       ) => {
         setExpandedVendorId(
           vendorId,
+        );
+
+        updatePortfolioSessionState(
+          {
+            expandedVendorId:
+              vendorId,
+          },
         );
 
         scrollToElementAfterLayout(
@@ -368,9 +404,7 @@ const Portfolio = () => {
 
         <Experience
           initialExpandedId={
-            languageNavigationState
-              ?.expandedExperienceId ??
-            null
+            initialExpandedExperienceId
           }
         />
 
