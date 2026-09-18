@@ -16,6 +16,17 @@ interface ResponsiveImageProps
   alt: string;
   sources?: readonly ResponsiveImageSource[];
   sizes?: string;
+
+  /*
+   * This class defines the stable layout box used by the image.
+   *
+   * When responsive sources exist, the nested <picture> uses
+   * display: contents so adding AVIF/WebP delivery cannot alter
+   * the geometry that the original <img> had.
+   *
+   * The existing prop name is retained to avoid changing every
+   * current caller.
+   */
   pictureClassName?: string;
 }
 
@@ -56,39 +67,61 @@ export const ResponsiveImage = ({
     />
   );
 
+  const content =
+    resolvedSources.length >
+    0 ? (
+      <picture className="contents">
+        {resolvedSources.map(
+          (
+            source,
+          ) => (
+            <source
+              key={`${source.type}-${source.srcSet}`}
+              type={
+                source.type
+              }
+              srcSet={
+                source.srcSet
+              }
+              sizes={
+                sizes
+              }
+            />
+          ),
+        )}
+
+        {image}
+      </picture>
+    ) : (
+      image
+    );
+
+  /*
+   * Always use the same explicit layout wrapper when the caller
+   * provides layout classes. This makes optimized and unoptimized
+   * assets geometrically equivalent:
+   *
+   * wrapper -> img
+   *
+   * and:
+   *
+   * wrapper -> picture(display: contents) -> img
+   *
+   * therefore behave identically in Grid/Flex layouts.
+   */
   if (
-    resolvedSources.length ===
-    0
+    pictureClassName
   ) {
-    return image;
+    return (
+      <span
+        className={
+          pictureClassName
+        }
+      >
+        {content}
+      </span>
+    );
   }
 
-  return (
-    <picture
-      className={
-        pictureClassName
-      }
-    >
-      {resolvedSources.map(
-        (
-          source,
-        ) => (
-          <source
-            key={`${source.type}-${source.srcSet}`}
-            type={
-              source.type
-            }
-            srcSet={
-              source.srcSet
-            }
-            sizes={
-              sizes
-            }
-          />
-        ),
-      )}
-
-      {image}
-    </picture>
-  );
+  return content;
 };
