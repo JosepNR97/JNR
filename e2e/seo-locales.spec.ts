@@ -19,8 +19,18 @@ const LOCALES = [
   },
 ] as const;
 
+const SECTION_CONTEXT_IDS = [
+  'about',
+  'certifications',
+  'services',
+  'experience',
+  'education',
+  'contact',
+] as const;
+
 type LocaleCode = (typeof LOCALES)[number]['code'];
 type Locale = (typeof LOCALES)[number];
+type SectionContextId = (typeof SECTION_CONTEXT_IDS)[number];
 
 const productionUrl = (locale: LocaleCode) =>
   `https://josepnr97.github.io/JNR/${locale}/`;
@@ -156,6 +166,23 @@ const getConflictingLocale = (
   return locale;
 };
 
+const getLocale = (
+  code: LocaleCode,
+): Locale => {
+  const locale = LOCALES.find(
+    (candidate) =>
+      candidate.code === code,
+  );
+
+  if (!locale) {
+    throw new Error(
+      `Unknown locale: ${code}`,
+    );
+  }
+
+  return locale;
+};
+
 const installNavigationLanguageMarker = async (
   page: Page,
 ) => {
@@ -195,6 +222,105 @@ const expectPersistedBeforeNavigation = async (
     );
 
   expect(persistedLanguage).toBe(language);
+};
+
+const isSectionCurrentContext = async (
+  page: Page,
+  sectionId: SectionContextId,
+) =>
+  page.evaluate((id) => {
+    const target = document.getElementById(id);
+
+    if (!target) {
+      return false;
+    }
+
+    const documentHeight = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight,
+    );
+
+    const viewportBottom =
+      window.scrollY + window.innerHeight;
+
+    if (
+      id === 'contact' &&
+      documentHeight > 0 &&
+      viewportBottom >= documentHeight - 2
+    ) {
+      return true;
+    }
+
+    const readingLineY = Math.max(
+      96,
+      Math.min(window.innerHeight * 0.25, 240),
+    );
+
+    const rect =
+      target.getBoundingClientRect();
+
+    return (
+      rect.top <= readingLineY &&
+      rect.bottom > readingLineY
+    );
+  }, sectionId);
+
+const expectSectionContext = async (
+  page: Page,
+  sectionId: SectionContextId,
+) => {
+  await expect
+    .poll(() =>
+      isSectionCurrentContext(
+        page,
+        sectionId,
+      ),
+    )
+    .toBe(true);
+};
+
+const scrollToSection = async (
+  page: Page,
+  sectionId: SectionContextId,
+) => {
+  await page.evaluate((id) => {
+    const target =
+      document.getElementById(id);
+
+    if (!target) {
+      throw new Error(
+        `Could not find section #${id}`,
+      );
+    }
+
+    /*
+     * Production intentionally uses smooth scrolling for ordinary in-page
+     * navigation. This test needs a stable position before clicking the
+     * language selector, so temporarily disable smooth scrolling while
+     * arranging the test state.
+     */
+    const documentElement =
+      document.documentElement;
+
+    const previousScrollBehavior =
+      documentElement.style.scrollBehavior;
+
+    documentElement.style.scrollBehavior =
+      'auto';
+
+    target.scrollIntoView({
+      block: 'start',
+      behavior: 'auto',
+    });
+
+    documentElement.style.scrollBehavior =
+      previousScrollBehavior;
+  }, sectionId);
+
+  await expectSectionContext(
+    page,
+    sectionId,
+  );
 };
 
 test.describe(
@@ -247,6 +373,11 @@ test.describe(
         await expectLocaleState(
           page,
           locale,
+        );
+
+        await expectSectionContext(
+          page,
+          'about',
         );
       });
     }
@@ -303,7 +434,7 @@ test.describe(
             targetLocale.code,
           ]);
 
-        test(`${originLocale.code} -> ${targetLocale.code} navigates directly to the selected locale`, async ({
+        test(`${originLocale.code} -> ${targetLocale.code} navigates directly to the selected locale from the top of the page`, async ({
           page,
         }) => {
           await blockAnalytics(page);
@@ -312,10 +443,6 @@ test.describe(
             `/${originLocale.code}/`,
           );
 
-          /*
-           * Exercise the harder case reported in the browser: make the
-           * selection immediately after a full reload.
-           */
           await page.reload({
             waitUntil:
               'domcontentloaded',
@@ -332,11 +459,6 @@ test.describe(
             originLocale,
           );
 
-          /*
-           * Deliberately inject the third language as a conflicting stored
-           * preference. The explicit selection must still be the only
-           * navigation destination.
-           */
           await setStoredLanguage(
             page,
             conflictingLocale.code,
@@ -347,12 +469,6 @@ test.describe(
             conflictingLocale.code,
           );
 
-          /*
-           * Capture which language was persisted by the old document before
-           * it was actually unloaded. This distinguishes persistence before
-           * navigation from the destination page merely correcting storage
-           * after it has already loaded.
-           */
           await installNavigationLanguageMarker(
             page,
           );
@@ -396,16 +512,6 @@ test.describe(
             targetLocale.code,
           );
 
-          /*
-           * This is the core invariant:
-           *
-           * no root entry,
-           * no third locale,
-           * no temporary wrong locale.
-           *
-           * The only main-frame navigation allowed after the click is the
-           * explicitly selected destination.
-           */
           expect(
             navigationPathnames,
           ).toEqual([
@@ -414,6 +520,123 @@ test.describe(
         });
       }
     }
+
+    for (const sectionId of SECTION_CONTEXT_IDS) {
+      test(`language selection preserves the visible ${sectionId} section`, async ({
+        page,
+      }) => {
+        await blockAnalytics(page);
+
+        await page.goto(
+          '/es/?source=section-context',
+        );
+
+        await expectLocaleState(
+          page,
+          getLocale('es'),
+        );
+
+        await scrollToSection(
+          page,
+          sectionId,
+        );
+
+        await page
+          .getByRole('banner')
+          .getByRole('button', {
+            name: 'English',
+          })
+          .click();
+
+        await expect(page).toHaveURL(
+          new RegExp(
+            `/en/\\?source=section-context#${sectionId}$`,
+          ),
+        );
+
+        await page.waitForLoadState(
+          'networkidle',
+        );
+
+        await expect(page).toHaveURL(
+          new RegExp(
+            `/en/\\?source=section-context#${sectionId}$`,
+          ),
+        );
+
+        await expectLocaleState(
+          page,
+          getLocale('en'),
+        );
+
+        /*
+         * The hash existing in the URL is not enough. Because React creates
+         * the section after the initial HTML document has loaded, verify that
+         * the application has explicitly restored the real viewport context.
+         */
+        await expectSectionContext(
+          page,
+          sectionId,
+        );
+      });
+    }
+
+    test('the visible section replaces a stale section hash when changing language', async ({
+      page,
+    }) => {
+      await blockAnalytics(page);
+
+      await page.goto(
+        '/es/#about',
+      );
+
+      await expect(page).toHaveURL(
+        /\/es\/#about$/,
+      );
+
+      await expectSectionContext(
+        page,
+        'about',
+      );
+
+      await scrollToSection(
+        page,
+        'services',
+      );
+
+      /*
+       * The URL deliberately remains on #about. The user's actual viewport
+       * context must win when the language is changed.
+       */
+      await expect(page).toHaveURL(
+        /\/es\/#about$/,
+      );
+
+      await page
+        .getByRole('banner')
+        .getByRole('button', {
+          name: 'English',
+        })
+        .click();
+
+      await expect(page).toHaveURL(
+        /\/en\/#services$/,
+      );
+
+      await page.waitForLoadState(
+        'networkidle',
+      );
+
+      await expectLocaleState(
+        page,
+        getLocale('en'),
+      );
+
+      await expectSectionContext(
+        page,
+        'services',
+      );
+    });
 
     for (const locale of LOCALES) {
       test(`root entry respects stored ${locale.code} preference and preserves the section anchor`, async ({
@@ -440,6 +663,11 @@ test.describe(
           page,
           locale,
         );
+
+        await expectSectionContext(
+          page,
+          'services',
+        );
       });
     }
 
@@ -463,11 +691,6 @@ test.describe(
           locale,
         );
 
-        /*
-         * Make storage deliberately disagree with the current explicit URL.
-         * If the root is reached from this localized page, the explicit
-         * same-origin referrer must win.
-         */
         await setStoredLanguage(
           page,
           conflictingLocale.code,
@@ -502,10 +725,6 @@ test.describe(
           locale,
         );
 
-        /*
-         * In this test the root navigation is intentional, so the expected
-         * recovery sequence is precisely root -> original explicit locale.
-         */
         expect(
           navigationPathnames,
         ).toEqual([
