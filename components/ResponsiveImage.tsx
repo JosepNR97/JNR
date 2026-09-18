@@ -1,6 +1,9 @@
 import type {
   ImgHTMLAttributes,
 } from 'react';
+import {
+  getResponsiveImageSources,
+} from '../imageAssets';
 import type {
   ResponsiveImageSource,
 } from '../imageAssets';
@@ -9,46 +12,64 @@ interface ResponsiveImageProps
   extends Omit<
     ImgHTMLAttributes<HTMLImageElement>,
     | 'alt'
-    | 'height'
     | 'sizes'
     | 'srcSet'
-    | 'width'
   > {
   alt: string;
-  width: number;
-  height: number;
   sources?: readonly ResponsiveImageSource[];
   sizes?: string;
   pictureClassName?: string;
 }
 
 export const ResponsiveImage = ({
-  sources = [],
+  sources,
   sizes,
   pictureClassName,
   alt,
-  width,
-  height,
   ...imageProps
-}: ResponsiveImageProps) => (
-  <picture
-    className={pictureClassName}
-  >
-    {sources.map((source) => (
-      <source
-        key={source.type}
-        type={source.type}
-        srcSet={source.srcSet}
+}: ResponsiveImageProps) => {
+  const automaticSources =
+    getResponsiveImageSources(
+      typeof imageProps.src ===
+        'string'
+        ? imageProps.src
+        : undefined,
+    );
+
+  const resolvedSources =
+    sources ??
+    automaticSources;
+
+  return (
+    <picture
+      className={
+        pictureClassName
+      }
+    >
+      {resolvedSources.map(
+        (
+          source,
+        ) => (
+          <source
+            key={`${source.type}-${source.srcSet}`}
+            type={
+              source.type
+            }
+            srcSet={
+              source.srcSet
+            }
+            sizes={
+              sizes
+            }
+          />
+        ),
+      )}
+
+      <img
+        {...imageProps}
+        alt={alt}
         sizes={sizes}
       />
-    ))}
-
-    <img
-      {...imageProps}
-      alt={alt}
-      width={width}
-      height={height}
-      sizes={sizes}
-    />
-  </picture>
-);
+    </picture>
+  );
+};
