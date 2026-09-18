@@ -104,7 +104,28 @@ At the very beginning or end of the document, the browser's valid scroll range m
 
 Viewport restoration is applied without smooth scrolling so a locale change does not visibly animate from the top of the destination document.
 
-The position is corrected again across the next animation frames to absorb any immediate browser fragment handling or initial layout settlement.
+## Initial layout settlement
+
+Restoring the viewport once immediately after React mounts is not sufficient to guarantee stable geometry.
+
+The portfolio uses local Inter and Playfair Display webfonts. A localized document can therefore mount before all final font metrics have been applied. When those fonts finish loading, translated text higher in the page may reflow and change the document geometry even though the relevant accordion state itself has not changed.
+
+Other initial document resources can also complete after the first React layout pass.
+
+For that reason, viewport restoration uses several deterministic settlement points:
+
+1. immediately after the destination React layout is committed;
+2. across the next animation frames;
+3. after `document.fonts.ready` resolves;
+4. across additional animation frames after font settlement;
+5. when the initial document `load` lifecycle has completed;
+6. across additional animation frames after that final document settlement.
+
+Every corrective pass uses the same stable anchor and the same captured viewport position.
+
+The mechanism therefore compensates for initial layout shifts without relying on an arbitrary timeout.
+
+The persisted `sessionStorage` snapshot is still one-shot. Once the destination application has accepted it, the stored copy is removed. The mounted React document retains the already validated snapshot in memory only long enough to complete the initial corrective passes.
 
 ## Expanded content restoration
 
@@ -118,8 +139,9 @@ This ordering is important:
 
 1. load the localized document;
 2. mount React with the same relevant panels expanded;
-3. restore the previous viewport context using the final expanded layout;
-4. clear the temporary navigation snapshot.
+3. restore the previous viewport context using the expanded layout;
+4. keep correcting that position while the initial document geometry settles;
+5. discard the temporary hand-off state.
 
 Only meaningful content state is transferred.
 
@@ -129,7 +151,7 @@ Ephemeral interaction state such as hover, keyboard focus, an open mobile naviga
 
 The navigation snapshot exists only to bridge one explicit locale change.
 
-After the destination document has restored the state, the snapshot is removed from `sessionStorage`.
+After the destination document has accepted the state, its persisted copy is removed from `sessionStorage`.
 
 A later reload, direct visit, Back/Forward navigation, or shared URL therefore does not inherit an obsolete expanded state or scroll position from an earlier locale switch.
 
