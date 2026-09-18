@@ -1,12 +1,10 @@
 import {
+  useEffect,
   useState,
 } from 'react';
 import {
   useLanguage,
 } from '../context/LanguageContext';
-import {
-  getCertificationBadgeSources,
-} from '../imageAssets';
 import {
   ChevronDownIcon,
   EducationIcon,
@@ -57,7 +55,9 @@ export const Education = ({
       vendorId: string,
     ) => {
       setLoadedVendorIds(
-        (current) => {
+        (
+          current,
+        ) => {
           if (
             current.has(
               vendorId,
@@ -74,16 +74,48 @@ export const Education = ({
       );
     };
 
+  /*
+   * expandedVendorId can change without the
+   * Education trigger being clicked, for
+   * example after a carousel selection or
+   * when tab-scoped state is restored.
+   *
+   * Persist the fact that this vendor has
+   * been displayed so its images remain
+   * mounted during later closing animations.
+   */
+  useEffect(() => {
+    if (
+      !expandedVendorId
+    ) {
+      return;
+    }
+
+    setLoadedVendorIds(
+      (
+        current,
+      ) => {
+        if (
+          current.has(
+            expandedVendorId,
+          )
+        ) {
+          return current;
+        }
+
+        return new Set([
+          ...current,
+          expandedVendorId,
+        ]);
+      },
+    );
+  }, [
+    expandedVendorId,
+  ]);
+
   const handleVendorToggle = (
     vendorId: string,
   ) => {
-    /*
-     * Keep badge URLs assigned after the
-     * vendor has been opened once so the
-     * closing animation does not blank the
-     * images and subsequent opens can reuse
-     * the browser cache.
-     */
     markVendorImagesLoaded(
       vendorId,
     );
@@ -151,15 +183,21 @@ export const Education = ({
                     <div className="flex items-center gap-5 text-left sm:gap-6">
                       <div className="grid h-20 w-20 shrink-0 place-items-center rounded-lg border border-slate-100 bg-white p-2 shadow-xs">
                         {item.logoUrl ? (
-                          <img
+                          <ResponsiveImage
                             src={
                               item.logoUrl
                             }
                             alt={`Logo ${item.institution}`}
-                            width="160"
-                            height="160"
+                            width={
+                              160
+                            }
+                            height={
+                              160
+                            }
+                            sizes="64px"
                             loading="lazy"
                             decoding="async"
+                            pictureClassName="contents"
                             className="h-full w-full object-contain"
                           />
                         ) : (
@@ -271,15 +309,21 @@ export const Education = ({
                     >
                       <span className="flex min-w-0 flex-1 items-center gap-4 sm:gap-6">
                         <span className="grid h-16 w-20 shrink-0 place-items-center rounded-lg border border-slate-100 bg-white p-2 sm:h-20">
-                          <img
+                          <ResponsiveImage
                             src={
                               vendor.logoUrl
                             }
                             alt={`Logo ${vendor.name}`}
-                            width="160"
-                            height="100"
+                            width={
+                              160
+                            }
+                            height={
+                              100
+                            }
+                            sizes="64px"
                             loading="lazy"
                             decoding="async"
+                            pictureClassName="contents"
                             className="max-h-full max-w-full object-contain"
                           />
                         </span>
@@ -369,13 +413,6 @@ export const Education = ({
                                 >
                                   <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-100 bg-white p-1">
                                     <ResponsiveImage
-                                      sources={
-                                        shouldLoadCertificationImages
-                                          ? getCertificationBadgeSources(
-                                              certification.image,
-                                            )
-                                          : []
-                                      }
                                       src={
                                         shouldLoadCertificationImages
                                           ? certification.image
@@ -388,13 +425,10 @@ export const Education = ({
                                       height={
                                         64
                                       }
+                                      sizes="48px"
                                       loading="eager"
                                       decoding="async"
-                                      onLoad={() =>
-                                        markVendorImagesLoaded(
-                                          vendor.id,
-                                        )
-                                      }
+                                      pictureClassName="contents"
                                       className="h-12 w-12 object-contain"
                                     />
                                   </span>
