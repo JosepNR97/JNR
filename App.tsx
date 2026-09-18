@@ -37,7 +37,8 @@ const restoreHashPositionAfterMount =
       return;
     }
 
-    let targetId = rawHash;
+    let targetId =
+      rawHash;
 
     try {
       targetId =
@@ -57,12 +58,6 @@ const restoreHashPositionAfterMount =
       return;
     }
 
-    /*
-     * Localized pages are separate HTML documents whose section elements only
-     * exist after React mounts. Explicitly restore the hash target now that
-     * the DOM exists instead of relying solely on the browser's initial hash
-     * navigation.
-     */
     const documentElement =
       document.documentElement;
 
@@ -71,7 +66,8 @@ const restoreHashPositionAfterMount =
         .scrollBehavior;
 
     documentElement.style
-      .scrollBehavior = 'auto';
+      .scrollBehavior =
+      'auto';
 
     target.scrollIntoView({
       block: 'start',
@@ -89,12 +85,6 @@ const Portfolio = () => {
     t,
   } = useLanguage();
 
-  /*
-   * The locale-transition snapshot is one-shot and has priority when present.
-   * The longer-lived portfolio session state survives reloads in the same tab
-   * and keeps meaningful accordion state available after that snapshot has
-   * already been consumed.
-   */
   const [
     languageNavigationState,
   ] = useState(
@@ -104,49 +94,32 @@ const Portfolio = () => {
       ),
   );
 
+  /*
+   * Meaningful UI state belongs to the tab session, independently from the
+   * one-shot locale-navigation snapshot.
+   */
   const [
-    initialPortfolioSessionState,
+    portfolioSessionState,
+    setPortfolioSessionState,
   ] = useState(
     readPortfolioSessionState,
   );
-
-  const initialExpandedExperienceId =
-    languageNavigationState
-      ?.expandedExperienceId ??
-    initialPortfolioSessionState
-      .expandedExperienceId;
-
-  const [
-    expandedVendorId,
-    setExpandedVendorId,
-  ] =
-    useState<string | null>(
-      () =>
-        languageNavigationState
-          ?.expandedVendorId ??
-        initialPortfolioSessionState
-          .expandedVendorId,
-    );
 
   useLayoutEffect(() => {
     if (
       !languageNavigationState
     ) {
       /*
-       * Normal entry, reload or shared URL: no locale-transition snapshot
-       * exists, so the explicit URL fragment remains authoritative.
-       *
-       * With no fragment, the browser remains free to apply its native
-       * history/reload scroll restoration. Accordion state has already been
-       * restored during the initial React render, so the document geometry
-       * matches the state the user was browsing before the reload.
+       * Direct entry or reload: URL fragments remain authoritative.
+       * Without a fragment, native browser scroll restoration is left alone.
        */
       restoreHashPositionAfterMount();
 
       return undefined;
     }
 
-    let cancelled = false;
+    let cancelled =
+      false;
 
     const pendingAnimationFrames =
       new Set<number>();
@@ -166,7 +139,8 @@ const Portfolio = () => {
       (
         callback: () => void,
       ) => {
-        let animationFrame = 0;
+        let animationFrame =
+          0;
 
         animationFrame =
           window.requestAnimationFrame(
@@ -175,9 +149,7 @@ const Portfolio = () => {
                 animationFrame,
               );
 
-              if (
-                cancelled
-              ) {
+              if (cancelled) {
                 return;
               }
 
@@ -205,28 +177,17 @@ const Portfolio = () => {
         );
       };
 
-    /*
-     * The accordion states were already applied during the initial React
-     * render, so start by restoring against the layout currently available
-     * before the browser paints the mounted application.
-     */
     restorePosition();
     restoreAcrossAnimationFrames();
 
-    /*
-     * Local webfonts can finish loading after the first React layout pass.
-     * Their final metrics may reflow translated content above the restored
-     * anchor. Correct the viewport again only after the browser reports that
-     * all fonts required by the current document have finished loading.
-     */
     const restoreAfterFonts =
       async () => {
         try {
           await document.fonts.ready;
         } catch {
           /*
-           * Font readiness is an enhancement to geometric stability. A
-           * failure must never prevent the locale navigation itself.
+           * Font readiness improves geometric stability but is not required
+           * for navigation to remain functional.
            */
         }
 
@@ -240,10 +201,6 @@ const Portfolio = () => {
 
     void restoreAfterFonts();
 
-    /*
-     * The document load event provides a second deterministic settlement
-     * point for resources that can complete after the initial React commit.
-     */
     const restoreAfterLoad =
       () => {
         if (cancelled) {
@@ -270,14 +227,14 @@ const Portfolio = () => {
     }
 
     /*
-     * The language-navigation hand-off itself remains one-shot. Expanded
-     * content is persisted independently in portfolioSessionState, so it can
-     * survive later reloads without preserving stale scroll coordinates.
+     * Geometry from a locale hand-off is one-shot. Accordion state is stored
+     * independently and therefore remains available after this is cleared.
      */
     clearLanguageNavigationState();
 
     return () => {
-      cancelled = true;
+      cancelled =
+        true;
 
       window.removeEventListener(
         'load',
@@ -299,13 +256,56 @@ const Portfolio = () => {
     languageNavigationState,
   ]);
 
+  const handleExperienceToggle =
+    useCallback(
+      (
+        itemId: string,
+      ) => {
+        const shouldExpand =
+          portfolioSessionState
+            .expandedExperienceId !==
+          itemId;
+
+        const nextExpandedId =
+          shouldExpand
+            ? itemId
+            : null;
+
+        setPortfolioSessionState(
+          (
+            currentState,
+          ) => ({
+            ...currentState,
+            expandedExperienceId:
+              nextExpandedId,
+          }),
+        );
+
+        updatePortfolioSessionState({
+          expandedExperienceId:
+            nextExpandedId,
+        });
+
+        if (shouldExpand) {
+          scrollToElementAfterLayout(
+            `experience-item-${itemId}`,
+          );
+        }
+      },
+      [
+        portfolioSessionState
+          .expandedExperienceId,
+      ],
+    );
+
   const handleVendorToggle =
     useCallback(
       (
         vendorId: string,
       ) => {
         const shouldExpand =
-          expandedVendorId !==
+          portfolioSessionState
+            .expandedVendorId !==
           vendorId;
 
         const nextExpandedVendorId =
@@ -313,16 +313,20 @@ const Portfolio = () => {
             ? vendorId
             : null;
 
-        setExpandedVendorId(
-          nextExpandedVendorId,
-        );
-
-        updatePortfolioSessionState(
-          {
+        setPortfolioSessionState(
+          (
+            currentState,
+          ) => ({
+            ...currentState,
             expandedVendorId:
               nextExpandedVendorId,
-          },
+          }),
         );
+
+        updatePortfolioSessionState({
+          expandedVendorId:
+            nextExpandedVendorId,
+        });
 
         if (shouldExpand) {
           scrollToElementAfterLayout(
@@ -330,7 +334,10 @@ const Portfolio = () => {
           );
         }
       },
-      [expandedVendorId],
+      [
+        portfolioSessionState
+          .expandedVendorId,
+      ],
     );
 
   const handleCertificationSelect =
@@ -338,16 +345,20 @@ const Portfolio = () => {
       (
         vendorId: string,
       ) => {
-        setExpandedVendorId(
-          vendorId,
-        );
-
-        updatePortfolioSessionState(
-          {
+        setPortfolioSessionState(
+          (
+            currentState,
+          ) => ({
+            ...currentState,
             expandedVendorId:
               vendorId,
-          },
+          }),
         );
+
+        updatePortfolioSessionState({
+          expandedVendorId:
+            vendorId,
+        });
 
         scrollToElementAfterLayout(
           `education-card-${vendorId}`,
@@ -403,14 +414,19 @@ const Portfolio = () => {
         <Services />
 
         <Experience
-          initialExpandedId={
-            initialExpandedExperienceId
+          expandedId={
+            portfolioSessionState
+              .expandedExperienceId
+          }
+          onToggle={
+            handleExperienceToggle
           }
         />
 
         <Education
           expandedVendorId={
-            expandedVendorId
+            portfolioSessionState
+              .expandedVendorId
           }
           onVendorToggle={
             handleVendorToggle
