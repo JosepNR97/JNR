@@ -16,13 +16,12 @@ const IGNORED_SCROLL_ANCHOR_IDS = new Set([
 
 interface ScrollSnapshot {
   anchorId: string | null;
-  anchorProgress: number | null;
-  referenceY: number;
+  anchorViewportTop: number | null;
   scrollY: number;
 }
 
 export interface LanguageNavigationState {
-  version: 1;
+  version: 2;
   createdAt: number;
   fromLanguage: Language;
   toLanguage: Language;
@@ -57,6 +56,15 @@ const isNullableString = (
   value === null ||
   typeof value === 'string';
 
+const isNullableFiniteNumber = (
+  value: unknown,
+): value is number | null =>
+  value === null ||
+  (
+    typeof value === 'number' &&
+    Number.isFinite(value)
+  );
+
 const isFiniteNumber = (
   value: unknown,
 ): value is number =>
@@ -70,7 +78,12 @@ const isLanguageNavigationState = (
     return false;
   }
 
-  if (value.version !== 1) {
+  /*
+   * Version 2 stores the viewport position of the stable anchor itself.
+   * Version 1 stored proportional progress through the anchor and must not
+   * be restored with the new geometry contract.
+   */
+  if (value.version !== 2) {
     return false;
   }
 
@@ -88,28 +101,15 @@ const isLanguageNavigationState = (
 
   const {
     anchorId,
-    anchorProgress,
-    referenceY,
+    anchorViewportTop,
     scrollY,
   } = value.scroll;
 
   if (
     !isNullableString(anchorId) ||
-    !isFiniteNumber(referenceY) ||
-    referenceY < 0 ||
+    !isNullableFiniteNumber(anchorViewportTop) ||
     !isFiniteNumber(scrollY) ||
     scrollY < 0
-  ) {
-    return false;
-  }
-
-  if (
-    anchorProgress !== null &&
-    (
-      !isFiniteNumber(anchorProgress) ||
-      anchorProgress < 0 ||
-      anchorProgress > 1
-    )
   ) {
     return false;
   }
@@ -243,6 +243,11 @@ const findScrollAnchor = (
     }
   }
 
+  /*
+   * elementsFromPoint can miss a useful stable ID when the reading point
+   * happens to fall over decorative or otherwise non-addressable content.
+   * Fall back to the stable IDs already present in the main portfolio DOM.
+   */
   const candidates =
     Array.from(
       document.querySelectorAll<HTMLElement>(
@@ -270,6 +275,11 @@ const findScrollAnchor = (
   if (
     containingCandidates.length > 0
   ) {
+    /*
+     * Prefer the most specific stable element that contains the reading
+     * point. A smaller containing element is normally closer to the content
+     * the user is actually reading than an outer section wrapper.
+     */
     return containingCandidates.reduce(
       (smallest, candidate) => {
         const smallestHeight =
@@ -334,13 +344,14 @@ const captureScrollSnapshot =
       getReferenceY();
 
     const anchor =
-      findScrollAnchor(referenceY);
+      findScrollAnchor(
+        referenceY,
+      );
 
     if (!anchor) {
       return {
         anchorId: null,
-        anchorProgress: null,
-        referenceY,
+        anchorViewportTop: null,
         scrollY: Math.max(
           0,
           window.scrollY,
@@ -351,25 +362,23 @@ const captureScrollSnapshot =
     const rect =
       anchor.getBoundingClientRect();
 
-    const progress =
-      rect.height > 0
-        ? Math.max(
-            0,
-            Math.min(
-              1,
-              (
-                referenceY -
-                rect.top
-              ) /
-                rect.height,
-            ),
-          )
-        : null;
-
     return {
       anchorId: anchor.id,
-      anchorProgress: progress,
-      referenceY,
+
+      /*
+       * Preserve the actual screen position of the stable element, not the
+       * proportional progress through it.
+       *
+       * Translated text can change an element's height. A percentage-based
+       * anchor therefore moves the element itself when switching language.
+       * Storing its viewport top keeps the UI visually stationary instead.
+       *
+       * Negative values are valid: an anchor can begin above the viewport
+       * while the user is reading content further down inside it.
+       */
+      anchorViewportTop:
+        rect.top,
+
       scrollY: Math.max(
         0,
         window.scrollY,
@@ -415,7 +424,7 @@ export const saveLanguageNavigationState = ({
       );
 
     const state: LanguageNavigationState = {
-      version: 1,
+      version: 2,
       createdAt: Date.now(),
       fromLanguage,
       toLanguage,
@@ -439,8 +448,9 @@ export const saveLanguageNavigationState = ({
     );
   } catch {
     /*
-     * A locale change must keep working even if sessionStorage is unavailable.
-     * The destination URL and its hash remain sufficient fallbacks.
+     * A locale change must keep working even if sessionStorage is
+     * unavailable. The destination URL and its hash remain sufficient
+     * fallbacks.
      */
   }
 };
@@ -471,7 +481,9 @@ export const readLanguageNavigationState = (
 
     const parsedState:
       unknown =
-        JSON.parse(serializedState);
+        JSON.parse(
+          serializedState,
+        );
 
     if (
       !isLanguageNavigationState(
@@ -513,13 +525,12 @@ export const restoreLanguageNavigationPosition = (
 
   const {
     anchorId,
-    anchorProgress,
-    referenceY,
+    anchorViewportTop,
   } = state.scroll;
 
   if (
     anchorId &&
-    anchorProgress !== null
+    anchorViewportTop !== null
   ) {
     const anchor =
       document.getElementById(
@@ -530,17 +541,24 @@ export const restoreLanguageNavigationPosition = (
       const rect =
         anchor.getBoundingClientRect();
 
-      if (rect.height > 0) {
-        const anchorPointDocumentY =
-          window.scrollY +
-          rect.top +
-          rect.height *
-            anchorProgress;
-
-        targetScrollY =
-          anchorPointDocumentY -
-          referenceY;
-      }
+      /*
+       * Move the destination document by exactly the difference between the
+       * anchor's current screen position and its screen position before the
+       * locale switch.
+       *
+       * Example:
+       *
+       *   source:      trigger top = 120 px
+       *   destination: trigger top = 144 px
+       *   correction:                 24 px
+       *
+       * After scrolling the destination by 24 px, the same stable trigger is
+       * once again positioned at 120 px.
+       */
+      targetScrollY =
+        window.scrollY +
+        rect.top -
+        anchorViewportTop;
     }
   }
 
