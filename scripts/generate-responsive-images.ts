@@ -1,18 +1,21 @@
 import {
   mkdir,
+  readdir,
   rm,
   stat,
+  writeFile,
 } from 'node:fs/promises';
 import {
-  basename,
-  dirname,
   extname,
+  relative,
   resolve,
 } from 'node:path';
 import sharp from 'sharp';
 import {
-  CERTIFICATION_BADGE_DELIVERY,
-  PROFILE_IMAGE_DELIVERY,
+  IMAGE_DELIVERY_RULES,
+} from '../imageDeliveryConfig.ts';
+import type {
+  ImageDeliveryRule,
 } from '../imageDeliveryConfig.ts';
 
 const projectRoot =
@@ -29,311 +32,744 @@ const assetsRoot =
 
 const generatedRoot =
   resolve(
+    projectRoot,
+    'generated-images',
+  );
+
+const legacyGeneratedRoot =
+  resolve(
     assetsRoot,
     'generated',
   );
 
-const generatedPath = (
-  ...segments: string[]
-) =>
-  resolve(
-    generatedRoot,
-    ...segments,
-  );
+const RASTER_EXTENSIONS =
+  new Set([
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.webp',
+  ]);
 
-const stemOf = (
-  filename: string,
-) =>
-  basename(
-    filename,
-    extname(filename),
-  );
+const SOURCE_EXTENSION_PRIORITY:
+  Readonly<
+    Record<
+      string,
+      number
+    >
+  > = {
+    '.png': 3,
+    '.jpg': 2,
+    '.jpeg': 2,
+    '.webp': 1,
+  };
 
-const ensureParent =
-  async (
-    path: string,
+interface RasterAsset {
+  absolutePath: string;
+  relativePath: string;
+  logicalKey: string;
+  extension: string;
+  width: number;
+  height: number;
+  bytes: number;
+}
+
+interface RasterGroup {
+  logicalKey: string;
+  rule: ImageDeliveryRule;
+  assets: RasterAsset[];
+}
+
+interface EncodedCandidate {
+  width: number;
+  avif: Buffer;
+  webp: Buffer;
+}
+
+const normalizeRelativePath =
+  (
+    value: string,
+  ) =>
+    value.replaceAll(
+      '\\',
+      '/',
+    );
+
+const stripExtension =
+  (
+    value: string,
   ) => {
-    await mkdir(
-      dirname(path),
-      {
-        recursive: true,
-      },
+    const extension =
+      extname(
+        value,
+      );
+
+    if (!extension) {
+      return value;
+    }
+
+    return value.slice(
+      0,
+      -extension.length,
     );
   };
 
-const fileSize =
+const collectFiles =
   async (
-    path: string,
-  ) =>
-    (
-      await stat(path)
-    ).size;
+    directory: string,
+  ): Promise<
+    string[]
+  > => {
+    let entries;
 
-const assertSmallerThanSource =
+    try {
+      entries =
+        await readdir(
+          directory,
+          {
+            withFileTypes:
+              true,
+          },
+        );
+    } catch (
+      error
+    ) {
+      const fileSystemError =
+        error as NodeJS.ErrnoException;
+
+      if (
+        fileSystemError.code ===
+        'ENOENT'
+      ) {
+        return [];
+      }
+
+      throw error;
+    }
+
+    const files: string[] =
+      [];
+
+    for (
+      const entry of
+      entries
+    ) {
+      const entryPath =
+        resolve(
+          directory,
+          entry.name,
+        );
+
+      if (
+        entry.isDirectory()
+      ) {
+        files.push(
+          ...(await collectFiles(
+            entryPath,
+          )),
+        );
+
+        continue;
+      }
+
+      if (
+        entry.isFile()
+      ) {
+        files.push(
+          entryPath,
+        );
+      }
+    }
+
+    return files;
+  };
+
+const inspectRasterAsset =
   async (
-    source: string,
-    output: string,
-  ) => {
+    absolutePath: string,
+  ): Promise<RasterAsset> => {
     const [
-      sourceBytes,
-      outputBytes,
+      metadata,
+      fileStats,
     ] =
       await Promise.all([
-        fileSize(
-          source,
-        ),
-        fileSize(
-          output,
+        sharp(
+          absolutePath,
+        ).metadata(),
+
+        stat(
+          absolutePath,
         ),
       ]);
 
     if (
-      outputBytes >=
-      sourceBytes
+      !metadata.width ||
+      !metadata.height
     ) {
       throw new Error(
-        `Generated image is not smaller than its source: ${output} (${outputBytes} >= ${sourceBytes} bytes)`,
+        `Could not determine raster dimensions for ${absolutePath}.`,
       );
     }
+
+    const relativePath =
+      normalizeRelativePath(
+        relative(
+          assetsRoot,
+          absolutePath,
+        ),
+      );
+
+    const extension =
+      extname(
+        relativePath,
+      ).toLowerCase();
+
+    return {
+      absolutePath,
+      relativePath,
+      logicalKey:
+        stripExtension(
+          relativePath,
+        ),
+      extension,
+      width:
+        metadata.width,
+      height:
+        metadata.height,
+      bytes:
+        fileStats.size,
+    };
   };
 
-const assertProfileDimensions =
-  async (
-    source: string,
-  ) => {
-    const metadata =
-      await sharp(
-        source,
-      ).metadata();
-
-    if (
-      metadata.width !==
-        PROFILE_IMAGE_DELIVERY.width ||
-      metadata.height !==
-        PROFILE_IMAGE_DELIVERY.height
-    ) {
-      throw new Error(
-        `Unexpected profile image dimensions: ${metadata.width ?? 'unknown'}x${metadata.height ?? 'unknown'}. Expected ${PROFILE_IMAGE_DELIVERY.width}x${PROFILE_IMAGE_DELIVERY.height}.`,
-      );
-    }
-  };
-
-const generateProfileImages =
-  async () => {
-    const source =
-      resolve(
-        assetsRoot,
-        PROFILE_IMAGE_DELIVERY.source,
-      );
-
-    await assertProfileDimensions(
-      source,
-    );
-
-    const stem =
-      stemOf(
-        PROFILE_IMAGE_DELIVERY.source,
-      );
+const discoverRasterGroups =
+  async (): Promise<
+    Map<
+      string,
+      RasterGroup
+    >
+  > => {
+    const groups =
+      new Map<
+        string,
+        RasterGroup
+      >();
 
     for (
-      const width of
-      PROFILE_IMAGE_DELIVERY.responsiveWidths
+      const [
+        directory,
+        rule,
+      ] of Object.entries(
+        IMAGE_DELIVERY_RULES,
+      )
     ) {
-      const avifOutput =
-        generatedPath(
-          'people',
-          `${stem}-${width}.avif`,
-        );
-
-      const webpOutput =
-        generatedPath(
-          'people',
-          `${stem}-${width}.webp`,
-        );
-
-      await Promise.all([
-        ensureParent(
-          avifOutput,
-        ),
-        ensureParent(
-          webpOutput,
-        ),
-      ]);
-
-      await Promise.all([
-        sharp(source)
-          .rotate()
-          .resize({
-            width,
-            withoutEnlargement:
-              true,
-          })
-          .avif({
-            quality: 55,
-            effort: 4,
-          })
-          .toFile(
-            avifOutput,
-          ),
-
-        sharp(source)
-          .rotate()
-          .resize({
-            width,
-            withoutEnlargement:
-              true,
-          })
-          .webp({
-            quality: 84,
-            effort: 4,
-            smartSubsample:
-              true,
-          })
-          .toFile(
-            webpOutput,
-          ),
-      ]);
-
-      await Promise.all([
-        assertSmallerThanSource(
-          source,
-          avifOutput,
-        ),
-        assertSmallerThanSource(
-          source,
-          webpOutput,
-        ),
-      ]);
-    }
-  };
-
-const generateCertificationBadges =
-  async () => {
-    for (
-      const filename of
-      CERTIFICATION_BADGE_DELIVERY.filenames
-    ) {
-      const source =
+      const directoryPath =
         resolve(
           assetsRoot,
-          'certifications',
-          filename,
+          directory,
         );
 
-      const stem =
-        stemOf(
-          filename,
+      const files =
+        await collectFiles(
+          directoryPath,
         );
 
-      const width =
-        CERTIFICATION_BADGE_DELIVERY.width;
+      for (
+        const absolutePath of
+        files
+      ) {
+        const extension =
+          extname(
+            absolutePath,
+          ).toLowerCase();
 
-      const avifOutput =
-        generatedPath(
-          'certifications',
-          `${stem}-${width}.avif`,
+        if (
+          !RASTER_EXTENSIONS.has(
+            extension,
+          )
+        ) {
+          continue;
+        }
+
+        const asset =
+          await inspectRasterAsset(
+            absolutePath,
+          );
+
+        const existingGroup =
+          groups.get(
+            asset.logicalKey,
+          );
+
+        if (
+          existingGroup
+        ) {
+          existingGroup.assets.push(
+            asset,
+          );
+
+          continue;
+        }
+
+        groups.set(
+          asset.logicalKey,
+          {
+            logicalKey:
+              asset.logicalKey,
+            rule,
+            assets: [
+              asset,
+            ],
+          },
         );
+      }
+    }
 
-      const webpOutput =
-        generatedPath(
-          'certifications',
-          `${stem}-${width}.webp`,
+    return groups;
+  };
+
+const validateGroupDimensions =
+  (
+    group: RasterGroup,
+  ) => {
+    const firstAsset =
+      group.assets[0];
+
+    if (
+      !firstAsset
+    ) {
+      throw new Error(
+        `Raster group ${group.logicalKey} contains no source assets.`,
+      );
+    }
+
+    for (
+      const asset of
+      group.assets
+    ) {
+      if (
+        asset.width !==
+          firstAsset.width ||
+        asset.height !==
+          firstAsset.height
+      ) {
+        throw new Error(
+          [
+            `Raster files sharing the logical asset "${group.logicalKey}" have different dimensions.`,
+            'Rename one of the files or make their dimensions match before building responsive derivatives.',
+          ].join(
+            ' ',
+          ),
         );
+      }
+    }
+  };
 
+const chooseGenerationSource =
+  (
+    group: RasterGroup,
+  ): RasterAsset => {
+    validateGroupDimensions(
+      group,
+    );
+
+    const candidates =
+      [...group.assets].sort(
+        (
+          left,
+          right,
+        ) => {
+          const leftPriority =
+            SOURCE_EXTENSION_PRIORITY[
+              left.extension
+            ] ?? 0;
+
+          const rightPriority =
+            SOURCE_EXTENSION_PRIORITY[
+              right.extension
+            ] ?? 0;
+
+          if (
+            leftPriority !==
+            rightPriority
+          ) {
+            return (
+              rightPriority -
+              leftPriority
+            );
+          }
+
+          if (
+            left.bytes !==
+            right.bytes
+          ) {
+            return (
+              right.bytes -
+              left.bytes
+            );
+          }
+
+          return left.relativePath.localeCompare(
+            right.relativePath,
+          );
+        },
+      );
+
+    const source =
+      candidates[0];
+
+    if (!source) {
+      throw new Error(
+        `Could not select a source image for ${group.logicalKey}.`,
+      );
+    }
+
+    return source;
+  };
+
+const getTargetWidths = (
+  sourceWidth: number,
+  rule: ImageDeliveryRule,
+): number[] => {
+  const maxConfiguredWidth =
+    Math.max(
+      ...rule.widths,
+    );
+
+  const requiredMaxWidth =
+    Math.min(
+      sourceWidth,
+      maxConfiguredWidth,
+    );
+
+  const widths =
+    new Set<number>(
+      rule.widths.filter(
+        (
+          width,
+        ) =>
+          width <
+          requiredMaxWidth,
+      ),
+    );
+
+  /*
+   * Ensure each generated format always
+   * contains a candidate at the largest
+   * resolution that can reasonably be used.
+   *
+   * This avoids a <source> winning format
+   * selection while only offering an
+   * undersized candidate.
+   */
+  widths.add(
+    requiredMaxWidth,
+  );
+
+  return [
+    ...widths,
+  ].sort(
+    (
+      left,
+      right,
+    ) =>
+      left -
+      right,
+  );
+};
+
+const encodeCandidate =
+  async (
+    source: RasterAsset,
+    width: number,
+    rule: ImageDeliveryRule,
+  ): Promise<EncodedCandidate> => {
+    const [
+      avif,
+      webp,
+    ] =
       await Promise.all([
-        ensureParent(
-          avifOutput,
-        ),
-        ensureParent(
-          webpOutput,
-        ),
-      ]);
-
-      await Promise.all([
-        sharp(source)
+        sharp(
+          source.absolutePath,
+        )
           .rotate()
           .resize({
             width,
-            height:
-              width,
-            fit: 'inside',
             withoutEnlargement:
               true,
           })
           .avif({
-            quality: 70,
+            quality:
+              rule.avifQuality,
             effort: 4,
           })
-          .toFile(
-            avifOutput,
-          ),
+          .toBuffer(),
 
-        sharp(source)
+        sharp(
+          source.absolutePath,
+        )
           .rotate()
           .resize({
             width,
-            height:
-              width,
-            fit: 'inside',
             withoutEnlargement:
               true,
           })
           .webp({
-            quality: 88,
+            quality:
+              rule.webpQuality,
             effort: 4,
             smartSubsample:
               true,
           })
-          .toFile(
-            webpOutput,
-          ),
+          .toBuffer(),
       ]);
 
-      await Promise.all([
-        assertSmallerThanSource(
-          source,
-          avifOutput,
+    return {
+      width,
+      avif,
+      webp,
+    };
+  };
+
+const generateGroup =
+  async (
+    group: RasterGroup,
+  ) => {
+    const source =
+      chooseGenerationSource(
+        group,
+      );
+
+    /*
+     * If multiple equivalent source formats
+     * exist (for example PNG + WebP), use
+     * the smallest existing file as the
+     * transfer-size baseline.
+     *
+     * This prevents a newly encoded variant
+     * from being considered an optimization
+     * merely because it is smaller than a
+     * large master PNG while still being
+     * larger than the existing WebP.
+     */
+    const baselineBytes =
+      Math.min(
+        ...group.assets.map(
+          (
+            asset,
+          ) =>
+            asset.bytes,
         ),
-        assertSmallerThanSource(
-          source,
-          webpOutput,
+      );
+
+    const widths =
+      getTargetWidths(
+        source.width,
+        group.rule,
+      );
+
+    const candidates =
+      await Promise.all(
+        widths.map(
+          (
+            width,
+          ) =>
+            encodeCandidate(
+              source,
+              width,
+              group.rule,
+            ),
         ),
-      ]);
+      );
+
+    /*
+     * A format is only exposed if every
+     * candidate in its srcset improves on
+     * the relevant baseline.
+     *
+     * This is important because browsers
+     * choose formats by <source> order; they
+     * do not compare transfer sizes.
+     */
+    const keepWebp =
+      candidates.every(
+        (
+          candidate,
+        ) =>
+          candidate.webp
+            .length <
+          baselineBytes,
+      );
+
+    const keepAvif =
+      candidates.every(
+        (
+          candidate,
+        ) => {
+          const comparisonBytes =
+            keepWebp
+              ? candidate.webp
+                  .length
+              : baselineBytes;
+
+          return (
+            candidate.avif
+              .length <
+            comparisonBytes
+          );
+        },
+      );
+
+    if (
+      !keepWebp &&
+      !keepAvif
+    ) {
+      return {
+        optimized:
+          false,
+        generatedFiles:
+          0,
+      };
     }
+
+    const outputDirectory =
+      resolve(
+        generatedRoot,
+        group.logicalKey,
+      );
+
+    await mkdir(
+      outputDirectory,
+      {
+        recursive:
+          true,
+      },
+    );
+
+    let generatedFiles =
+      0;
+
+    for (
+      const candidate of
+      candidates
+    ) {
+      if (
+        keepAvif
+      ) {
+        await writeFile(
+          resolve(
+            outputDirectory,
+            `${candidate.width}.avif`,
+          ),
+          candidate.avif,
+        );
+
+        generatedFiles +=
+          1;
+      }
+
+      if (
+        keepWebp
+      ) {
+        await writeFile(
+          resolve(
+            outputDirectory,
+            `${candidate.width}.webp`,
+          ),
+          candidate.webp,
+        );
+
+        generatedFiles +=
+          1;
+      }
+    }
+
+    return {
+      optimized:
+        true,
+      generatedFiles,
+    };
   };
 
 const main =
   async () => {
     /*
-     * Generated assets are disposable build
-     * output. Removing the directory first
-     * prevents stale derivatives when the
-     * configuration changes.
+     * Generated files are disposable build
+     * output. Always start clean so removed
+     * or renamed originals cannot leave
+     * stale responsive derivatives behind.
      */
-    await rm(
-      generatedRoot,
-      {
-        recursive: true,
-        force: true,
-      },
-    );
+    await Promise.all([
+      rm(
+        generatedRoot,
+        {
+          recursive:
+            true,
+          force: true,
+        },
+      ),
+
+      rm(
+        legacyGeneratedRoot,
+        {
+          recursive:
+            true,
+          force: true,
+        },
+      ),
+    ]);
 
     await mkdir(
       generatedRoot,
       {
-        recursive: true,
+        recursive:
+          true,
       },
     );
 
-    await generateProfileImages();
+    const groups =
+      await discoverRasterGroups();
 
-    await generateCertificationBadges();
+    let optimizedAssets =
+      0;
+
+    let skippedAssets =
+      0;
+
+    let generatedFiles =
+      0;
+
+    for (
+      const group of
+      groups.values()
+    ) {
+      const result =
+        await generateGroup(
+          group,
+        );
+
+      if (
+        result.optimized
+      ) {
+        optimizedAssets +=
+          1;
+      } else {
+        skippedAssets +=
+          1;
+      }
+
+      generatedFiles +=
+        result.generatedFiles;
+    }
 
     console.log(
-      `Generated responsive image assets in ${generatedRoot.replace(
-        `${projectRoot}/`,
-        '',
-      )}`,
+      [
+        'Responsive image generation complete.',
+        `${groups.size} raster asset groups scanned.`,
+        `${optimizedAssets} optimized.`,
+        `${skippedAssets} kept on their original delivery path.`,
+        `${generatedFiles} generated derivatives.`,
+      ].join(
+        ' ',
+      ),
     );
   };
 
