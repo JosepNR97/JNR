@@ -2,15 +2,40 @@ import {
   expect,
   test,
 } from '@playwright/test';
+import {
+  LANGUAGE_NAVIGATION_STORAGE_KEY,
+} from '../languageNavigationState';
+import {
+  LANGUAGE_STORAGE_KEY,
+} from '../localeRouting';
+import {
+  PORTFOLIO_SESSION_STATE_STORAGE_KEY,
+  parsePortfolioSessionState,
+} from '../portfolioSessionState';
 
-const LANGUAGE_STORAGE_KEY =
-  'jnr-language-v1';
+const getPersistedPortfolioSessionState =
+  async (
+    page: Parameters<
+      Parameters<
+        typeof test
+      >[1]
+    >[0]['page'],
+  ) => {
+    const rawState =
+      await page.evaluate(
+        (
+          storageKey,
+        ) =>
+          window.sessionStorage.getItem(
+            storageKey,
+          ),
+        PORTFOLIO_SESSION_STATE_STORAGE_KEY,
+      );
 
-const LANGUAGE_NAVIGATION_STORAGE_KEY =
-  'jnr-language-navigation-v1';
-
-const PORTFOLIO_SESSION_STATE_STORAGE_KEY =
-  'jnr-portfolio-session-state-v1';
+    return parsePortfolioSessionState(
+      rawState,
+    );
+  };
 
 test.beforeEach(
   async ({
@@ -120,6 +145,18 @@ test.describe(
           );
         }
 
+        const expectedExperienceId =
+          experienceTriggerId.replace(
+            'experience-trigger-',
+            '',
+          );
+
+        const expectedVendorId =
+          educationTriggerId.replace(
+            'education-trigger-',
+            '',
+          );
+
         /*
          * Place the Education trigger deliberately inside the viewport rather
          * than leaving it aligned to a browser-generated scroll position.
@@ -159,42 +196,19 @@ test.describe(
         );
 
         await expect
-          .poll(() =>
-            page.evaluate(
-              (
-                storageKey,
-              ) => {
-                const rawState =
-                  window.sessionStorage.getItem(
-                    storageKey,
-                  );
-
-                if (!rawState) {
-                  return null;
-                }
-
-                return JSON.parse(
-                  rawState,
-                );
-              },
-              PORTFOLIO_SESSION_STATE_STORAGE_KEY,
-            ),
+          .poll(
+            async () =>
+              getPersistedPortfolioSessionState(
+                page,
+              ),
           )
-          .toEqual(
-            expect.objectContaining({
-              version: 1,
-              expandedExperienceId:
-                experienceTriggerId.replace(
-                  'experience-trigger-',
-                  '',
-                ),
-              expandedVendorId:
-                educationTriggerId.replace(
-                  'education-trigger-',
-                  '',
-                ),
-            }),
-          );
+          .toEqual({
+            version: 1,
+            expandedExperienceId:
+              expectedExperienceId,
+            expandedVendorId:
+              expectedVendorId,
+          });
 
         const scrollYBefore =
           await page.evaluate(
@@ -298,22 +312,146 @@ test.describe(
           .toBeNull();
 
         /*
-         * The meaningful UI state remains available for subsequent reloads
-         * during the lifetime of this browser tab.
+         * Meaningful UI state remains available for subsequent reloads during
+         * the lifetime of this browser tab.
          */
         await expect
-          .poll(() =>
-            page.evaluate(
-              (
-                storageKey,
-              ) =>
-                window.sessionStorage.getItem(
-                  storageKey,
-                ),
-              PORTFOLIO_SESSION_STATE_STORAGE_KEY,
-            ),
+          .poll(
+            async () =>
+              getPersistedPortfolioSessionState(
+                page,
+              ),
           )
-          .not.toBeNull();
+          .toEqual({
+            version: 1,
+            expandedExperienceId:
+              expectedExperienceId,
+            expandedVendorId:
+              expectedVendorId,
+          });
+      },
+    );
+
+    test(
+      'vendor selected from the certifications carousel remains expanded after reload',
+      async ({
+        page,
+      }) => {
+        await page.goto(
+          '/es/',
+        );
+
+        /*
+         * Reduced motion is enabled in beforeEach, so the carousel is stable
+         * and can be exercised without coupling this session-state test to its
+         * autoplay implementation.
+         */
+        const certificationsViewport =
+          page.getByTestId(
+            'certifications-viewport',
+          );
+
+        await certificationsViewport.scrollIntoViewIfNeeded();
+
+        const awsLogo =
+          certificationsViewport.getByRole(
+            'button',
+            {
+              name: /AWS/i,
+            },
+          );
+
+        const awsEducationTrigger =
+          page.getByRole(
+            'button',
+            {
+              name: /Amazon Web Services \(AWS\)/i,
+            },
+          );
+
+        await expect(
+          awsEducationTrigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'false',
+        );
+
+        await awsLogo.click();
+
+        await expect(
+          awsEducationTrigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'true',
+        );
+
+        const educationTriggerId =
+          await awsEducationTrigger.getAttribute(
+            'id',
+          );
+
+        expect(
+          educationTriggerId,
+        ).not.toBeNull();
+
+        if (!educationTriggerId) {
+          throw new Error(
+            'Expected AWS Education trigger to expose a stable ID.',
+          );
+        }
+
+        const expectedVendorId =
+          educationTriggerId.replace(
+            'education-trigger-',
+            '',
+          );
+
+        await expect
+          .poll(
+            async () =>
+              getPersistedPortfolioSessionState(
+                page,
+              ),
+          )
+          .toEqual(
+            expect.objectContaining({
+              version: 1,
+              expandedVendorId:
+                expectedVendorId,
+            }),
+          );
+
+        await page.reload({
+          waitUntil:
+            'networkidle',
+        });
+
+        const restoredAwsEducationTrigger =
+          page.locator(
+            `#${educationTriggerId}`,
+          );
+
+        await expect(
+          restoredAwsEducationTrigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'true',
+        );
+
+        await expect
+          .poll(
+            async () =>
+              getPersistedPortfolioSessionState(
+                page,
+              ),
+          )
+          .toEqual(
+            expect.objectContaining({
+              version: 1,
+              expandedVendorId:
+                expectedVendorId,
+            }),
+          );
       },
     );
   },
