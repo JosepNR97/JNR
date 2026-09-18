@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { updatePortfolioSessionState } from '../portfolioSessionState';
 import { scrollToElementAfterLayout } from '../scrollToElement';
 import {
   BriefcaseIcon,
@@ -36,10 +37,20 @@ export const Experience = ({
     const shouldExpand =
       expandedId !== itemId;
 
-    setExpandedId(
+    const nextExpandedId =
       shouldExpand
         ? itemId
-        : null,
+        : null;
+
+    setExpandedId(
+      nextExpandedId,
+    );
+
+    updatePortfolioSessionState(
+      {
+        expandedExperienceId:
+          nextExpandedId,
+      },
     );
 
     if (shouldExpand) {
