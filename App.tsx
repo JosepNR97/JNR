@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useState,
 } from 'react';
@@ -23,10 +24,85 @@ import {
   restoreLanguageNavigationPosition,
 } from './languageNavigationState';
 import {
+  persistExpandedExperienceId,
+  persistExpandedVendorId,
+  persistPortfolioReloadPosition,
   readPortfolioSessionState,
-  updatePortfolioSessionState,
 } from './portfolioSessionState';
 import { scrollToElementAfterLayout } from './scrollToElement';
+
+const getCurrentLocation =
+  (): string =>
+    `${window.location.pathname}${window.location.search}${window.location.hash}`;
+
+const isReloadNavigation =
+  (): boolean => {
+    if (
+      typeof PerformanceNavigationTiming ===
+      'undefined'
+    ) {
+      return false;
+    }
+
+    return performance
+      .getEntriesByType(
+        'navigation',
+      )
+      .some(
+        (
+          entry,
+        ) =>
+          entry instanceof
+            PerformanceNavigationTiming &&
+          entry.type ===
+            'reload',
+      );
+  };
+
+const restoreDocumentScrollY = (
+  scrollY: number,
+): void => {
+  const maximumScrollY =
+    Math.max(
+      0,
+      document.documentElement
+        .scrollHeight -
+        window.innerHeight,
+    );
+
+  const clampedScrollY =
+    Math.max(
+      0,
+      Math.min(
+        scrollY,
+        maximumScrollY,
+      ),
+    );
+
+  const documentElement =
+    document.documentElement;
+
+  const previousScrollBehavior =
+    documentElement.style
+      .scrollBehavior;
+
+  documentElement.style
+    .scrollBehavior =
+    'auto';
+
+  window.scrollTo({
+    top:
+      clampedScrollY,
+    left:
+      0,
+    behavior:
+      'auto',
+  });
+
+  documentElement.style
+    .scrollBehavior =
+    previousScrollBehavior;
+};
 
 const restoreHashPositionAfterMount =
   () => {
@@ -70,8 +146,10 @@ const restoreHashPositionAfterMount =
       'auto';
 
     target.scrollIntoView({
-      block: 'start',
-      behavior: 'auto',
+      block:
+        'start',
+      behavior:
+        'auto',
     });
 
     documentElement.style
@@ -94,10 +172,6 @@ const Portfolio = () => {
       ),
   );
 
-  /*
-   * Meaningful UI state belongs to the tab session, independently from the
-   * one-shot locale-navigation snapshot.
-   */
   const [
     portfolioSessionState,
     setPortfolioSessionState,
@@ -105,13 +179,89 @@ const Portfolio = () => {
     readPortfolioSessionState,
   );
 
+  /*
+   * Only a real browser reload may consume the persisted reload position.
+   * Direct navigation, Back/Forward and locale navigation must not replay it.
+   */
+  const [
+    reloadPosition,
+  ] = useState(
+    () => {
+      if (
+        !isReloadNavigation()
+      ) {
+        return null;
+      }
+
+      const candidate =
+        portfolioSessionState
+          .reloadPosition;
+
+      if (
+        !candidate ||
+        candidate.location !==
+          getCurrentLocation()
+      ) {
+        return null;
+      }
+
+      return candidate;
+    },
+  );
+
+  /*
+   * pagehide runs immediately before a reload or document navigation and is
+   * compatible with the browser page lifecycle. The captured coordinate is
+   * only consumed by a later document when that navigation is confirmed to
+   * have been an actual reload.
+   */
+  useEffect(() => {
+    const handlePageHide =
+      () => {
+        persistPortfolioReloadPosition({
+          location:
+            getCurrentLocation(),
+          scrollY:
+            Math.max(
+              0,
+              window.scrollY,
+            ),
+        });
+      };
+
+    window.addEventListener(
+      'pagehide',
+      handlePageHide,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'pagehide',
+        handlePageHide,
+      );
+    };
+  }, []);
+
   useLayoutEffect(() => {
-    if (
-      !languageNavigationState
-    ) {
+    const restorePosition =
+      languageNavigationState
+        ? () => {
+            restoreLanguageNavigationPosition(
+              languageNavigationState,
+            );
+          }
+        : reloadPosition
+          ? () => {
+              restoreDocumentScrollY(
+                reloadPosition.scrollY,
+              );
+            }
+          : null;
+
+    if (!restorePosition) {
       /*
-       * Direct entry or reload: URL fragments remain authoritative.
-       * Without a fragment, native browser scroll restoration is left alone.
+       * A normal document entry has no transient viewport snapshot.
+       * Explicit URL fragments therefore remain authoritative.
        */
       restoreHashPositionAfterMount();
 
@@ -124,15 +274,13 @@ const Portfolio = () => {
     const pendingAnimationFrames =
       new Set<number>();
 
-    const restorePosition =
+    const applyRestoration =
       () => {
         if (cancelled) {
           return;
         }
 
-        restoreLanguageNavigationPosition(
-          languageNavigationState,
-        );
+        restorePosition();
       };
 
     const requestTrackedAnimationFrame =
@@ -166,18 +314,22 @@ const Portfolio = () => {
       () => {
         requestTrackedAnimationFrame(
           () => {
-            restorePosition();
+            applyRestoration();
 
             requestTrackedAnimationFrame(
               () => {
-                restorePosition();
+                applyRestoration();
               },
             );
           },
         );
       };
 
-    restorePosition();
+    /*
+     * Expanded panels already exist in the first React layout because their
+     * state was synchronously reconstructed from portfolioSessionState.
+     */
+    applyRestoration();
     restoreAcrossAnimationFrames();
 
     const restoreAfterFonts =
@@ -186,8 +338,8 @@ const Portfolio = () => {
           await document.fonts.ready;
         } catch {
           /*
-           * Font readiness improves geometric stability but is not required
-           * for navigation to remain functional.
+           * Font readiness improves geometric stability but must never make
+           * navigation dependent on successful font loading.
            */
         }
 
@@ -195,7 +347,7 @@ const Portfolio = () => {
           return;
         }
 
-        restorePosition();
+        applyRestoration();
         restoreAcrossAnimationFrames();
       };
 
@@ -207,7 +359,7 @@ const Portfolio = () => {
           return;
         }
 
-        restorePosition();
+        applyRestoration();
         restoreAcrossAnimationFrames();
       };
 
@@ -221,16 +373,21 @@ const Portfolio = () => {
         'load',
         restoreAfterLoad,
         {
-          once: true,
+          once:
+            true,
         },
       );
     }
 
     /*
-     * Geometry from a locale hand-off is one-shot. Accordion state is stored
-     * independently and therefore remains available after this is cleared.
+     * Only the locale-transition geometry is one-shot. Reload position is
+     * tab-scoped and will simply be replaced by the next pagehide.
      */
-    clearLanguageNavigationState();
+    if (
+      languageNavigationState
+    ) {
+      clearLanguageNavigationState();
+    }
 
     return () => {
       cancelled =
@@ -254,7 +411,56 @@ const Portfolio = () => {
     };
   }, [
     languageNavigationState,
+    reloadPosition,
   ]);
+
+  /*
+   * These two setters are the single synchronization boundary between React
+   * UI state and its tab-scoped persisted representation.
+   */
+  const setExpandedExperienceId =
+    useCallback(
+      (
+        expandedExperienceId:
+          string | null,
+      ) => {
+        setPortfolioSessionState(
+          (
+            currentState,
+          ) => ({
+            ...currentState,
+            expandedExperienceId,
+          }),
+        );
+
+        persistExpandedExperienceId(
+          expandedExperienceId,
+        );
+      },
+      [],
+    );
+
+  const setExpandedVendorId =
+    useCallback(
+      (
+        expandedVendorId:
+          string | null,
+      ) => {
+        setPortfolioSessionState(
+          (
+            currentState,
+          ) => ({
+            ...currentState,
+            expandedVendorId,
+          }),
+        );
+
+        persistExpandedVendorId(
+          expandedVendorId,
+        );
+      },
+      [],
+    );
 
   const handleExperienceToggle =
     useCallback(
@@ -266,25 +472,11 @@ const Portfolio = () => {
             .expandedExperienceId !==
           itemId;
 
-        const nextExpandedId =
+        setExpandedExperienceId(
           shouldExpand
             ? itemId
-            : null;
-
-        setPortfolioSessionState(
-          (
-            currentState,
-          ) => ({
-            ...currentState,
-            expandedExperienceId:
-              nextExpandedId,
-          }),
+            : null,
         );
-
-        updatePortfolioSessionState({
-          expandedExperienceId:
-            nextExpandedId,
-        });
 
         if (shouldExpand) {
           scrollToElementAfterLayout(
@@ -295,6 +487,7 @@ const Portfolio = () => {
       [
         portfolioSessionState
           .expandedExperienceId,
+        setExpandedExperienceId,
       ],
     );
 
@@ -308,25 +501,11 @@ const Portfolio = () => {
             .expandedVendorId !==
           vendorId;
 
-        const nextExpandedVendorId =
+        setExpandedVendorId(
           shouldExpand
             ? vendorId
-            : null;
-
-        setPortfolioSessionState(
-          (
-            currentState,
-          ) => ({
-            ...currentState,
-            expandedVendorId:
-              nextExpandedVendorId,
-          }),
+            : null,
         );
-
-        updatePortfolioSessionState({
-          expandedVendorId:
-            nextExpandedVendorId,
-        });
 
         if (shouldExpand) {
           scrollToElementAfterLayout(
@@ -337,6 +516,7 @@ const Portfolio = () => {
       [
         portfolioSessionState
           .expandedVendorId,
+        setExpandedVendorId,
       ],
     );
 
@@ -345,26 +525,17 @@ const Portfolio = () => {
       (
         vendorId: string,
       ) => {
-        setPortfolioSessionState(
-          (
-            currentState,
-          ) => ({
-            ...currentState,
-            expandedVendorId:
-              vendorId,
-          }),
+        setExpandedVendorId(
+          vendorId,
         );
-
-        updatePortfolioSessionState({
-          expandedVendorId:
-            vendorId,
-        });
 
         scrollToElementAfterLayout(
           `education-card-${vendorId}`,
         );
       },
-      [],
+      [
+        setExpandedVendorId,
+      ],
     );
 
   const handleSkipToContent =
