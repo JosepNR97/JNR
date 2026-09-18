@@ -1,23 +1,23 @@
 export const PORTFOLIO_SESSION_STATE_STORAGE_KEY =
-  'jnr-portfolio-session-state-v1';
+  'jnr-portfolio-session-state-v2';
 
-export interface PortfolioSessionState {
-  version: 1;
-  expandedExperienceId: string | null;
-  expandedVendorId: string | null;
+export interface PortfolioReloadPosition {
+  location: string;
+  scrollY: number;
 }
 
-type PortfolioSessionStateUpdate = Partial<
-  Pick<
-    PortfolioSessionState,
-    'expandedExperienceId' | 'expandedVendorId'
-  >
->;
+export interface PortfolioSessionState {
+  version: 2;
+  expandedExperienceId: string | null;
+  expandedVendorId: string | null;
+  reloadPosition: PortfolioReloadPosition | null;
+}
 
 const EMPTY_PORTFOLIO_SESSION_STATE: PortfolioSessionState = {
-  version: 1,
+  version: 2,
   expandedExperienceId: null,
   expandedVendorId: null,
+  reloadPosition: null,
 };
 
 const isRecord = (
@@ -32,6 +32,29 @@ const isNullableString = (
   value === null ||
   typeof value === 'string';
 
+const isPortfolioReloadPosition = (
+  value: unknown,
+): value is PortfolioReloadPosition => {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.location === 'string' &&
+    typeof value.scrollY === 'number' &&
+    Number.isFinite(value.scrollY) &&
+    value.scrollY >= 0
+  );
+};
+
+const isNullablePortfolioReloadPosition = (
+  value: unknown,
+): value is PortfolioReloadPosition | null =>
+  value === null ||
+  isPortfolioReloadPosition(
+    value,
+  );
+
 const isPortfolioSessionState = (
   value: unknown,
 ): value is PortfolioSessionState => {
@@ -40,12 +63,15 @@ const isPortfolioSessionState = (
   }
 
   return (
-    value.version === 1 &&
+    value.version === 2 &&
     isNullableString(
       value.expandedExperienceId,
     ) &&
     isNullableString(
       value.expandedVendorId,
+    ) &&
+    isNullablePortfolioReloadPosition(
+      value.reloadPosition,
     )
   );
 };
@@ -100,8 +126,7 @@ export const readPortfolioSessionState =
       if (!parsedState) {
         /*
          * Malformed or obsolete session data must not be retried on every
-         * render. Reset the persisted entry and continue with the safe
-         * default state.
+         * render. Remove it and continue from the safe default state.
          */
         window.sessionStorage.removeItem(
           PORTFOLIO_SESSION_STATE_STORAGE_KEY,
@@ -113,15 +138,15 @@ export const readPortfolioSessionState =
       return parsedState;
     } catch {
       /*
-       * sessionStorage can be unavailable in restrictive environments.
-       * Persistence is an enhancement; portfolio interaction must continue.
+       * sessionStorage may be unavailable in restrictive environments.
+       * Session continuity is an enhancement and must never break the UI.
        */
       return getEmptyPortfolioSessionState();
     }
   };
 
-export const updatePortfolioSessionState = (
-  update: PortfolioSessionStateUpdate,
+const writePortfolioSessionState = (
+  nextState: PortfolioSessionState,
 ): void => {
   if (
     typeof window === 'undefined'
@@ -130,15 +155,6 @@ export const updatePortfolioSessionState = (
   }
 
   try {
-    const currentState =
-      readPortfolioSessionState();
-
-    const nextState: PortfolioSessionState = {
-      ...currentState,
-      ...update,
-      version: 1,
-    };
-
     window.sessionStorage.setItem(
       PORTFOLIO_SESSION_STATE_STORAGE_KEY,
       JSON.stringify(
@@ -147,7 +163,61 @@ export const updatePortfolioSessionState = (
     );
   } catch {
     /*
-     * A storage failure must never prevent accordion interaction.
+     * A storage failure must never prevent normal portfolio interaction.
      */
   }
+};
+
+const updatePortfolioSessionState = (
+  updater: (
+    currentState: PortfolioSessionState,
+  ) => PortfolioSessionState,
+): void => {
+  const currentState =
+    readPortfolioSessionState();
+
+  writePortfolioSessionState(
+    updater(
+      currentState,
+    ),
+  );
+};
+
+export const persistExpandedExperienceId = (
+  expandedExperienceId: string | null,
+): void => {
+  updatePortfolioSessionState(
+    (
+      currentState,
+    ) => ({
+      ...currentState,
+      expandedExperienceId,
+    }),
+  );
+};
+
+export const persistExpandedVendorId = (
+  expandedVendorId: string | null,
+): void => {
+  updatePortfolioSessionState(
+    (
+      currentState,
+    ) => ({
+      ...currentState,
+      expandedVendorId,
+    }),
+  );
+};
+
+export const persistPortfolioReloadPosition = (
+  reloadPosition: PortfolioReloadPosition,
+): void => {
+  updatePortfolioSessionState(
+    (
+      currentState,
+    ) => ({
+      ...currentState,
+      reloadPosition,
+    }),
+  );
 };
