@@ -41,36 +41,75 @@ when English is selected.
 
 The application does not create a fragment merely because a particular section happens to be visible. A clean localized URL therefore remains clean.
 
-## Tab-scoped portfolio UI state
+## Tab-scoped portfolio state
 
 Meaningful browsing state is retained for the lifetime of the current browser tab.
 
-`portfolioSessionState.ts` owns this persisted UI contract. It currently stores:
+`portfolioSessionState.ts` owns this persisted contract. It contains:
 
 - the expanded Experience item, if any;
-- the expanded professional Education provider, if any.
+- the expanded professional Education provider, if any;
+- the most recent document location and scroll coordinate captured before the document is left.
 
-The state is stored in `sessionStorage`, not `localStorage`.
+The state uses `sessionStorage`, not `localStorage`.
 
-This means that it survives document reloads and locale changes in the same tab without becoming a long-term preference that unexpectedly reappears in a future browser session.
+It therefore survives reloads and locale changes within the same tab without becoming a long-term preference that unexpectedly reappears in an unrelated future browser session.
 
-`App` is the single React owner of this state. Experience and Education are controlled components and do not access browser storage directly.
+`App` is the single React owner of expandable portfolio UI state. Experience and Education are controlled components and do not access browser storage directly.
 
-Every user interaction that changes one of these expanded states updates both the React state and the tab-scoped persistence layer.
+The synchronization boundary between React state and `sessionStorage` is centralized in `App`, while the storage module owns serialization, validation and persistence.
 
-This includes selecting a professional certification provider directly from Education and selecting the same provider through the Certifications carousel.
+Selecting a professional provider directly in Education and selecting the same provider through the Certifications carousel both use the same state path.
 
-On the next document mount, the persisted values are read synchronously and used as initial React state. Expanded content therefore exists in the initial mounted layout rather than being opened later in an effect.
+Transient interaction state such as hover, keyboard focus, mobile navigation overlays, carousel autoplay progress and animation state is intentionally not persisted.
 
-This is particularly important for reloads because native browser scroll restoration then operates against the same expanded document geometry that the user was viewing before the reload.
+## Expanded content restoration
 
-Transient interaction state such as hover, keyboard focus, mobile navigation overlays, carousel autoplay progress, and animation state is intentionally not persisted.
+Experience and professional Education use stable IDs that are common to all three translations.
+
+Their persisted IDs are read synchronously during the initial application render.
+
+Expanded panels therefore exist in the first mounted layout rather than being opened later by an effect.
+
+This is important for both reload and locale continuity because viewport restoration is calculated against the same meaningful UI geometry the user was previously browsing.
+
+Closing an accordion explicitly stores `null`, so a later reload does not reopen content the user intentionally closed.
+
+## Reload continuity
+
+A normal browser reload is treated differently from other document navigations.
+
+Immediately before the current document is hidden, `pagehide` stores:
+
+- the exact pathname, query string and fragment;
+- the current vertical scroll coordinate.
+
+The next document considers that coordinate only when `PerformanceNavigationTiming` identifies the navigation as an actual `reload`.
+
+The stored location must also exactly match the newly loaded location.
+
+This prevents a coordinate captured on one page from being replayed during:
+
+- direct navigation;
+- a locale change;
+- Back/Forward navigation;
+- a visit to another localized URL.
+
+On an actual reload, expanded Experience and Education state is reconstructed first. The saved scroll coordinate is then restored against that layout.
+
+The restoration is corrected during initial layout settlement so late font or resource metrics do not leave the user at a different visual position.
+
+This makes F5 continuity an explicit application contract instead of depending on browser-native scroll restoration behavior.
+
+If an explicit fragment is present during an actual reload, the reload snapshot takes priority for that immediate reload because the user may have moved away from the beginning of the referenced section.
+
+For a fresh direct navigation with no valid reload snapshot, the URL fragment remains authoritative.
 
 ## Locale-transition navigation state
 
 A separate one-shot state exists exclusively for locale-to-locale navigation.
 
-`languageNavigationState.ts` does not store portfolio UI state.
+`languageNavigationState.ts` does not store portfolio accordion state.
 
 Its responsibility is limited to the geometry required to preserve the user's visual position when translated content changes height.
 
@@ -83,15 +122,15 @@ Immediately before changing locale, it records:
 - that anchor's vertical position inside the viewport;
 - the current absolute scroll position as a fallback.
 
-The destination document accepts this snapshot only when it is structurally valid, has not expired, targets the current locale, and matches the exact loaded pathname, query string, and fragment.
+The destination document accepts this snapshot only when it is structurally valid, has not expired, targets the current locale and matches the exact loaded pathname, query string and fragment.
 
-Invalid, stale, or mismatched snapshots are discarded.
+Invalid, stale or mismatched snapshots are discarded.
 
 ## Viewport restoration across translations
 
 The portfolio does not simply copy an absolute `scrollY` value from one language to another.
 
-Catalan, Spanish, and English content can occupy different vertical space, so the same absolute page coordinate may represent different content after translation.
+Catalan, Spanish and English content can occupy different vertical space, so the same absolute page coordinate may represent different content after translation.
 
 Instead, the source document identifies a stable DOM anchor around a reading point within the viewport.
 
@@ -107,13 +146,30 @@ At the beginning or end of the document, the requested position is clamped to th
 
 Viewport restoration runs without smooth scrolling so a language change does not visibly animate from the top of the new document.
 
+## Restoration priority
+
+Viewport restoration follows a single priority order:
+
+1. a valid locale-transition snapshot;
+2. a valid reload position for an actual reload of the exact same location;
+3. an explicit URL fragment;
+4. otherwise no application-driven scroll restoration.
+
+This prevents the independent navigation mechanisms from competing with each other.
+
+The locale snapshot wins during a language change because translated content may have different geometry.
+
+The reload snapshot wins during F5 because it represents the precise position the user occupied immediately before reloading.
+
+A fragment remains authoritative for normal direct navigation, bookmarks and shared URLs.
+
 ## Initial layout settlement
 
-A localized document can continue changing geometry shortly after React mounts.
+A document can continue changing geometry shortly after React mounts.
 
-The portfolio uses local Inter and Playfair Display webfonts, and final font metrics can reflow translated content after the first React layout pass.
+The portfolio uses local Inter and Playfair Display webfonts, and final font metrics can reflow content after the first React layout pass.
 
-For this reason, locale-transition viewport restoration is corrected at deterministic settlement points:
+For both locale-transition and reload restoration, the selected position is corrected at deterministic settlement points:
 
 1. immediately after the destination React layout is committed;
 2. across the following animation frames;
@@ -124,35 +180,25 @@ For this reason, locale-transition viewport restoration is corrected at determin
 
 This avoids relying on an arbitrary timeout.
 
-Once the destination document has accepted the locale-transition snapshot, the persisted copy is removed from `sessionStorage`. The already validated in-memory value remains available only long enough to perform these initial corrective passes.
+Only the locale-transition snapshot is one-shot. Once accepted by the destination document, its persisted copy is removed.
 
-## Reload behavior
-
-An ordinary reload does not create or consume a locale-transition snapshot.
-
-Expanded portfolio UI state is reconstructed from `portfolioSessionState` before the mounted application is presented.
-
-With no explicit fragment, normal browser history and reload scroll restoration remains responsible for the document position.
-
-With an explicit URL fragment, the fragment remains authoritative.
-
-This means that reloading the current tab preserves meaningful open content without replaying stale geometry from a previous language change.
+The reload coordinate belongs to the tab-scoped portfolio state and is replaced by the next `pagehide`.
 
 ## Direct URLs and fragments
 
-When no valid locale-transition snapshot exists, the URL is authoritative for explicit fragment navigation.
+When neither a valid locale-transition snapshot nor a valid reload snapshot applies, the URL is authoritative for explicit fragment navigation.
 
 For example:
 
 `/JNR/en/#experience`
 
-must navigate to Experience when opened directly, through a bookmark, after a normal direct load, or from an external link.
+must navigate to Experience when opened directly, through a bookmark or from an external link.
 
 Localized portfolio sections are created by React, so the browser can initially encounter the fragment before the corresponding DOM element exists.
 
 After React mounts, the application explicitly resolves the current fragment and restores its target. This complements native fragment navigation.
 
-During an explicit language switch, an existing fragment remains present in the destination URL, but the valid one-shot viewport snapshot controls that immediate transition so that a user deeper inside the section is not unnecessarily moved back to its beginning.
+During an explicit language switch, an existing fragment remains present in the destination URL, but the valid one-shot locale snapshot controls that immediate transition so that a user deeper inside the section is not unnecessarily moved back to its beginning.
 
 ## Root entry point
 
@@ -181,7 +227,7 @@ The 404 page resolves its display language using:
 4. a supported browser language;
 5. Spanish as the final fallback.
 
-The document remains `noindex` and localizes its `lang`, title, description, message, and return action client-side.
+The document remains `noindex` and localizes its `lang`, title, description, message and return action client-side.
 
 Its return action points directly to the resolved localized portfolio URL instead of navigating through `/JNR/`.
 
@@ -195,19 +241,33 @@ The sitemap lists only the three canonical locale URLs and includes reciprocal `
 
 Different test layers intentionally validate different responsibilities.
 
-Vitest validates the `portfolioSessionState` persistence contract, including valid reads, malformed or obsolete storage, partial updates, and explicit closed-state persistence.
+Vitest validates the `portfolioSessionState` persistence contract, including:
 
-Component tests validate controlled accordion behavior and accessibility semantics without coupling components to browser storage.
+- safe empty defaults;
+- valid persisted state;
+- malformed JSON;
+- invalid persisted schemas;
+- obsolete versions;
+- independent accordion updates;
+- explicit closed state;
+- reload-position persistence.
 
-Playwright validates user-visible continuity in a real Chromium browser:
+Component tests validate controlled accordion behavior and accessibility semantics without coupling those components to browser storage.
 
-- expanded Experience and Education content survives reload;
-- a provider opened from the Certifications carousel remains expanded after reload;
-- locale changes preserve expanded content;
-- locale changes preserve the user's translated viewport context;
-- explicit query strings and fragments survive locale navigation;
-- direct fragment URLs are restored after React mounts.
+Playwright validates user-visible behavior in Chromium, including:
 
-E2E tests intentionally avoid decoding the internal `sessionStorage` representation. The persistence format is an implementation detail covered by unit tests rather than part of the browser-level behavioral contract.
+- expanded Experience and Education content surviving reload;
+- viewport context surviving reload;
+- a provider opened from the Certifications carousel surviving reload;
+- a logo click selecting its provider;
+- a drag beginning on the same logo not selecting the provider;
+- locale changes preserving expanded content;
+- locale changes preserving translated viewport context;
+- explicit query strings and fragments surviving locale navigation;
+- direct fragment URLs being restored after React mounts.
+
+The click and drag carousel scenarios are separate E2E tests because portfolio state is intentionally persistent within a tab. Playwright's per-test browser-context isolation provides the correct clean-state boundary without manipulating application storage from the test.
+
+E2E tests intentionally avoid decoding or resetting the portfolio `sessionStorage` representation. Its serialized format is an implementation detail covered by unit tests rather than part of the browser-level behavioral contract.
 
 The localized URL remains authoritative for language and SEO.
