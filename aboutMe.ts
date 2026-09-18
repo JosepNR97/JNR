@@ -6,7 +6,7 @@ export const PROFILE_DATA = {
   email: "josepnunez97@gmail.com",
   linkedin: "https://www.linkedin.com/in/josep-nunez-riba",
   website: "https://josepnr97.github.io/JNR/",
-  image: assetPath('people/josep-nunez-riba.webp'),
+  image: assetPath('people/josep-nunez-riba-2.webp'),
   location: {
     ca: "Barcelona",
     es: "Barcelona",
