@@ -2,11 +2,95 @@ import {
   expect,
   test,
 } from '@playwright/test';
+import type {
+  Locator,
+  Page,
+} from '@playwright/test';
 
 test.use({
   reducedMotion:
     'reduce',
 });
+
+const waitForScheduledLayoutScroll =
+  async (
+    page: Page,
+  ) => {
+    await page.evaluate(
+      () =>
+        new Promise<void>(
+          (
+            resolve,
+          ) => {
+            window.requestAnimationFrame(
+              () => {
+                window.requestAnimationFrame(
+                  () => {
+                    resolve();
+                  },
+                );
+              },
+            );
+          },
+        ),
+    );
+  };
+
+const setViewportTop =
+  async (
+    locator: Locator,
+    desiredTop: number,
+  ) => {
+    await locator.evaluate(
+      (
+        element,
+        targetTop,
+      ) => {
+        const rect =
+          element.getBoundingClientRect();
+
+        const documentElement =
+          document.documentElement;
+
+        const previousScrollBehavior =
+          documentElement.style
+            .scrollBehavior;
+
+        documentElement.style
+          .scrollBehavior =
+          'auto';
+
+        window.scrollTo({
+          top:
+            window.scrollY +
+            rect.top -
+            targetTop,
+          left:
+            0,
+          behavior:
+            'auto',
+        });
+
+        documentElement.style
+          .scrollBehavior =
+          previousScrollBehavior;
+      },
+      desiredTop,
+    );
+  };
+
+const getViewportTop =
+  (
+    locator: Locator,
+  ) =>
+    locator.evaluate(
+      (
+        element,
+      ) =>
+        element
+          .getBoundingClientRect()
+          .top,
+    );
 
 test.beforeEach(
   async ({
@@ -25,7 +109,7 @@ test.describe(
   'portfolio tab session state',
   () => {
     test(
-      'reload preserves expanded Experience and Education content',
+      'reload preserves expanded Experience, Education and viewport context',
       async ({
         page,
       }) => {
@@ -89,42 +173,34 @@ test.describe(
         }
 
         /*
-         * Leave the user in the Education area before reloading so the test
-         * also verifies that restoring expanded panels does not collapse the
-         * document back to the top.
+         * Opening an accordion schedules its layout-aware scroll over two
+         * animation frames. Let it finish before establishing the exact
+         * viewport position whose reload continuity we want to validate.
          */
-        await educationTrigger.evaluate(
-          (
-            element,
-          ) => {
-            const rect =
-              element.getBoundingClientRect();
+        await waitForScheduledLayoutScroll(
+          page,
+        );
 
-            const documentElement =
-              document.documentElement;
+        await setViewportTop(
+          educationTrigger,
+          140,
+        );
 
-            const previousScrollBehavior =
-              documentElement.style
-                .scrollBehavior;
+        const viewportTopBefore =
+          await getViewportTop(
+            educationTrigger,
+          );
 
-            documentElement.style
-              .scrollBehavior =
-              'auto';
+        expect(
+          viewportTopBefore,
+        ).toBeGreaterThanOrEqual(
+          139,
+        );
 
-            window.scrollTo({
-              top:
-                window.scrollY +
-                rect.top -
-                140,
-              left: 0,
-              behavior:
-                'auto',
-            });
-
-            documentElement.style
-              .scrollBehavior =
-              previousScrollBehavior;
-          },
+        expect(
+          viewportTopBefore,
+        ).toBeLessThanOrEqual(
+          141,
         );
 
         await page.reload({
@@ -162,37 +238,27 @@ test.describe(
           'true',
         );
 
+        /*
+         * F5 continuity is an explicit application contract instead of an
+         * assumption about Chromium's native scroll restoration.
+         */
         await expect
-          .poll(() =>
-            restoredEducationTrigger.evaluate(
-              (
-                element,
-              ) => {
-                const rect =
-                  element.getBoundingClientRect();
-
-                return (
-                  rect.bottom >
-                    0 &&
-                  rect.top <
-                    window.innerHeight
+          .poll(
+            async () => {
+              const viewportTopAfter =
+                await getViewportTop(
+                  restoredEducationTrigger,
                 );
-              },
-            ),
+
+              return Math.abs(
+                viewportTopAfter -
+                  viewportTopBefore,
+              );
+            },
           )
-          .toBe(true);
-
-        const scrollYAfter =
-          await page.evaluate(
-            () =>
-              window.scrollY,
+          .toBeLessThanOrEqual(
+            4,
           );
-
-        expect(
-          scrollYAfter,
-        ).toBeGreaterThan(
-          0,
-        );
       },
     );
 
@@ -216,7 +282,8 @@ test.describe(
           certificationsViewport.getByRole(
             'button',
             {
-              name: /AWS/i,
+              name:
+                /AWS/i,
             },
           );
 
