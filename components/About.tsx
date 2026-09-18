@@ -38,8 +38,8 @@ export const About: React.FC = () => {
               <img
                 src={PROFILE_DATA.image}
                 alt={PROFILE_DATA.name}
-                width="1132"
-                height="877"
+                width="1254"
+                height="1254"
                 loading="lazy"
                 decoding="async"
                 className="w-full h-full object-cover object-top transform transition-transform duration-500 group-hover:scale-105"
