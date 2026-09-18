@@ -1,64 +1,350 @@
-import { useState } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import {
+  useState,
+} from 'react';
+import {
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
-import { LanguageProvider } from '../context/LanguageContext';
-import { Education } from './Education';
+import {
+  vi,
+} from 'vitest';
+import {
+  LanguageProvider,
+} from '../context/LanguageContext';
+import {
+  Education,
+} from './Education';
 
-const EducationHarness = () => {
-  const [expandedVendorId, setExpandedVendorId] = useState<string | null>(null);
+const EducationHarness =
+  () => {
+    const [
+      expandedVendorId,
+      setExpandedVendorId,
+    ] = useState<
+      string | null
+    >(null);
 
-  const handleVendorToggle = (vendorId: string) => {
-    setExpandedVendorId((current) => (current === vendorId ? null : vendorId));
+    const handleVendorToggle =
+      (
+        vendorId: string,
+      ) => {
+        setExpandedVendorId(
+          (current) =>
+            current ===
+            vendorId
+              ? null
+              : vendorId,
+        );
+      };
+
+    return (
+      <Education
+        expandedVendorId={
+          expandedVendorId
+        }
+        onVendorToggle={
+          handleVendorToggle
+        }
+      />
+    );
   };
 
-  return <Education expandedVendorId={expandedVendorId} onVendorToggle={handleVendorToggle} />;
-};
+describe(
+  'Education',
+  () => {
+    it('renders each certification as its own card in an expanded vendor panel', () => {
+      window.localStorage.setItem(
+        'jnr-language-v1',
+        'en',
+      );
 
-describe('Education', () => {
-  it('renders each certification as its own card in an expanded vendor panel', () => {
-    window.localStorage.setItem('jnr-language-v1', 'en');
+      render(
+        <LanguageProvider>
+          <Education
+            expandedVendorId="v_ms"
+            onVendorToggle={
+              vi.fn()
+            }
+          />
+        </LanguageProvider>,
+      );
 
-    render(
-      <LanguageProvider>
-        <Education expandedVendorId="v_ms" onVendorToggle={vi.fn()} />
-      </LanguageProvider>,
-    );
+      const panel =
+        screen.getByRole(
+          'region',
+          {
+            name: /Microsoft Azure/i,
+          },
+        );
 
-    const panel = screen.getByRole('region', { name: /Microsoft Azure/i });
-    expect(within(panel).getAllByRole('listitem')).toHaveLength(4);
-    expect(panel.querySelector('ul')).toHaveClass('sm:grid-cols-2');
+      expect(
+        within(
+          panel,
+        ).getAllByRole(
+          'listitem',
+        ),
+      ).toHaveLength(4);
 
-    const badge = panel.querySelector('img[src*="azure-ai-fundamentals"]');
-    expect(badge).toHaveAttribute('loading', 'eager');
-    expect(badge).toHaveAttribute('decoding', 'sync');
-    expect(badge).toHaveClass('h-12', 'w-12', 'object-contain');
-  });
+      expect(
+        panel.querySelector(
+          'ul',
+        ),
+      ).toHaveClass(
+        'sm:grid-cols-2',
+      );
 
-  it('exposes an expanded vendor panel and restores its credential links to the tab order', async () => {
-    window.localStorage.setItem('jnr-language-v1', 'en');
-    const user = userEvent.setup();
+      const badge =
+        panel.querySelector(
+          'img[src*="azure-ai-fundamentals"]',
+        );
 
-    render(
-      <LanguageProvider>
-        <EducationHarness />
-      </LanguageProvider>,
-    );
+      expect(
+        badge,
+      ).toHaveAttribute(
+        'loading',
+        'eager',
+      );
 
-    const trigger = screen.getByRole('button', { name: /Microsoft Azure/i });
-    const panelId = trigger.getAttribute('aria-controls');
-    const panel = panelId ? document.getElementById(panelId) : null;
-    const credentialLink = panel?.querySelector('a');
+      expect(
+        badge,
+      ).toHaveAttribute(
+        'decoding',
+        'async',
+      );
 
-    expect(trigger).toHaveAttribute('aria-expanded', 'false');
-    expect(panel).toHaveAttribute('aria-hidden', 'true');
-    expect(credentialLink).toHaveAttribute('tabindex', '-1');
+      expect(
+        badge,
+      ).toHaveAttribute(
+        'width',
+        '64',
+      );
 
-    await user.click(trigger);
+      expect(
+        badge,
+      ).toHaveAttribute(
+        'height',
+        '64',
+      );
 
-    expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    expect(panel).not.toHaveAttribute('aria-hidden');
-    expect(credentialLink).not.toHaveAttribute('tabindex');
-    expect(screen.getByRole('region', { name: /Microsoft Azure/i })).toBeVisible();
-  });
-});
+      expect(
+        badge,
+      ).toHaveClass(
+        'h-12',
+        'w-12',
+        'object-contain',
+      );
+    });
+
+    it('does not assign certification badge sources until the vendor is expanded', async () => {
+      window.localStorage.setItem(
+        'jnr-language-v1',
+        'en',
+      );
+
+      const user =
+        userEvent.setup();
+
+      render(
+        <LanguageProvider>
+          <EducationHarness />
+        </LanguageProvider>,
+      );
+
+      const trigger =
+        screen.getByRole(
+          'button',
+          {
+            name: /GitHub/i,
+          },
+        );
+
+      const panelId =
+        trigger.getAttribute(
+          'aria-controls',
+        );
+
+      const panel =
+        panelId
+          ? document.getElementById(
+              panelId,
+            )
+          : null;
+
+      expect(
+        panel,
+      ).not.toBeNull();
+
+      const badges =
+        panel?.querySelectorAll(
+          'img',
+        );
+
+      expect(
+        badges,
+      ).toHaveLength(2);
+
+      badges?.forEach(
+        (
+          badge,
+        ) => {
+          expect(
+            badge,
+          ).not.toHaveAttribute(
+            'src',
+          );
+        },
+      );
+
+      expect(
+        panel?.querySelectorAll(
+          'source',
+        ),
+      ).toHaveLength(0);
+
+      await user.click(
+        trigger,
+      );
+
+      const loadedBadges =
+        panel?.querySelectorAll(
+          'img',
+        );
+
+      loadedBadges?.forEach(
+        (
+          badge,
+        ) => {
+          expect(
+            badge,
+          ).toHaveAttribute(
+            'src',
+          );
+        },
+      );
+
+      expect(
+        panel?.querySelector(
+          'source[srcset*="generated/certifications/github-actions-192.avif"]',
+        ),
+      ).not.toBeNull();
+
+      expect(
+        panel?.querySelector(
+          'source[srcset*="generated/certifications/github-administration-192.webp"]',
+        ),
+      ).not.toBeNull();
+
+      await user.click(
+        trigger,
+      );
+
+      loadedBadges?.forEach(
+        (
+          badge,
+        ) => {
+          expect(
+            badge,
+          ).toHaveAttribute(
+            'src',
+          );
+        },
+      );
+    });
+
+    it('exposes an expanded vendor panel and restores its credential links to the tab order', async () => {
+      window.localStorage.setItem(
+        'jnr-language-v1',
+        'en',
+      );
+
+      const user =
+        userEvent.setup();
+
+      render(
+        <LanguageProvider>
+          <EducationHarness />
+        </LanguageProvider>,
+      );
+
+      const trigger =
+        screen.getByRole(
+          'button',
+          {
+            name: /Microsoft Azure/i,
+          },
+        );
+
+      const panelId =
+        trigger.getAttribute(
+          'aria-controls',
+        );
+
+      const panel =
+        panelId
+          ? document.getElementById(
+              panelId,
+            )
+          : null;
+
+      const credentialLink =
+        panel?.querySelector(
+          'a',
+        );
+
+      expect(
+        trigger,
+      ).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+
+      expect(
+        panel,
+      ).toHaveAttribute(
+        'aria-hidden',
+        'true',
+      );
+
+      expect(
+        credentialLink,
+      ).toHaveAttribute(
+        'tabindex',
+        '-1',
+      );
+
+      await user.click(
+        trigger,
+      );
+
+      expect(
+        trigger,
+      ).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+
+      expect(
+        panel,
+      ).not.toHaveAttribute(
+        'aria-hidden',
+      );
+
+      expect(
+        credentialLink,
+      ).not.toHaveAttribute(
+        'tabindex',
+      );
+
+      expect(
+        screen.getByRole(
+          'region',
+          {
+            name: /Microsoft Azure/i,
+          },
+        ),
+      ).toBeVisible();
+    });
+  },
+);
