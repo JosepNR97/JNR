@@ -14,7 +14,7 @@ interface GeneratedImageVariant {
 }
 
 const generatedImageModules =
-  import.meta.glob(
+  import.meta.glob<string>(
     './generated-images/**/*.{avif,webp}',
     {
       eager: true,
@@ -23,10 +23,7 @@ const generatedImageModules =
       import:
         'default',
     },
-  ) as Record<
-    string,
-    string
-  >;
+  );
 
 const GENERATED_VARIANT_PATTERN =
   /^\.\/generated-images\/(.+)\/(\d+)\.(avif|webp)$/;
