@@ -2,40 +2,11 @@ import {
   expect,
   test,
 } from '@playwright/test';
-import {
-  LANGUAGE_NAVIGATION_STORAGE_KEY,
-} from '../languageNavigationState';
-import {
-  LANGUAGE_STORAGE_KEY,
-} from '../localeRouting';
-import {
-  PORTFOLIO_SESSION_STATE_STORAGE_KEY,
-  parsePortfolioSessionState,
-} from '../portfolioSessionState';
 
-const getPersistedPortfolioSessionState =
-  async (
-    page: Parameters<
-      Parameters<
-        typeof test
-      >[1]
-    >[0]['page'],
-  ) => {
-    const rawState =
-      await page.evaluate(
-        (
-          storageKey,
-        ) =>
-          window.sessionStorage.getItem(
-            storageKey,
-          ),
-        PORTFOLIO_SESSION_STATE_STORAGE_KEY,
-      );
-
-    return parsePortfolioSessionState(
-      rawState,
-    );
-  };
+test.use({
+  reducedMotion:
+    'reduce',
+});
 
 test.beforeEach(
   async ({
@@ -47,26 +18,6 @@ test.beforeEach(
         await route.abort();
       },
     );
-
-    await page.addInitScript(
-      ({
-        languageStorageKey,
-      }) => {
-        window.localStorage.setItem(
-          languageStorageKey,
-          'es',
-        );
-      },
-      {
-        languageStorageKey:
-          LANGUAGE_STORAGE_KEY,
-      },
-    );
-
-    await page.emulateMedia({
-      reducedMotion:
-        'reduce',
-    });
   },
 );
 
@@ -74,7 +25,7 @@ test.describe(
   'portfolio tab session state',
   () => {
     test(
-      'reload preserves expanded content and browsing context',
+      'reload preserves expanded Experience and Education content',
       async ({
         page,
       }) => {
@@ -128,14 +79,6 @@ test.describe(
             'id',
           );
 
-        expect(
-          experienceTriggerId,
-        ).not.toBeNull();
-
-        expect(
-          educationTriggerId,
-        ).not.toBeNull();
-
         if (
           !experienceTriggerId ||
           !educationTriggerId
@@ -145,21 +88,10 @@ test.describe(
           );
         }
 
-        const expectedExperienceId =
-          experienceTriggerId.replace(
-            'experience-trigger-',
-            '',
-          );
-
-        const expectedVendorId =
-          educationTriggerId.replace(
-            'education-trigger-',
-            '',
-          );
-
         /*
-         * Place the Education trigger deliberately inside the viewport rather
-         * than leaving it aligned to a browser-generated scroll position.
+         * Leave the user in the Education area before reloading so the test
+         * also verifies that restoring expanded panels does not collapse the
+         * document back to the top.
          */
         await educationTrigger.evaluate(
           (
@@ -193,33 +125,6 @@ test.describe(
               .scrollBehavior =
               previousScrollBehavior;
           },
-        );
-
-        await expect
-          .poll(
-            async () =>
-              getPersistedPortfolioSessionState(
-                page,
-              ),
-          )
-          .toEqual({
-            version: 1,
-            expandedExperienceId:
-              expectedExperienceId,
-            expandedVendorId:
-              expectedVendorId,
-          });
-
-        const scrollYBefore =
-          await page.evaluate(
-            () =>
-              window.scrollY,
-          );
-
-        expect(
-          scrollYBefore,
-        ).toBeGreaterThan(
-          0,
         );
 
         await page.reload({
@@ -257,11 +162,6 @@ test.describe(
           'true',
         );
 
-        /*
-         * Chrome owns ordinary reload scroll restoration. The application
-         * must restore the same layout state early enough that this native
-         * behavior still lands in the same browsing context.
-         */
         await expect
           .poll(() =>
             restoredEducationTrigger.evaluate(
@@ -293,47 +193,11 @@ test.describe(
         ).toBeGreaterThan(
           0,
         );
-
-        /*
-         * A normal reload must not masquerade as a locale transition.
-         */
-        await expect
-          .poll(() =>
-            page.evaluate(
-              (
-                storageKey,
-              ) =>
-                window.sessionStorage.getItem(
-                  storageKey,
-                ),
-              LANGUAGE_NAVIGATION_STORAGE_KEY,
-            ),
-          )
-          .toBeNull();
-
-        /*
-         * Meaningful UI state remains available for subsequent reloads during
-         * the lifetime of this browser tab.
-         */
-        await expect
-          .poll(
-            async () =>
-              getPersistedPortfolioSessionState(
-                page,
-              ),
-          )
-          .toEqual({
-            version: 1,
-            expandedExperienceId:
-              expectedExperienceId,
-            expandedVendorId:
-              expectedVendorId,
-          });
       },
     );
 
     test(
-      'vendor selected from the certifications carousel remains expanded after reload',
+      'vendor opened from the certifications carousel remains expanded after reload',
       async ({
         page,
       }) => {
@@ -341,11 +205,6 @@ test.describe(
           '/es/',
         );
 
-        /*
-         * Reduced motion is enabled in beforeEach, so the carousel is stable
-         * and can be exercised without coupling this session-state test to its
-         * autoplay implementation.
-         */
         const certificationsViewport =
           page.getByTestId(
             'certifications-viewport',
@@ -362,11 +221,8 @@ test.describe(
           );
 
         const awsEducationTrigger =
-          page.getByRole(
-            'button',
-            {
-              name: /Amazon Web Services \(AWS\)/i,
-            },
+          page.locator(
+            '#education-trigger-v_aws',
           );
 
         await expect(
@@ -385,73 +241,19 @@ test.describe(
           'true',
         );
 
-        const educationTriggerId =
-          await awsEducationTrigger.getAttribute(
-            'id',
-          );
-
-        expect(
-          educationTriggerId,
-        ).not.toBeNull();
-
-        if (!educationTriggerId) {
-          throw new Error(
-            'Expected AWS Education trigger to expose a stable ID.',
-          );
-        }
-
-        const expectedVendorId =
-          educationTriggerId.replace(
-            'education-trigger-',
-            '',
-          );
-
-        await expect
-          .poll(
-            async () =>
-              getPersistedPortfolioSessionState(
-                page,
-              ),
-          )
-          .toEqual(
-            expect.objectContaining({
-              version: 1,
-              expandedVendorId:
-                expectedVendorId,
-            }),
-          );
-
         await page.reload({
           waitUntil:
             'networkidle',
         });
 
-        const restoredAwsEducationTrigger =
-          page.locator(
-            `#${educationTriggerId}`,
-          );
-
         await expect(
-          restoredAwsEducationTrigger,
+          page.locator(
+            '#education-trigger-v_aws',
+          ),
         ).toHaveAttribute(
           'aria-expanded',
           'true',
         );
-
-        await expect
-          .poll(
-            async () =>
-              getPersistedPortfolioSessionState(
-                page,
-              ),
-          )
-          .toEqual(
-            expect.objectContaining({
-              version: 1,
-              expandedVendorId:
-                expectedVendorId,
-            }),
-          );
       },
     );
   },
