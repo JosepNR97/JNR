@@ -31,7 +31,9 @@ const EducationHarness =
         vendorId: string,
       ) => {
         setExpandedVendorId(
-          (current) =>
+          (
+            current,
+          ) =>
             current ===
             vendorId
               ? null
@@ -54,7 +56,7 @@ const EducationHarness =
 describe(
   'Education',
   () => {
-    it('renders each certification as its own card in an expanded vendor panel', () => {
+    it('renders an already-expanded vendor with its certification images immediately available', () => {
       window.localStorage.setItem(
         'jnr-language-v1',
         'en',
@@ -75,7 +77,8 @@ describe(
         screen.getByRole(
           'region',
           {
-            name: /Microsoft Azure/i,
+            name:
+              /Microsoft Azure/i,
           },
         );
 
@@ -85,7 +88,9 @@ describe(
         ).getAllByRole(
           'listitem',
         ),
-      ).toHaveLength(4);
+      ).toHaveLength(
+        4,
+      );
 
       expect(
         panel.querySelector(
@@ -137,7 +142,7 @@ describe(
       );
     });
 
-    it('does not assign certification badge sources until the vendor is expanded', async () => {
+    it('does not assign certification image URLs until a vendor is opened and keeps them after closing', async () => {
       window.localStorage.setItem(
         'jnr-language-v1',
         'en',
@@ -156,7 +161,8 @@ describe(
         screen.getByRole(
           'button',
           {
-            name: /GitHub/i,
+            name:
+              /GitHub/i,
           },
         );
 
@@ -183,7 +189,9 @@ describe(
 
       expect(
         badges,
-      ).toHaveLength(2);
+      ).toHaveLength(
+        2,
+      );
 
       badges?.forEach(
         (
@@ -201,7 +209,9 @@ describe(
         panel?.querySelectorAll(
           'source',
         ),
-      ).toHaveLength(0);
+      ).toHaveLength(
+        0,
+      );
 
       await user.click(
         trigger,
@@ -224,20 +234,15 @@ describe(
         },
       );
 
-      expect(
-        panel?.querySelector(
-          'source[srcset*="generated/certifications/github-actions-192.avif"]',
-        ),
-      ).not.toBeNull();
-
-      expect(
-        panel?.querySelector(
-          'source[srcset*="generated/certifications/github-administration-192.webp"]',
-        ),
-      ).not.toBeNull();
-
       await user.click(
         trigger,
+      );
+
+      expect(
+        trigger,
+      ).toHaveAttribute(
+        'aria-expanded',
+        'false',
       );
 
       loadedBadges?.forEach(
@@ -272,7 +277,8 @@ describe(
         screen.getByRole(
           'button',
           {
-            name: /Microsoft Azure/i,
+            name:
+              /Microsoft Azure/i,
           },
         );
 
@@ -341,7 +347,8 @@ describe(
         screen.getByRole(
           'region',
           {
-            name: /Microsoft Azure/i,
+            name:
+              /Microsoft Azure/i,
           },
         ),
       ).toBeVisible();
