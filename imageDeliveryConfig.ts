@@ -1,30 +1,68 @@
-export const PROFILE_IMAGE_DELIVERY = {
-  source:
-    'people/josep-nunez-riba-2.png',
-  width: 1254,
-  height: 1254,
-  responsiveWidths: [
-    480,
-    960,
-  ],
-} as const;
+export interface ImageDeliveryRule {
+  widths: readonly number[];
+  avifQuality: number;
+  webpQuality: number;
+}
 
-export const CERTIFICATION_BADGE_DELIVERY = {
-  width: 192,
-  filenames: [
-    'github-actions.png',
-    'github-administration.png',
-    'google-cloud-digital-leader.png',
-    'openAI-chatGPT-deployment-practitioner.png',
-    'openAI-chatGPT-solutions-practitioner.png',
-    'openAI-codex-deployment-practitioner.png',
-    'openAI-codex-solutions-practitioner.png',
-    'openAI-consultative-solutions-practitioner.png',
-    'openAI-foundational-knowledge.png',
-    'openAI-technical-practitioner.png',
-    'safe-agilist.png',
-    'servicenow-welcome.png',
-    'togaf-foundation.png',
-    'togaf-practitioner.png',
-  ],
-} as const;
+export const IMAGE_DELIVERY_RULES = {
+  people: {
+    widths: [
+      480,
+      960,
+    ],
+    avifQuality: 60,
+    webpQuality: 84,
+  },
+
+  certifications: {
+    widths: [
+      48,
+      96,
+      192,
+    ],
+    avifQuality: 78,
+    webpQuality: 90,
+  },
+
+  'credential-issuers': {
+    widths: [
+      80,
+      160,
+      320,
+    ],
+    avifQuality: 78,
+    webpQuality: 90,
+  },
+
+  education: {
+    widths: [
+      64,
+      128,
+      256,
+    ],
+    avifQuality: 78,
+    webpQuality: 90,
+  },
+
+  employers: {
+    widths: [
+      144,
+      288,
+    ],
+    avifQuality: 78,
+    webpQuality: 90,
+  },
+
+  brand: {
+    widths: [
+      64,
+      128,
+      256,
+    ],
+    avifQuality: 78,
+    webpQuality: 90,
+  },
+} as const satisfies Record<
+  string,
+  ImageDeliveryRule
+>;
