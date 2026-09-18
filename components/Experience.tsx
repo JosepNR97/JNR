@@ -162,8 +162,8 @@ export const Experience = ({
                                 sizes="144px"
                                 loading="lazy"
                                 decoding="async"
-                                pictureClassName="grid h-full w-full place-items-center"
-                                className="h-8 max-w-full object-contain object-center"
+                                pictureClassName="relative block h-8 w-full"
+                                className="absolute inset-0 h-full w-full object-contain object-center"
                               />
                             </span>
 
