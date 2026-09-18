@@ -89,7 +89,7 @@ const Portfolio = () => {
    * Reading does not consume the snapshot. This is important for React
    * StrictMode, which can invoke initial render logic more than once in
    * development. The snapshot is cleared only after the mounted application
-   * has restored it.
+   * has accepted it.
    */
   const [
     languageNavigationState,
@@ -113,66 +113,169 @@ const Portfolio = () => {
 
   useLayoutEffect(() => {
     if (
-      languageNavigationState
+      !languageNavigationState
     ) {
       /*
-       * The expanded states were applied during the initial React render, so
-       * their final geometry already exists when this layout effect runs.
-       * Restore immediately before paint.
+       * Normal entry, reload or shared URL: no locale-transition snapshot
+       * exists, so the explicit URL fragment remains authoritative.
        */
-      restoreLanguageNavigationPosition(
-        languageNavigationState,
-      );
+      restoreHashPositionAfterMount();
 
-      /*
-       * Correct again across the next two animation frames. This protects the
-       * viewport against any final browser hash handling or layout settlement
-       * immediately after the localized document mounts.
-       */
-      let firstAnimationFrame =
-        0;
+      return undefined;
+    }
 
-      let secondAnimationFrame =
-        0;
+    let cancelled = false;
 
-      firstAnimationFrame =
-        window.requestAnimationFrame(
-          () => {
-            restoreLanguageNavigationPosition(
-              languageNavigationState,
-            );
+    const pendingAnimationFrames =
+      new Set<number>();
 
-            secondAnimationFrame =
-              window.requestAnimationFrame(
-                () => {
-                  restoreLanguageNavigationPosition(
-                    languageNavigationState,
-                  );
-                },
-              );
-          },
-        );
+    const restorePosition =
+      () => {
+        if (cancelled) {
+          return;
+        }
 
-      clearLanguageNavigationState();
-
-      return () => {
-        window.cancelAnimationFrame(
-          firstAnimationFrame,
-        );
-
-        window.cancelAnimationFrame(
-          secondAnimationFrame,
+        restoreLanguageNavigationPosition(
+          languageNavigationState,
         );
       };
+
+    const requestTrackedAnimationFrame =
+      (
+        callback: () => void,
+      ) => {
+        let animationFrame = 0;
+
+        animationFrame =
+          window.requestAnimationFrame(
+            () => {
+              pendingAnimationFrames.delete(
+                animationFrame,
+              );
+
+              if (
+                cancelled
+              ) {
+                return;
+              }
+
+              callback();
+            },
+          );
+
+        pendingAnimationFrames.add(
+          animationFrame,
+        );
+      };
+
+    const restoreAcrossAnimationFrames =
+      () => {
+        requestTrackedAnimationFrame(
+          () => {
+            restorePosition();
+
+            requestTrackedAnimationFrame(
+              () => {
+                restorePosition();
+              },
+            );
+          },
+        );
+      };
+
+    /*
+     * The accordion states were already applied during the initial React
+     * render, so start by restoring against the layout currently available
+     * before the browser paints the mounted application.
+     */
+    restorePosition();
+    restoreAcrossAnimationFrames();
+
+    /*
+     * Local webfonts can finish loading after the first React layout pass.
+     * Their final metrics may reflow translated content above the restored
+     * anchor. Correct the viewport again only after the browser reports that
+     * all fonts required by the current document have finished loading.
+     */
+    const restoreAfterFonts =
+      async () => {
+        try {
+          await document.fonts.ready;
+        } catch {
+          /*
+           * Font readiness is an enhancement to geometric stability. A
+           * failure must never prevent the locale navigation itself.
+           */
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        restorePosition();
+        restoreAcrossAnimationFrames();
+      };
+
+    void restoreAfterFonts();
+
+    /*
+     * The document load event provides a second deterministic settlement
+     * point for resources that can complete after the initial React commit.
+     * Images that affect layout already reserve their dimensions, but this
+     * final pass makes the hand-off resilient to any remaining initial
+     * document layout work.
+     */
+    const restoreAfterLoad =
+      () => {
+        if (cancelled) {
+          return;
+        }
+
+        restorePosition();
+        restoreAcrossAnimationFrames();
+      };
+
+    if (
+      document.readyState ===
+      'complete'
+    ) {
+      restoreAfterLoad();
+    } else {
+      window.addEventListener(
+        'load',
+        restoreAfterLoad,
+        {
+          once: true,
+        },
+      );
     }
 
     /*
-     * Normal entry, reload or shared URL: no locale-transition snapshot
-     * exists, so the explicit URL fragment remains authoritative.
+     * The sessionStorage hand-off is one-shot. The in-memory state retained
+     * by this mounted component is enough for the remaining corrective
+     * passes, so the persisted snapshot can be removed immediately.
      */
-    restoreHashPositionAfterMount();
+    clearLanguageNavigationState();
 
-    return undefined;
+    return () => {
+      cancelled = true;
+
+      window.removeEventListener(
+        'load',
+        restoreAfterLoad,
+      );
+
+      for (
+        const animationFrame
+        of pendingAnimationFrames
+      ) {
+        window.cancelAnimationFrame(
+          animationFrame,
+        );
+      }
+
+      pendingAnimationFrames.clear();
+    };
   }, [
     languageNavigationState,
   ]);
