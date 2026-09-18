@@ -163,37 +163,6 @@ const expectAllFramesCentered =
     }
   };
 
-const expectAllImagesLoaded =
-  async (
-    images: Locator,
-  ) => {
-    const count =
-      await images.count();
-
-    expect(
-      count,
-    ).toBeGreaterThan(
-      0,
-    );
-
-    for (
-      let index = 0;
-      index < count;
-      index += 1
-    ) {
-      const image =
-        images.nth(
-          index,
-        );
-
-      await image.scrollIntoViewIfNeeded();
-
-      await expectLoadedImage(
-        image,
-      );
-    }
-  };
-
 const collectFailedImageResponses =
   (
     page: Page,
@@ -606,7 +575,6 @@ test.describe(
 
         /*
          * Every professional vendor logo is covered dynamically.
-         * No vendor names or image filenames are hardcoded here.
          */
         await expectAllFramesCentered(
           page.locator(
@@ -615,13 +583,15 @@ test.describe(
         );
 
         /*
-         * Experience does not use a visible fixed logo frame,
-         * so centering against an arbitrary container would not
-         * be meaningful. Still verify every experience logo loads.
+         * Every employer logo in Experience is covered
+         * dynamically, regardless of whether the source
+         * is SVG or an optimized raster image.
+         *
+         * New companies automatically join this test.
          */
-        await expectAllImagesLoaded(
+        await expectAllFramesCentered(
           page.locator(
-            '#experience img[alt^="Logo "]',
+            '[data-image-frame="experience-logo"]',
           ),
         );
 
