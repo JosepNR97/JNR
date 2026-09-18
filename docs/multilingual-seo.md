@@ -51,11 +51,41 @@ rather than automatically becoming something such as `/JNR/en/#experience`.
 
 This keeps URL state distinct from transient browsing state.
 
+## Tab-scoped portfolio UI state
+
+Meaningful browsing state is preserved for the lifetime of the current browser tab.
+
+This state is stored in `sessionStorage`, not `localStorage`, so it survives a reload or locale change without becoming a long-term preference that unexpectedly reappears in a future browsing session.
+
+The tab-scoped portfolio state currently contains:
+
+- the expanded Experience item, if any;
+- the expanded professional Education provider, if any.
+
+Whenever either accordion state changes, the corresponding stable content ID is written to the tab-scoped state.
+
+When the React application mounts again in the same tab, those IDs are read synchronously and used as initial React state.
+
+This is intentionally done during initial rendering rather than by opening the panels after mount. Restoring the expanded layout from the beginning allows the browser's native reload scroll restoration to operate against document geometry that matches what the user was browsing before the reload.
+
+The result is that an ordinary reload behaves as continuity rather than a reset:
+
+1. the URL remains unchanged;
+2. the browser restores its normal history/reload scroll position;
+3. the same Experience item remains expanded;
+4. the same professional Education provider remains expanded.
+
+The tab-scoped state ends naturally when the browser tab or its session is discarded.
+
+Ephemeral interaction state is not persisted. This includes hover, keyboard focus, the mobile navigation overlay, carousel animation timing, and transient animation state.
+
 ## Continuity across language changes
 
 Although each locale is a separate HTML document, changing language should feel to the user like translating the current page rather than navigating to a different browsing state.
 
-Immediately before a locale-to-locale document navigation, the application therefore stores a short-lived navigation snapshot in `sessionStorage`.
+The persistent tab-scoped accordion state is not sufficient on its own because translated content can have different heights.
+
+Immediately before a locale-to-locale document navigation, the application therefore also stores a short-lived navigation snapshot in `sessionStorage`.
 
 The snapshot contains:
 
@@ -67,9 +97,9 @@ The snapshot contains:
 - the currently expanded Experience item, if any;
 - the currently expanded professional Education provider, if any.
 
-The snapshot is deliberately scoped to the current browser tab and is valid only for a short time. It is not a persistent user preference.
+The accordion values duplicate meaningful state already retained for the tab, but they also describe the precise source-document state at the moment of the locale hand-off and therefore provide an authoritative transition snapshot.
 
-The destination document accepts the snapshot only when all of the following are true:
+The destination document accepts the navigation snapshot only when all of the following are true:
 
 1. the snapshot is structurally valid;
 2. it has not expired;
@@ -86,13 +116,13 @@ Catalan, Spanish, and English copy can occupy different amounts of vertical spac
 
 Instead, the source document identifies a stable DOM element around a reading point within the viewport. Stable section, accordion, trigger, and panel IDs remain equivalent across localized documents because they are derived from shared content identifiers rather than translated labels.
 
-The snapshot stores the exact vertical viewport position of that stable anchor.
+The navigation snapshot stores the exact vertical viewport position of that stable anchor.
 
 For example, if an Education trigger begins 120 pixels below the top of the viewport before changing language, the destination document positions the equivalent trigger 120 pixels below the top of the viewport after translation.
 
 This intentionally differs from preserving proportional progress through an element. Translated labels and descriptions can change the height of a card or trigger. Preserving a percentage within that differently sized element would move the element itself on screen, even though the user only changed language.
 
-After the destination React application has mounted and any expanded content has been restored, the equivalent stable element is located in the translated document. The application then scrolls by exactly the difference between its current viewport position and the viewport position captured in the source document.
+After the destination React application has mounted and the expanded content has been restored, the equivalent stable element is located in the translated document. The application then scrolls by exactly the difference between its current viewport position and the viewport position captured in the source document.
 
 This keeps the surrounding interface visually stationary across the locale switch even when translated content changes element heights.
 
@@ -112,7 +142,7 @@ The portfolio uses local Inter and Playfair Display webfonts. A localized docume
 
 Other initial document resources can also complete after the first React layout pass.
 
-For that reason, viewport restoration uses several deterministic settlement points:
+For that reason, locale-transition viewport restoration uses several deterministic settlement points:
 
 1. immediately after the destination React layout is committed;
 2. across the next animation frames;
@@ -125,55 +155,60 @@ Every corrective pass uses the same stable anchor and the same captured viewport
 
 The mechanism therefore compensates for initial layout shifts without relying on an arbitrary timeout.
 
-The persisted `sessionStorage` snapshot is still one-shot. Once the destination application has accepted it, the stored copy is removed. The mounted React document retains the already validated snapshot in memory only long enough to complete the initial corrective passes.
+The persisted locale-transition snapshot is still one-shot. Once the destination application has accepted it, the stored copy is removed. The mounted React document retains the already validated snapshot in memory only long enough to complete the initial corrective passes.
 
 ## Expanded content restoration
 
 Experience and professional Education accordions use stable IDs shared across all three translations.
 
-When a language change occurs, the snapshot records the currently expanded item in each area.
+For an ordinary reload, their IDs come from the tab-scoped portfolio UI state.
 
-The destination application uses these IDs as initial React state, so expanded panels are already part of the destination layout before viewport restoration is calculated.
+For a locale transition, the validated one-shot navigation snapshot takes priority over the longer-lived tab state because it represents the exact source-document state at the moment the language was changed.
 
-This ordering is important:
+The destination application uses those IDs as initial React state, so expanded panels are already part of the destination layout before viewport restoration is calculated.
+
+The locale-switch ordering is therefore:
 
 1. load the localized document;
-2. mount React with the same relevant panels expanded;
-3. restore the previous viewport context using the expanded layout;
-4. keep correcting that position while the initial document geometry settles;
-5. discard the temporary hand-off state.
+2. resolve the tab-scoped state and the valid one-shot navigation snapshot;
+3. mount React with the same relevant panels expanded;
+4. restore the previous viewport context using the expanded layout;
+5. keep correcting that position while the initial document geometry settles;
+6. discard the one-shot navigation snapshot while retaining meaningful accordion state for the current tab.
 
 Only meaningful content state is transferred.
 
-Ephemeral interaction state such as hover, keyboard focus, an open mobile navigation overlay, animation progress, or carousel autoplay timing is intentionally not carried across document navigations.
+## Persistent versus one-shot state
 
-## One-shot state
+Two separate `sessionStorage` concepts intentionally coexist.
 
-The navigation snapshot exists only to bridge one explicit locale change.
+The portfolio UI state is tab-scoped and persistent for that tab. It remembers meaningful expanded accordion state across reloads and locale changes.
 
-After the destination document has accepted the state, its persisted copy is removed from `sessionStorage`.
+The language-navigation snapshot is one-shot. It exists only to bridge one explicit locale change and carries geometric information that must not affect later navigation.
 
-A later reload, direct visit, Back/Forward navigation, or shared URL therefore does not inherit an obsolete expanded state or scroll position from an earlier locale switch.
+After the destination document accepts the language-navigation snapshot, that snapshot is removed from `sessionStorage`.
 
-This keeps explicit URL navigation predictable while still providing continuity during the user's immediate language change.
+The accordion state remains available independently, so a later reload keeps the same expanded content without replaying an obsolete locale-transition scroll position.
+
+This distinction prevents stale geometry from hijacking later reloads while still making the portfolio feel continuous during normal browsing.
 
 ## Direct URLs and fragments
 
-When no valid locale-transition snapshot exists, the URL remains the sole navigation authority.
+When no valid locale-transition snapshot exists, the URL remains the navigation authority for explicit fragments.
 
 For example, opening:
 
 `/JNR/en/#experience`
 
-directly, through a bookmark, after a reload, or from an external link must navigate to the Experience section normally.
+directly, through a bookmark, or from an external link must navigate to the Experience section normally.
 
 Localized pages are separate HTML documents whose portfolio section elements are created when React mounts. The initial HTML shell can therefore be parsed before a fragment target such as `#experience` exists.
 
 After React mounts, the application explicitly resolves the current URL fragment and scrolls to the corresponding element. This complements native browser fragment navigation and ensures that direct localized URLs work consistently.
 
-During an explicit language switch, an existing fragment is still preserved in the destination URL, but the one-shot transition snapshot has priority for that immediate viewport restoration. This prevents a user who has moved deeper into the section from being sent back to its beginning merely because the URL still contains the section fragment.
+During an explicit language switch, an existing fragment is still preserved in the destination URL, but the validated one-shot transition snapshot has priority for that immediate viewport restoration. This prevents a user who has moved deeper into the section from being sent back to its beginning merely because the URL still contains the section fragment.
 
-After the snapshot is consumed, future direct navigation to the same URL once again follows the fragment normally.
+Once the transition snapshot is consumed, later explicit fragment navigation follows the URL normally.
 
 ## Root entry point
 
@@ -216,9 +251,9 @@ The sitemap lists only the three canonical locale URLs and includes reciprocal `
 
 ## Browser validation
 
-The Playwright multilingual smoke suite validates the routing and locale-transition contract in a real Chromium browser.
+The browser suites validate both multilingual routing and tab-session continuity in real Chromium.
 
-It covers:
+The multilingual suite covers:
 
 - initial localized metadata;
 - explicit locale authority over stored preferences;
@@ -230,7 +265,15 @@ It covers:
 - preservation of expanded Experience state across a locale change;
 - preservation of expanded professional Education state across a locale change;
 - preservation of the stable viewport-anchor position across translations;
-- one-shot consumption of the temporary navigation snapshot;
+- one-shot consumption of the temporary language-navigation snapshot;
 - root-entry behavior.
 
-The snapshot mechanism is an enhancement to browsing continuity only. The localized URL remains authoritative for language and SEO.
+The tab-session suite additionally verifies that:
+
+- expanded Experience state survives a reload;
+- expanded professional Education state survives a reload;
+- the restored layout allows the browser to retain the same browsing context;
+- a normal reload does not create or replay a locale-transition snapshot;
+- meaningful accordion state remains available for subsequent reloads within the same tab.
+
+The state mechanisms enhance browsing continuity only. The localized URL remains authoritative for language and SEO.
