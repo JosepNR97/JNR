@@ -1,14 +1,33 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
-import { CERTIFICATION_LOGOS } from '../constants';
-import { useLanguage } from '../context/LanguageContext';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import type {
+  PointerEvent as ReactPointerEvent,
+} from 'react';
+import {
+  CERTIFICATION_LOGOS,
+} from '../constants';
+import {
+  useLanguage,
+} from '../context/LanguageContext';
+import {
+  ResponsiveImage,
+} from './ResponsiveImage';
 
 interface CertificationsProps {
-  onSelectVendor: (vendorId: string) => void;
+  onSelectVendor: (
+    vendorId: string,
+  ) => void;
 }
 
-const AUTO_SCROLL_PX_PER_SECOND = 52;
-const DRAG_THRESHOLD = 6;
+const AUTO_SCROLL_PX_PER_SECOND =
+  52;
+
+const DRAG_THRESHOLD =
+  6;
 
 /*
  * Nine copies give us four complete sequences on either side of
@@ -16,29 +35,52 @@ const DRAG_THRESHOLD = 6;
  * this provides enough buffer for very wide and 8K-class viewports
  * while keeping the loop independent from viewport width.
  */
-const CAROUSEL_COPIES = 9;
-const INTERACTIVE_COPY_INDEX = Math.floor(CAROUSEL_COPIES / 2);
+const CAROUSEL_COPIES =
+  9;
+
+const INTERACTIVE_COPY_INDEX =
+  Math.floor(
+    CAROUSEL_COPIES /
+      2,
+  );
 
 const normalizeOffset = (
   offset: number,
   segmentWidth: number,
 ) => {
-  if (segmentWidth <= 0) return offset;
-
-  const lowerBoundary =
-    -(INTERACTIVE_COPY_INDEX + 1) * segmentWidth;
-
-  const upperBoundary =
-    -(INTERACTIVE_COPY_INDEX - 1) * segmentWidth;
-
-  let normalizedOffset = offset;
-
-  while (normalizedOffset <= lowerBoundary) {
-    normalizedOffset += segmentWidth;
+  if (
+    segmentWidth <= 0
+  ) {
+    return offset;
   }
 
-  while (normalizedOffset > upperBoundary) {
-    normalizedOffset -= segmentWidth;
+  const lowerBoundary =
+    -(INTERACTIVE_COPY_INDEX +
+      1) *
+    segmentWidth;
+
+  const upperBoundary =
+    -(INTERACTIVE_COPY_INDEX -
+      1) *
+    segmentWidth;
+
+  let normalizedOffset =
+    offset;
+
+  while (
+    normalizedOffset <=
+    lowerBoundary
+  ) {
+    normalizedOffset +=
+      segmentWidth;
+  }
+
+  while (
+    normalizedOffset >
+    upperBoundary
+  ) {
+    normalizedOffset -=
+      segmentWidth;
   }
 
   return normalizedOffset;
@@ -48,224 +90,335 @@ const getLoopProgress = (
   offset: number,
   segmentWidth: number,
 ) => {
-  if (segmentWidth <= 0) return 0;
+  if (
+    segmentWidth <= 0
+  ) {
+    return 0;
+  }
 
-  const distance = -offset;
+  const distance =
+    -offset;
 
   const remainder =
-    ((distance % segmentWidth) + segmentWidth) %
+    ((distance %
+      segmentWidth) +
+      segmentWidth) %
     segmentWidth;
 
-  return remainder / segmentWidth;
+  return (
+    remainder /
+    segmentWidth
+  );
 };
 
 const applyTrackOffset = (
   track: HTMLDivElement,
   offset: number,
 ) => {
-  track.style.transform = `translate3d(${offset}px, 0, 0)`;
+  track.style.transform =
+    `translate3d(${offset}px, 0, 0)`;
 };
 
-export const Certifications = ({
-  onSelectVendor,
-}: CertificationsProps) => {
-  const { t } = useLanguage();
+export const Certifications =
+  ({
+    onSelectVendor,
+  }: CertificationsProps) => {
+    const { t } =
+      useLanguage();
 
-  const trackRef = useRef<HTMLDivElement>(null);
-  const segmentRef = useRef<HTMLDivElement>(null);
+    const trackRef =
+      useRef<HTMLDivElement>(
+        null,
+      );
 
-  const animationFrameRef = useRef(0);
-  const previousFrameTimeRef =
-    useRef<number | null>(null);
+    const segmentRef =
+      useRef<HTMLDivElement>(
+        null,
+      );
 
-  const segmentWidthRef = useRef(0);
-  const offsetRef = useRef(0);
+    const animationFrameRef =
+      useRef(
+        0,
+      );
 
-  const hoverPausedRef = useRef(false);
-  const keyboardFocusPausedRef = useRef(false);
-  const draggingRef = useRef(false);
-  const reducedMotionRef = useRef(false);
+    const previousFrameTimeRef =
+      useRef<
+        number | null
+      >(null);
 
-  const dragResetTimeoutRef =
-    useRef<number | null>(null);
+    const segmentWidthRef =
+      useRef(
+        0,
+      );
 
-  const pointerRef = useRef({
-    active: false,
-    pointerId: -1,
-    startX: 0,
-    lastX: 0,
-    moved: false,
-  });
+    const offsetRef =
+      useRef(
+        0,
+      );
 
-  const [isDragging, setIsDragging] =
-    useState(false);
+    const hoverPausedRef =
+      useRef(
+        false,
+      );
 
-  useLayoutEffect(() => {
-    const segment = segmentRef.current;
-    const track = trackRef.current;
+    const keyboardFocusPausedRef =
+      useRef(
+        false,
+      );
 
-    if (!segment || !track) {
-      return undefined;
-    }
+    const draggingRef =
+      useRef(
+        false,
+      );
 
-    const measureSegment = () => {
-      const nextSegmentWidth =
-        segment.getBoundingClientRect().width;
+    const reducedMotionRef =
+      useRef(
+        false,
+      );
 
+    const dragResetTimeoutRef =
+      useRef<
+        number | null
+      >(null);
+
+    const pointerRef =
+      useRef({
+        active: false,
+        pointerId:
+          -1,
+        startX: 0,
+        lastX: 0,
+        moved: false,
+      });
+
+    const [
+      isDragging,
+      setIsDragging,
+    ] = useState(
+      false,
+    );
+
+    useLayoutEffect(
+      () => {
+        const segment =
+          segmentRef.current;
+
+        const track =
+          trackRef.current;
+
+        if (
+          !segment ||
+          !track
+        ) {
+          return undefined;
+        }
+
+        const measureSegment =
+          () => {
+            const nextSegmentWidth =
+              segment.getBoundingClientRect()
+                .width;
+
+            if (
+              !Number.isFinite(
+                nextSegmentWidth,
+              ) ||
+              nextSegmentWidth <=
+                0
+            ) {
+              return;
+            }
+
+            const previousSegmentWidth =
+              segmentWidthRef.current;
+
+            const progress =
+              previousSegmentWidth >
+              0
+                ? getLoopProgress(
+                    offsetRef.current,
+                    previousSegmentWidth,
+                  )
+                : 0;
+
+            segmentWidthRef.current =
+              nextSegmentWidth;
+
+            offsetRef.current =
+              -(INTERACTIVE_COPY_INDEX +
+                progress) *
+              nextSegmentWidth;
+
+            applyTrackOffset(
+              track,
+              offsetRef.current,
+            );
+          };
+
+        measureSegment();
+
+        let resizeObserver:
+          | ResizeObserver
+          | undefined;
+
+        if (
+          typeof ResizeObserver !==
+          'undefined'
+        ) {
+          resizeObserver =
+            new ResizeObserver(
+              measureSegment,
+            );
+
+          resizeObserver.observe(
+            segment,
+          );
+        }
+
+        window.addEventListener(
+          'resize',
+          measureSegment,
+          {
+            passive:
+              true,
+          },
+        );
+
+        return () => {
+          resizeObserver?.disconnect();
+
+          window.removeEventListener(
+            'resize',
+            measureSegment,
+          );
+        };
+      },
+      [],
+    );
+
+    useEffect(
+      () => {
+        const mediaQuery =
+          window.matchMedia(
+            '(prefers-reduced-motion: reduce)',
+          );
+
+        const updateMotionPreference =
+          () => {
+            reducedMotionRef.current =
+              mediaQuery.matches;
+          };
+
+        updateMotionPreference();
+
+        mediaQuery.addEventListener(
+          'change',
+          updateMotionPreference,
+        );
+
+        previousFrameTimeRef.current =
+          null;
+
+        const animate = (
+          frameTime: number,
+        ) => {
+          const track =
+            trackRef.current;
+
+          const segmentWidth =
+            segmentWidthRef.current;
+
+          if (
+            previousFrameTimeRef.current ===
+            null
+          ) {
+            previousFrameTimeRef.current =
+              frameTime;
+          }
+
+          const elapsedSeconds =
+            Math.min(
+              Math.max(
+                frameTime -
+                  previousFrameTimeRef.current,
+                0,
+              ) /
+                1000,
+              0.05,
+            );
+
+          previousFrameTimeRef.current =
+            frameTime;
+
+          const isPaused =
+            hoverPausedRef.current ||
+            keyboardFocusPausedRef.current ||
+            draggingRef.current ||
+            reducedMotionRef.current;
+
+          if (
+            track &&
+            segmentWidth >
+              0 &&
+            !isPaused
+          ) {
+            offsetRef.current =
+              normalizeOffset(
+                offsetRef.current -
+                  AUTO_SCROLL_PX_PER_SECOND *
+                    elapsedSeconds,
+                segmentWidth,
+              );
+
+            applyTrackOffset(
+              track,
+              offsetRef.current,
+            );
+          }
+
+          animationFrameRef.current =
+            window.requestAnimationFrame(
+              animate,
+            );
+        };
+
+        animationFrameRef.current =
+          window.requestAnimationFrame(
+            animate,
+          );
+
+        return () => {
+          mediaQuery.removeEventListener(
+            'change',
+            updateMotionPreference,
+          );
+
+          window.cancelAnimationFrame(
+            animationFrameRef.current,
+          );
+
+          if (
+            dragResetTimeoutRef.current !==
+            null
+          ) {
+            window.clearTimeout(
+              dragResetTimeoutRef.current,
+            );
+          }
+        };
+      },
+      [],
+    );
+
+    const handlePointerDown = (
+      event: ReactPointerEvent<HTMLDivElement>,
+    ) => {
       if (
-        !Number.isFinite(nextSegmentWidth) ||
-        nextSegmentWidth <= 0
+        event.button !==
+        0
       ) {
         return;
       }
-
-      const previousSegmentWidth =
-        segmentWidthRef.current;
-
-      const progress =
-        previousSegmentWidth > 0
-          ? getLoopProgress(
-              offsetRef.current,
-              previousSegmentWidth,
-            )
-          : 0;
-
-      segmentWidthRef.current =
-        nextSegmentWidth;
-
-      offsetRef.current =
-        -(INTERACTIVE_COPY_INDEX + progress) *
-        nextSegmentWidth;
-
-      applyTrackOffset(
-        track,
-        offsetRef.current,
-      );
-    };
-
-    measureSegment();
-
-    let resizeObserver:
-      | ResizeObserver
-      | undefined;
-
-    if (
-      typeof ResizeObserver !== 'undefined'
-    ) {
-      resizeObserver = new ResizeObserver(
-        measureSegment,
-      );
-
-      resizeObserver.observe(segment);
-    }
-
-    window.addEventListener(
-      'resize',
-      measureSegment,
-      { passive: true },
-    );
-
-    return () => {
-      resizeObserver?.disconnect();
-
-      window.removeEventListener(
-        'resize',
-        measureSegment,
-      );
-    };
-  }, []);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    );
-
-    const updateMotionPreference = () => {
-      reducedMotionRef.current =
-        mediaQuery.matches;
-    };
-
-    updateMotionPreference();
-
-    mediaQuery.addEventListener(
-      'change',
-      updateMotionPreference,
-    );
-
-    previousFrameTimeRef.current = null;
-
-    const animate = (
-      frameTime: number,
-    ) => {
-      const track = trackRef.current;
-      const segmentWidth =
-        segmentWidthRef.current;
-
-      if (
-        previousFrameTimeRef.current ===
-        null
-      ) {
-        previousFrameTimeRef.current =
-          frameTime;
-      }
-
-      const elapsedSeconds = Math.min(
-        Math.max(
-          frameTime -
-            previousFrameTimeRef.current,
-          0,
-        ) / 1000,
-        0.05,
-      );
-
-      previousFrameTimeRef.current =
-        frameTime;
-
-      const isPaused =
-        hoverPausedRef.current ||
-        keyboardFocusPausedRef.current ||
-        draggingRef.current ||
-        reducedMotionRef.current;
-
-      if (
-        track &&
-        segmentWidth > 0 &&
-        !isPaused
-      ) {
-        offsetRef.current =
-          normalizeOffset(
-            offsetRef.current -
-              AUTO_SCROLL_PX_PER_SECOND *
-                elapsedSeconds,
-            segmentWidth,
-          );
-
-        applyTrackOffset(
-          track,
-          offsetRef.current,
-        );
-      }
-
-      animationFrameRef.current =
-        window.requestAnimationFrame(
-          animate,
-        );
-    };
-
-    animationFrameRef.current =
-      window.requestAnimationFrame(
-        animate,
-      );
-
-    return () => {
-      mediaQuery.removeEventListener(
-        'change',
-        updateMotionPreference,
-      );
-
-      window.cancelAnimationFrame(
-        animationFrameRef.current,
-      );
 
       if (
         dragResetTimeoutRef.current !==
@@ -274,321 +427,390 @@ export const Certifications = ({
         window.clearTimeout(
           dragResetTimeoutRef.current,
         );
+
+        dragResetTimeoutRef.current =
+          null;
       }
-    };
-  }, []);
 
-  const handlePointerDown = (
-    event: ReactPointerEvent<HTMLDivElement>,
-  ) => {
-    if (event.button !== 0) return;
+      /*
+       * Mouse focus must not permanently pause autoplay.
+       * Keyboard focus is handled independently through
+       * :focus-visible.
+       */
+      keyboardFocusPausedRef.current =
+        false;
 
-    if (
-      dragResetTimeoutRef.current !==
-      null
-    ) {
-      window.clearTimeout(
-        dragResetTimeoutRef.current,
+      pointerRef.current =
+        {
+          active: true,
+          pointerId:
+            event.pointerId,
+          startX:
+            event.clientX,
+          lastX:
+            event.clientX,
+          moved: false,
+        };
+
+      draggingRef.current =
+        true;
+
+      setIsDragging(
+        true,
       );
-
-      dragResetTimeoutRef.current = null;
-    }
-
-    /*
-     * Mouse focus must not permanently pause autoplay.
-     * Keyboard focus is handled independently through
-     * :focus-visible.
-     */
-    keyboardFocusPausedRef.current =
-      false;
-
-    pointerRef.current = {
-      active: true,
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      lastX: event.clientX,
-      moved: false,
     };
 
-    draggingRef.current = true;
-    setIsDragging(true);
-  };
+    const handlePointerMove = (
+      event: ReactPointerEvent<HTMLDivElement>,
+    ) => {
+      const pointer =
+        pointerRef.current;
 
-  const handlePointerMove = (
-    event: ReactPointerEvent<HTMLDivElement>,
-  ) => {
-    const pointer = pointerRef.current;
-    const track = trackRef.current;
+      const track =
+        trackRef.current;
 
-    const segmentWidth =
-      segmentWidthRef.current;
+      const segmentWidth =
+        segmentWidthRef.current;
 
-    if (
-      !pointer.active ||
-      pointer.pointerId !==
-        event.pointerId ||
-      !track ||
-      segmentWidth <= 0
-    ) {
-      return;
-    }
-
-    const distanceFromStart =
-      event.clientX - pointer.startX;
-
-    let deltaX =
-      event.clientX - pointer.lastX;
-
-    if (!pointer.moved) {
       if (
-        Math.abs(distanceFromStart) <=
-        DRAG_THRESHOLD
+        !pointer.active ||
+        pointer.pointerId !==
+          event.pointerId ||
+        !track ||
+        segmentWidth <=
+          0
       ) {
         return;
       }
 
-      pointer.moved = true;
+      const distanceFromStart =
+        event.clientX -
+        pointer.startX;
 
-      /*
-       * Include the pixels consumed by the threshold so
-       * that dragging starts without a visible jump.
-       */
-      deltaX = distanceFromStart;
+      let deltaX =
+        event.clientX -
+        pointer.lastX;
 
-      event.currentTarget.setPointerCapture?.(
-        event.pointerId,
-      );
-    }
+      if (
+        !pointer.moved
+      ) {
+        if (
+          Math.abs(
+            distanceFromStart,
+          ) <=
+          DRAG_THRESHOLD
+        ) {
+          return;
+        }
 
-    pointer.lastX = event.clientX;
+        pointer.moved =
+          true;
 
-    event.preventDefault();
+        /*
+         * Include the pixels consumed by the threshold so
+         * that dragging starts without a visible jump.
+         */
+        deltaX =
+          distanceFromStart;
 
-    offsetRef.current =
-      normalizeOffset(
-        offsetRef.current + deltaX,
-        segmentWidth,
-      );
-
-    applyTrackOffset(
-      track,
-      offsetRef.current,
-    );
-  };
-
-  const handlePointerEnd = (
-    event: ReactPointerEvent<HTMLDivElement>,
-  ) => {
-    const pointer = pointerRef.current;
-
-    if (
-      !pointer.active ||
-      pointer.pointerId !== event.pointerId
-    ) {
-      return;
-    }
-
-    const moved = pointer.moved;
-
-    pointer.active = false;
-
-    draggingRef.current = false;
-    setIsDragging(false);
-
-    if (
-      event.currentTarget.hasPointerCapture?.(
-        event.pointerId,
-      )
-    ) {
-      event.currentTarget.releasePointerCapture?.(
-        event.pointerId,
-      );
-    }
-
-    /*
-     * Browsers emit click immediately after pointerup.
-     * Preserve the moved flag until that click can be
-     * discarded, then allow normal clicks again.
-     */
-    if (moved) {
-      dragResetTimeoutRef.current =
-        window.setTimeout(() => {
-          pointerRef.current.moved =
-            false;
-
-          dragResetTimeoutRef.current =
-            null;
-        }, 0);
-    } else {
-      pointerRef.current.moved = false;
-    }
-  };
-
-  const handleLogoClick = (
-    vendorId: string,
-  ) => {
-    if (pointerRef.current.moved) {
-      pointerRef.current.moved = false;
-      return;
-    }
-
-    onSelectVendor(vendorId);
-  };
-
-  const handleFocusCapture = (
-    event: React.FocusEvent<HTMLDivElement>,
-  ) => {
-    const target =
-      event.target as HTMLElement;
-
-    const isFocusVisible = (() => {
-      try {
-        return target.matches(
-          ':focus-visible',
+        event.currentTarget.setPointerCapture?.(
+          event.pointerId,
         );
-      } catch {
-        return false;
       }
-    })();
 
-    /*
-     * Mouse clicks also focus buttons. Only keyboard-visible
-     * focus should keep the carousel paused after hover ends.
-     */
-    if (!isFocusVisible) return;
+      pointer.lastX =
+        event.clientX;
 
-    keyboardFocusPausedRef.current =
-      true;
+      event.preventDefault();
 
-    const track = trackRef.current;
-    const segmentWidth =
-      segmentWidthRef.current;
-
-    /*
-     * Recenter the accessible sequence before keyboard
-     * navigation so all keyboard targets are predictable.
-     */
-    if (track && segmentWidth > 0) {
       offsetRef.current =
-        -INTERACTIVE_COPY_INDEX *
-        segmentWidth;
+        normalizeOffset(
+          offsetRef.current +
+            deltaX,
+          segmentWidth,
+        );
 
       applyTrackOffset(
         track,
         offsetRef.current,
       );
-    }
-  };
+    };
 
-  const handleBlurCapture = (
-    event: React.FocusEvent<HTMLDivElement>,
-  ) => {
-    if (
-      !event.currentTarget.contains(
-        event.relatedTarget,
-      )
-    ) {
-      keyboardFocusPausedRef.current =
+    const handlePointerEnd = (
+      event: ReactPointerEvent<HTMLDivElement>,
+    ) => {
+      const pointer =
+        pointerRef.current;
+
+      if (
+        !pointer.active ||
+        pointer.pointerId !==
+          event.pointerId
+      ) {
+        return;
+      }
+
+      const moved =
+        pointer.moved;
+
+      pointer.active =
         false;
-    }
-  };
 
-  return (
-    <section className="w-full overflow-hidden border-y border-slate-200 bg-slate-50 py-12">
-      <div className="mx-auto mb-8 max-w-7xl px-4 text-center">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">
-          {t.certifications.title}
-        </h2>
-      </div>
+      draggingRef.current =
+        false;
 
-      <div
-        data-testid="certifications-viewport"
-        className={`w-full touch-pan-y select-none overflow-hidden ${
-          isDragging
-            ? 'cursor-grabbing'
-            : 'cursor-grab'
-        }`}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerEnd}
-        onPointerCancel={handlePointerEnd}
-        onMouseEnter={() => {
-          hoverPausedRef.current = true;
-        }}
-        onMouseLeave={() => {
-          hoverPausedRef.current = false;
-        }}
-        onFocusCapture={handleFocusCapture}
-        onBlurCapture={handleBlurCapture}
-      >
-        <div
-          ref={trackRef}
-          data-testid="certifications-track"
-          className="flex w-max items-center py-4 will-change-transform"
-        >
-          {Array.from(
-            { length: CAROUSEL_COPIES },
-            (_, copyIndex) => (
-              <div
-                key={copyIndex}
-                ref={
-                  copyIndex ===
-                  INTERACTIVE_COPY_INDEX
-                    ? segmentRef
-                    : undefined
-                }
-                data-testid="certifications-segment"
-                data-carousel-segment={
-                  copyIndex ===
-                  INTERACTIVE_COPY_INDEX
-                    ? 'true'
-                    : undefined
-                }
-                className="flex shrink-0 items-center gap-12 pr-12"
-                aria-hidden={
-                  copyIndex !==
-                  INTERACTIVE_COPY_INDEX
-                }
-              >
-                {CERTIFICATION_LOGOS.map(
-                  (logo) => (
-                    <button
-                      key={`${copyIndex}-${logo.name}`}
-                      type="button"
-                      tabIndex={
-                        copyIndex ===
-                        INTERACTIVE_COPY_INDEX
-                          ? 0
-                          : -1
-                      }
-                      aria-label={`${t.certifications.openVendor} ${logo.name}`}
-                      onClick={() =>
-                        handleLogoClick(
-                          logo.educationId,
-                        )
-                      }
-                      className={`group grid h-20 w-40 shrink-0 place-items-center p-2 transition-transform duration-300 hover:scale-110 focus-visible:scale-110 ${
-                        isDragging
-                          ? 'cursor-grabbing'
-                          : 'cursor-pointer'
-                      }`}
-                    >
-                      <img
-                        src={logo.url}
-                        alt=""
-                        loading="eager"
-                        decoding="async"
-                        draggable="false"
-                        className="max-h-14 max-w-full object-contain opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
-                      />
-                    </button>
-                  ),
-                )}
-              </div>
-            ),
-          )}
+      setIsDragging(
+        false,
+      );
+
+      if (
+        event.currentTarget.hasPointerCapture?.(
+          event.pointerId,
+        )
+      ) {
+        event.currentTarget.releasePointerCapture?.(
+          event.pointerId,
+        );
+      }
+
+      /*
+       * Browsers emit click immediately after pointerup.
+       * Preserve the moved flag until that click can be
+       * discarded, then allow normal clicks again.
+       */
+      if (moved) {
+        dragResetTimeoutRef.current =
+          window.setTimeout(
+            () => {
+              pointerRef.current.moved =
+                false;
+
+              dragResetTimeoutRef.current =
+                null;
+            },
+            0,
+          );
+      } else {
+        pointerRef.current.moved =
+          false;
+      }
+    };
+
+    const handleLogoClick = (
+      vendorId: string,
+    ) => {
+      if (
+        pointerRef.current.moved
+      ) {
+        pointerRef.current.moved =
+          false;
+
+        return;
+      }
+
+      onSelectVendor(
+        vendorId,
+      );
+    };
+
+    const handleFocusCapture = (
+      event: React.FocusEvent<HTMLDivElement>,
+    ) => {
+      const target =
+        event.target as HTMLElement;
+
+      const isFocusVisible =
+        (() => {
+          try {
+            return target.matches(
+              ':focus-visible',
+            );
+          } catch {
+            return false;
+          }
+        })();
+
+      /*
+       * Mouse clicks also focus buttons. Only keyboard-visible
+       * focus should keep the carousel paused after hover ends.
+       */
+      if (
+        !isFocusVisible
+      ) {
+        return;
+      }
+
+      keyboardFocusPausedRef.current =
+        true;
+
+      const track =
+        trackRef.current;
+
+      const segmentWidth =
+        segmentWidthRef.current;
+
+      /*
+       * Recenter the accessible sequence before keyboard
+       * navigation so all keyboard targets are predictable.
+       */
+      if (
+        track &&
+        segmentWidth >
+          0
+      ) {
+        offsetRef.current =
+          -INTERACTIVE_COPY_INDEX *
+          segmentWidth;
+
+        applyTrackOffset(
+          track,
+          offsetRef.current,
+        );
+      }
+    };
+
+    const handleBlurCapture = (
+      event: React.FocusEvent<HTMLDivElement>,
+    ) => {
+      if (
+        !event.currentTarget.contains(
+          event.relatedTarget,
+        )
+      ) {
+        keyboardFocusPausedRef.current =
+          false;
+      }
+    };
+
+    return (
+      <section className="w-full overflow-hidden border-y border-slate-200 bg-slate-50 py-12">
+        <div className="mx-auto mb-8 max-w-7xl px-4 text-center">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">
+            {
+              t.certifications
+                .title
+            }
+          </h2>
         </div>
-      </div>
-    </section>
-  );
-};
+
+        <div
+          data-testid="certifications-viewport"
+          className={`w-full touch-pan-y select-none overflow-hidden ${
+            isDragging
+              ? 'cursor-grabbing'
+              : 'cursor-grab'
+          }`}
+          onPointerDown={
+            handlePointerDown
+          }
+          onPointerMove={
+            handlePointerMove
+          }
+          onPointerUp={
+            handlePointerEnd
+          }
+          onPointerCancel={
+            handlePointerEnd
+          }
+          onMouseEnter={() => {
+            hoverPausedRef.current =
+              true;
+          }}
+          onMouseLeave={() => {
+            hoverPausedRef.current =
+              false;
+          }}
+          onFocusCapture={
+            handleFocusCapture
+          }
+          onBlurCapture={
+            handleBlurCapture
+          }
+        >
+          <div
+            ref={
+              trackRef
+            }
+            data-testid="certifications-track"
+            className="flex w-max items-center py-4 will-change-transform"
+          >
+            {Array.from(
+              {
+                length:
+                  CAROUSEL_COPIES,
+              },
+              (
+                _,
+                copyIndex,
+              ) => (
+                <div
+                  key={
+                    copyIndex
+                  }
+                  ref={
+                    copyIndex ===
+                    INTERACTIVE_COPY_INDEX
+                      ? segmentRef
+                      : undefined
+                  }
+                  data-testid="certifications-segment"
+                  data-carousel-segment={
+                    copyIndex ===
+                    INTERACTIVE_COPY_INDEX
+                      ? 'true'
+                      : undefined
+                  }
+                  className="flex shrink-0 items-center gap-12 pr-12"
+                  aria-hidden={
+                    copyIndex !==
+                    INTERACTIVE_COPY_INDEX
+                  }
+                >
+                  {CERTIFICATION_LOGOS.map(
+                    (
+                      logo,
+                    ) => (
+                      <button
+                        key={`${copyIndex}-${logo.name}`}
+                        type="button"
+                        tabIndex={
+                          copyIndex ===
+                          INTERACTIVE_COPY_INDEX
+                            ? 0
+                            : -1
+                        }
+                        aria-label={`${t.certifications.openVendor} ${logo.name}`}
+                        onClick={() =>
+                          handleLogoClick(
+                            logo.educationId,
+                          )
+                        }
+                        className={`group grid h-20 w-40 shrink-0 place-items-center p-2 transition-transform duration-300 hover:scale-110 focus-visible:scale-110 ${
+                          isDragging
+                            ? 'cursor-grabbing'
+                            : 'cursor-pointer'
+                        }`}
+                      >
+                        <ResponsiveImage
+                          src={
+                            logo.url
+                          }
+                          alt=""
+                          sizes="160px"
+                          loading="eager"
+                          decoding="async"
+                          draggable="false"
+                          pictureClassName="contents"
+                          className="max-h-14 max-w-full object-contain opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
+                        />
+                      </button>
+                    ),
+                  )}
+                </div>
+              ),
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  };

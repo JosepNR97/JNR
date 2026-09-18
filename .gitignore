@@ -27,6 +27,12 @@ test-results/
 # Generated files
 public/assets/documents/*.pdf
 
+# Legacy generated image output
+/public/assets/generated/
+
+# Generated responsive image derivatives
+/generated-images/
+
 # Local environment files
 *.local
 
