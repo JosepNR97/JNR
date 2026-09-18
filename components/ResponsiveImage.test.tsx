@@ -9,7 +9,7 @@ import {
 describe(
   'ResponsiveImage',
   () => {
-    it('preserves image attributes and renders explicit responsive sources in order', () => {
+    it('preserves image attributes and renders responsive sources without letting picture own the layout box', () => {
       render(
         <ResponsiveImage
           sources={[
@@ -52,11 +52,6 @@ describe(
           'picture',
         );
 
-      const sources =
-        picture?.querySelectorAll(
-          'source',
-        );
-
       expect(
         picture,
       ).not.toBeNull();
@@ -64,43 +59,74 @@ describe(
       expect(
         picture,
       ).toHaveClass(
+        'contents',
+      );
+
+      const layoutWrapper =
+        picture?.parentElement;
+
+      expect(
+        layoutWrapper,
+      ).not.toBeNull();
+
+      expect(
+        layoutWrapper?.tagName,
+      ).toBe(
+        'SPAN',
+      );
+
+      expect(
+        layoutWrapper,
+      ).toHaveClass(
         'block',
         'h-full',
         'w-full',
       );
 
+      const sourceElements =
+        picture?.querySelectorAll(
+          'source',
+        );
+
       expect(
-        sources,
+        sourceElements,
       ).toHaveLength(
         2,
       );
 
       expect(
-        sources?.[0],
+        sourceElements?.[0],
       ).toHaveAttribute(
         'type',
         'image/avif',
       );
 
       expect(
-        sources?.[0],
+        sourceElements?.[0],
       ).toHaveAttribute(
         'srcset',
         '/image-480.avif 480w, /image-960.avif 960w',
       );
 
       expect(
-        sources?.[0],
+        sourceElements?.[0],
       ).toHaveAttribute(
         'sizes',
         '(min-width: 800px) 600px, 100vw',
       );
 
       expect(
-        sources?.[1],
+        sourceElements?.[1],
       ).toHaveAttribute(
         'type',
         'image/webp',
+      );
+
+      expect(
+        sourceElements?.[1],
+      ).toHaveAttribute(
+        'srcset',
+        '/image-480.webp 480w, /image-960.webp 960w',
       );
 
       expect(
@@ -155,7 +181,7 @@ describe(
       );
     });
 
-    it('renders the original image directly when no optimized source exists', () => {
+    it('uses the same stable layout wrapper when no optimized source exists', () => {
       render(
         <ResponsiveImage
           src="/small-logo.svg"
@@ -182,6 +208,28 @@ describe(
         ),
       ).toBeNull();
 
+      const layoutWrapper =
+        image.parentElement;
+
+      expect(
+        layoutWrapper,
+      ).not.toBeNull();
+
+      expect(
+        layoutWrapper?.tagName,
+      ).toBe(
+        'SPAN',
+      );
+
+      expect(
+        layoutWrapper,
+      ).toHaveClass(
+        'grid',
+        'h-full',
+        'w-full',
+        'place-items-center',
+      );
+
       expect(
         image,
       ).toHaveAttribute(
@@ -194,6 +242,93 @@ describe(
       ).toHaveClass(
         'block',
         'object-contain',
+      );
+    });
+
+    it('keeps optimized and unoptimized assets on the same wrapper contract', () => {
+      const {
+        rerender,
+      } = render(
+        <ResponsiveImage
+          sources={[
+            {
+              type:
+                'image/webp',
+              srcSet:
+                '/logo-80.webp 80w',
+            },
+          ]}
+          src="/logo.png"
+          alt="Logo"
+          width={160}
+          height={100}
+          className="max-h-full max-w-full object-contain"
+          pictureClassName="grid h-full w-full place-items-center"
+        />,
+      );
+
+      let image =
+        screen.getByRole(
+          'img',
+          {
+            name:
+              'Logo',
+          },
+        );
+
+      let wrapper =
+        image
+          .closest(
+            'picture',
+          )
+          ?.parentElement;
+
+      expect(
+        wrapper,
+      ).toHaveClass(
+        'grid',
+        'h-full',
+        'w-full',
+        'place-items-center',
+      );
+
+      rerender(
+        <ResponsiveImage
+          sources={[]}
+          src="/logo.svg"
+          alt="Logo"
+          width={160}
+          height={100}
+          className="max-h-full max-w-full object-contain"
+          pictureClassName="grid h-full w-full place-items-center"
+        />,
+      );
+
+      image =
+        screen.getByRole(
+          'img',
+          {
+            name:
+              'Logo',
+          },
+        );
+
+      wrapper =
+        image.parentElement;
+
+      expect(
+        image.closest(
+          'picture',
+        ),
+      ).toBeNull();
+
+      expect(
+        wrapper,
+      ).toHaveClass(
+        'grid',
+        'h-full',
+        'w-full',
+        'place-items-center',
       );
     });
 
@@ -210,6 +345,7 @@ describe(
           width={64}
           height={64}
           loading="eager"
+          pictureClassName="grid h-full w-full place-items-center"
         />,
       );
 
@@ -232,6 +368,15 @@ describe(
         image,
       ).toHaveClass(
         'block',
+      );
+
+      expect(
+        image?.parentElement,
+      ).toHaveClass(
+        'grid',
+        'h-full',
+        'w-full',
+        'place-items-center',
       );
 
       expect(
