@@ -107,6 +107,10 @@ describe(
 
       expect(
         badge,
+      ).not.toBeNull();
+
+      expect(
+        badge,
       ).toHaveAttribute(
         'loading',
         'eager',
@@ -133,12 +137,33 @@ describe(
         '64',
       );
 
+      /*
+       * The rendered 48×48 geometry now belongs to the stable
+       * ResponsiveImage wrapper rather than directly to <img>.
+       *
+       * The image fills that wrapper absolutely, so switching
+       * between original/WebP/AVIF candidates cannot alter the
+       * visual box.
+       */
+      expect(
+        badge?.parentElement,
+      ).toHaveClass(
+        'relative',
+        'block',
+        'h-12',
+        'w-12',
+      );
+
       expect(
         badge,
       ).toHaveClass(
-        'h-12',
-        'w-12',
+        'block',
+        'absolute',
+        'inset-0',
+        'h-full',
+        'w-full',
         'object-contain',
+        'object-center',
       );
     });
 
