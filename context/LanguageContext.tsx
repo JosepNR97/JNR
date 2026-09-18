@@ -52,11 +52,17 @@ const getInitialLanguage = (): Language => {
   if (typeof window === 'undefined') return 'es';
 
   const urlLanguage = getLanguageFromPathname(window.location.pathname);
-  if (urlLanguage) return urlLanguage;
+
+  if (urlLanguage) {
+    return urlLanguage;
+  }
 
   try {
     const storedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (isLanguage(storedLanguage)) return storedLanguage;
+
+    if (isLanguage(storedLanguage)) {
+      return storedLanguage;
+    }
   } catch {
     // Storage can be unavailable in restrictive browsing modes.
   }
@@ -76,6 +82,12 @@ const persistLanguage = (language: Language): void => {
   }
 };
 
+const getReadingLineY = (): number =>
+  Math.max(
+    96,
+    Math.min(window.innerHeight * 0.25, 240),
+  );
+
 const getLanguageNavigationHash = (): string => {
   const currentHash = window.location.hash;
   const currentHashId = currentHash.startsWith('#')
@@ -83,9 +95,8 @@ const getLanguageNavigationHash = (): string => {
     : currentHash;
 
   /*
-   * Preserve hashes that do not represent one of the portfolio's main
-   * sections. They may point to a more specific deep link that should not
-   * be replaced by the section-level navigation logic.
+   * Preserve specific deep links that are not one of the portfolio's
+   * section-level anchors.
    */
   if (
     currentHash &&
@@ -110,9 +121,9 @@ const getLanguageNavigationHash = (): string => {
   const viewportBottom = window.scrollY + window.innerHeight;
 
   /*
-   * At the very bottom of the document, a short final section may never
-   * reach the normal reading line because there is not enough content below
-   * it. In that case the last portfolio section is the intended context.
+   * A short final section cannot always reach the normal reading line.
+   * At the bottom of the page, the final portfolio section is therefore
+   * the active semantic context.
    */
   if (
     documentHeight > 0 &&
@@ -127,51 +138,61 @@ const getLanguageNavigationHash = (): string => {
     return `#${finalSection.id}`;
   }
 
-  /*
-   * Use a stable reading line below the fixed header instead of copying a
-   * raw scrollY value. This keeps the same semantic section across
-   * translations even when their content heights differ.
-   */
-  const referenceY = Math.max(
-    96,
-    Math.min(window.innerHeight * 0.25, 240),
-  );
+  const readingLineY = getReadingLineY();
 
-  let currentSection = sections.find((section) => {
+  const currentSection = sections.find((section) => {
     const rect = section.getBoundingClientRect();
 
-    return rect.top <= referenceY && rect.bottom > referenceY;
+    return (
+      rect.top <= readingLineY &&
+      rect.bottom > readingLineY
+    );
   });
 
+  if (currentSection) {
+    return currentSection.id === 'top'
+      ? ''
+      : `#${currentSection.id}`;
+  }
+
   /*
-   * A layout gap should not prevent context preservation. If the reading
-   * line happens to sit between sections, use the section whose top edge is
-   * closest to it.
+   * Layout gaps are not expected between the main sections, but use the
+   * closest section as a defensive fallback if the reading line happens to
+   * fall outside every section.
    */
-  if (!currentSection) {
-    currentSection = sections.reduce((nearestSection, section) => {
-      const nearestDistance = Math.abs(
-        nearestSection.getBoundingClientRect().top - referenceY,
+  const nearestSection = sections.reduce(
+    (nearest, section) => {
+      const nearestRect =
+        nearest.getBoundingClientRect();
+
+      const sectionRect =
+        section.getBoundingClientRect();
+
+      const nearestDistance = Math.min(
+        Math.abs(nearestRect.top - readingLineY),
+        Math.abs(nearestRect.bottom - readingLineY),
       );
 
-      const sectionDistance = Math.abs(
-        section.getBoundingClientRect().top - referenceY,
+      const sectionDistance = Math.min(
+        Math.abs(sectionRect.top - readingLineY),
+        Math.abs(sectionRect.bottom - readingLineY),
       );
 
       return sectionDistance < nearestDistance
         ? section
-        : nearestSection;
-    });
-  }
+        : nearest;
+    },
+  );
 
-  return currentSection.id === 'top'
+  return nearestSection.id === 'top'
     ? ''
-    : `#${currentSection.id}`;
+    : `#${nearestSection.id}`;
 };
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(getInitialLanguage);
   const navigationInProgressRef = useRef(false);
+
   const t = translations[language];
 
   useLayoutEffect(() => {
@@ -198,13 +219,13 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
         /*
          * Persist the explicit user choice before leaving the current
-         * document. The destination URL remains authoritative.
+         * localized document.
          */
         persistLanguage(nextLanguage);
 
         /*
-         * Preserve the user's semantic position in the portfolio instead of
-         * copying a raw pixel offset between translations.
+         * Preserve semantic page context rather than copying a pixel offset,
+         * because translated sections can have different heights.
          */
         const navigationHash = getLanguageNavigationHash();
 
