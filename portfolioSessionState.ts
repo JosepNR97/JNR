@@ -55,6 +55,38 @@ const getEmptyPortfolioSessionState =
     ...EMPTY_PORTFOLIO_SESSION_STATE,
   });
 
+/*
+ * JSON.parse() is an untrusted boundary and therefore initially produces
+ * unknown data. This parser owns the runtime validation for the persisted
+ * contract and returns the strongly typed state only after that validation
+ * succeeds.
+ *
+ * Keeping this logic here gives production code and tests one shared source
+ * of truth instead of relying on type assertions or duplicated validators.
+ */
+export const parsePortfolioSessionState = (
+  serializedState: string | null,
+): PortfolioSessionState | null => {
+  if (!serializedState) {
+    return null;
+  }
+
+  try {
+    const parsedState: unknown =
+      JSON.parse(
+        serializedState,
+      );
+
+    return isPortfolioSessionState(
+      parsedState,
+    )
+      ? parsedState
+      : null;
+  } catch {
+    return null;
+  }
+};
+
 export const readPortfolioSessionState =
   (): PortfolioSessionState => {
     if (
@@ -73,16 +105,17 @@ export const readPortfolioSessionState =
         return getEmptyPortfolioSessionState();
       }
 
-      const parsedState: unknown =
-        JSON.parse(
+      const parsedState =
+        parsePortfolioSessionState(
           serializedState,
         );
 
-      if (
-        !isPortfolioSessionState(
-          parsedState,
-        )
-      ) {
+      if (!parsedState) {
+        /*
+         * Do not leave malformed or obsolete data in the tab session.
+         * Future reads should start from a clean state instead of repeatedly
+         * attempting to decode invalid storage.
+         */
         window.sessionStorage.removeItem(
           PORTFOLIO_SESSION_STATE_STORAGE_KEY,
         );
@@ -92,6 +125,10 @@ export const readPortfolioSessionState =
 
       return parsedState;
     } catch {
+      /*
+       * sessionStorage can be unavailable in restrictive environments.
+       * Persistence is an enhancement; portfolio interaction must continue.
+       */
       return getEmptyPortfolioSessionState();
     }
   };
