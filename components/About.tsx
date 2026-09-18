@@ -9,12 +9,8 @@ import {
   useLanguage,
 } from '../context/LanguageContext';
 import {
-  getProfileImageSources,
   PROFILE_IMAGE_SIZES,
 } from '../imageAssets';
-import {
-  PROFILE_IMAGE_DELIVERY,
-} from '../imageDeliveryConfig';
 import {
   useCountUp,
 } from '../hooks/useCountUp';
@@ -33,11 +29,6 @@ import {
 
 const CURRENT_YEAR =
   new Date().getFullYear();
-
-const PROFILE_IMAGE_SOURCES =
-  getProfileImageSources(
-    PROFILE_DATA.image,
-  );
 
 export const About: React.FC =
   () => {
@@ -103,9 +94,6 @@ export const About: React.FC =
 
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-slate-200 shadow-2xl">
                 <ResponsiveImage
-                  sources={
-                    PROFILE_IMAGE_SOURCES
-                  }
                   src={
                     PROFILE_DATA.image
                   }
@@ -113,10 +101,10 @@ export const About: React.FC =
                     PROFILE_DATA.name
                   }
                   width={
-                    PROFILE_IMAGE_DELIVERY.width
+                    1254
                   }
                   height={
-                    PROFILE_IMAGE_DELIVERY.height
+                    1254
                   }
                   sizes={
                     PROFILE_IMAGE_SIZES
