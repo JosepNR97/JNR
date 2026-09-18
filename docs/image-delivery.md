@@ -1,95 +1,188 @@
 # Image delivery
 
-The portfolio generates a small, evidence-based set of responsive image derivatives during development and production builds.
+The portfolio automatically generates responsive image derivatives for raster assets used by the application.
 
-## Scope
+The image-delivery pipeline is designed so that adding normal portfolio content does not require maintaining a second list of optimized images.
 
-`npm run generate:images` uses `sharp` to generate only:
+## Content workflow
 
-- 480 px and 960 px AVIF/WebP candidates for the About profile photograph;
-- 192 px AVIF/WebP derivatives for certification badges whose existing source files have material transfer cost.
+Portfolio content remains managed through the existing data files.
 
-SVG assets, small credential-issuer logos, employer logos, academic logos and original source files are not rewritten.
+For example, adding a certification continues to require only:
 
-## Profile image
-
-Responsive derivatives are generated from:
-
-`public/assets/people/josep-nunez-riba-2.png`
-
-The PNG is retained as the high-quality generation source.
-
-The existing runtime image:
-
-`public/assets/people/josep-nunez-riba-2.webp`
-
-remains the fallback presented to browsers that do not select one of the generated responsive candidates.
-
-The generator verifies that the source image still has the expected intrinsic dimensions before producing derivatives.
-
-Changing the profile photograph in the future may therefore require updating `PROFILE_IMAGE_DELIVERY` when its filename or intrinsic dimensions change.
-
-## Certification badges
-
-Certification content continues to be managed through the existing `constants.ts` data model.
-
-Adding a new certification does not require changing the image-delivery configuration for the certification to work.
-
-A new certification can continue to be added by:
-
-1. adding its badge to `public/assets/certifications/`;
-2. referencing the badge from `constants.ts`;
+1. adding its image to `public/assets/certifications/`;
+2. referencing the image from `constants.ts`;
 3. adding the certification metadata and credential URL as usual.
 
-If the new source image is unusually large, it can optionally be added to the optimized badge list in `imageDeliveryConfig.ts`.
+No image filename needs to be added to the image-delivery configuration.
 
-This optimization list is not a second content source of truth. An image that is not listed continues to use its original source normally.
+The same principle applies to employer logos, credential issuers and academic logos.
+
+## Automatically discovered assets
+
+`npm run generate:images` scans raster files under:
+
+- `public/assets/people/`;
+- `public/assets/certifications/`;
+- `public/assets/credential-issuers/`;
+- `public/assets/education/`;
+- `public/assets/employers/`;
+- `public/assets/brand/`.
+
+Supported source formats are:
+
+- PNG;
+- JPEG/JPG;
+- WebP.
+
+SVG files are intentionally ignored and continue to be served directly as vectors.
+
+## Delivery rules
+
+Responsive widths are defined by asset category rather than by individual filename.
+
+Current rules are:
+
+- people: 480 and 960 px;
+- certification badges: 48, 96 and 192 px;
+- credential issuers: 80, 160 and 320 px;
+- academic logos: 64, 128 and 256 px;
+- employer logos: 144 and 288 px;
+- brand raster assets: 64, 128 and 256 px.
+
+The generator never upscales a source.
+
+When a source is smaller than the largest configured candidate, its natural width becomes the largest generated candidate so a responsive `<source>` never wins format selection while only providing an undersized image.
+
+## Automatic source selection
+
+When equivalent raster sources share the same logical name, such as:
+
+```text
+people/profile.png
+people/profile.webp
+```
+
+they are treated as the same logical image.
+
+The higher-quality source format is preferred for derivative generation while the smallest existing equivalent source is used as the transfer-size baseline.
+
+This allows a high-quality PNG master to be used for encoding without incorrectly treating a derivative as an optimization merely because it is smaller than the PNG while still being larger than an existing WebP.
+
+Equivalent files sharing the same logical name must have identical intrinsic dimensions.
+
+## Format selection
+
+For each logical raster image, the generator evaluates WebP and AVIF candidates.
+
+A WebP source set is emitted only when every generated WebP candidate is smaller than the existing transfer-size baseline.
+
+AVIF is emitted ahead of WebP only when every AVIF candidate is smaller than its equivalent WebP candidate.
+
+If WebP is not beneficial, AVIF is compared directly with the original baseline.
+
+As a result, a newer format is not automatically preferred merely because it is newer.
+
+If no generated format improves delivery, no responsive derivative is emitted and the original image remains the only source.
+
+## Generated files
+
+Generated responsive assets are written to:
+
+```text
+generated-images/
+```
+
+The directory is ignored by Git and is disposable build output.
+
+The generator removes the directory before every run so deleted or renamed source assets cannot leave stale derivatives behind.
+
+The previous temporary output directory:
+
+```text
+public/assets/generated/
+```
+
+is also removed by the generator for migration safety.
+
+## Runtime discovery
+
+`imageAssets.ts` uses Vite's static glob asset discovery to identify the derivatives that actually exist after generation.
+
+`ResponsiveImage` automatically maps an original public asset URL to the corresponding generated variants.
+
+Application components therefore only provide the original source:
+
+```tsx
+<ResponsiveImage
+  src={item.logoUrl}
+  alt="..."
+/>
+```
+
+They do not need to know which formats or widths were generated.
+
+Generated assets use Vite's no-inline asset handling so small optimized badges remain independent files rather than being embedded into the initial JavaScript bundle.
+
+This preserves deferred network loading for collapsed certification panels.
 
 ## Deferred certification loading
 
 Professional certification panels retain their existing accordion structure and accessibility semantics.
 
-Certification badge URLs are not assigned for vendors that have never been expanded. This prevents hidden badges from generating image requests during the initial portfolio load.
+Certification badge URLs are not assigned for vendors that have never been expanded.
 
-When a vendor is expanded:
+A collapsed and unvisited vendor therefore generates no certification badge image request.
 
-- its certification image URLs are assigned;
-- optimized AVIF/WebP sources are offered where configured;
-- the existing source remains the fallback;
-- image URLs remain assigned after the first expansion so closing animations retain their content and subsequent expansions reuse the browser cache.
+When a vendor is opened:
 
-## Generated files
+- its original image URL is assigned;
+- `ResponsiveImage` automatically exposes any generated responsive variants;
+- the browser selects the most appropriate generated width and supported format;
+- the original asset remains the fallback.
 
-Generated files are written to:
+Once a vendor has been opened, its image URLs remain assigned when the panel closes so:
 
-`public/assets/generated/`
+- the closing animation does not blank the images;
+- subsequent expansions can reuse the browser cache.
 
-and are intentionally ignored by Git.
+## Reload and restored state
 
-Vite copies them into the production build after `generate:images` runs.
+Expanded professional-certification state is already persisted through the portfolio's existing tab-scoped session state.
 
-The generator:
+If the page is reloaded while a certification vendor is expanded, `expandedVendorId` is reconstructed before the first Education render.
 
-- removes the generated directory before every run;
-- uses fixed dimensions and encoder settings;
-- never upscales an image;
-- fails if an expected source is unavailable;
-- fails if a generated optimized derivative is not smaller than its source.
+The expanded vendor therefore receives its badge image URLs immediately on mount and responsive image selection proceeds normally.
 
-This prevents stale build artifacts and keeps generation deterministic and idempotent.
+There is no intermediate state in which a restored open panel intentionally waits for user interaction before loading its badges.
+
+## Carousel behavior
+
+Certification carousel behavior is unchanged.
+
+Carousel logos preserve:
+
+- eager loading;
+- autoplay;
+- infinite looping;
+- hover pause;
+- keyboard interaction;
+- drag behavior;
+- click-to-open behavior;
+- reduced-motion behavior.
+
+Raster carousel logos can use automatically generated responsive variants while SVG logos continue to be served directly.
 
 ## Development and build integration
 
-Image generation is part of the normal project scripts.
-
-Development preparation runs:
+Development preparation continues to run:
 
 ```bash
 npm run generate:cv
 npm run generate:images
 ```
 
-Production builds run:
+Production builds continue to run:
 
 ```bash
 npm run generate:cv
@@ -98,11 +191,49 @@ tsc --noEmit
 vite build
 ```
 
-No generated image derivative needs to be committed to the repository.
+No generated responsive image needs to be committed to the repository.
+
+## Adding future content
+
+### New certification
+
+Normal workflow:
+
+```text
+add badge
+→ update constants.ts
+→ commit
+```
+
+No image-delivery configuration change is required.
+
+### New employer
+
+Normal workflow:
+
+```text
+add employer logo
+→ update portfolio data
+→ commit
+```
+
+If the logo is SVG it is preserved directly.
+
+If the logo is raster it is automatically evaluated for responsive optimization.
+
+### New project
+
+Projects do not require any image-delivery-specific maintenance.
+
+### New profile photograph
+
+A replacement profile photograph is automatically evaluated by the people image-delivery rule.
+
+If its intrinsic dimensions differ from the current profile image, the explicit `width` and `height` attributes in `About.tsx` must also be updated so the HTML continues to describe the source image accurately.
 
 ## Validation
 
-After changing image-delivery behavior, the normal validation set is:
+After changing image-delivery behavior, run:
 
 ```bash
 npm run audit:security
@@ -111,20 +242,24 @@ npm run test:e2e
 npm run test:a11y
 ```
 
-The image-delivery E2E coverage verifies that:
+The image-delivery E2E coverage verifies:
 
-- responsive About candidates load successfully;
-- mobile and high-density desktop contexts select appropriately sized candidates;
-- intrinsic dimensions remain present;
-- generated images do not return HTTP errors;
-- certification badges are not requested while their vendor has never been opened;
-- opening an optimized vendor loads the generated badge candidate.
+- responsive About delivery on mobile;
+- responsive About delivery on high-density desktop;
+- automatic optimization of a raster asset that has no per-file configuration;
+- explicit image dimensions;
+- absence of image HTTP failures;
+- no certification badge URLs before first expansion;
+- responsive certification delivery after expansion;
+- correct badge delivery after reloading with an expanded certification vendor.
 
 ## Performance validation
 
 Performance comparisons should use the canonical localized page:
 
-`/JNR/es/`
+```text
+/JNR/es/
+```
 
 or `/es/` under the local preview server.
 
@@ -135,6 +270,6 @@ Before/after Lighthouse or PageSpeed measurements should use equivalent mobile a
 - Cumulative Layout Shift (CLS);
 - transferred image bytes;
 - image-delivery estimated savings;
-- the identified LCP element.
+- identified LCP element.
 
-The existence of generated files alone is not considered evidence that the optimization is successful.
+The existence of generated derivatives alone is not considered evidence that the optimization is successful.
