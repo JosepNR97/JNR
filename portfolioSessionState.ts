@@ -55,22 +55,9 @@ const getEmptyPortfolioSessionState =
     ...EMPTY_PORTFOLIO_SESSION_STATE,
   });
 
-/*
- * JSON.parse() is an untrusted boundary and therefore initially produces
- * unknown data. This parser owns the runtime validation for the persisted
- * contract and returns the strongly typed state only after that validation
- * succeeds.
- *
- * Keeping this logic here gives production code and tests one shared source
- * of truth instead of relying on type assertions or duplicated validators.
- */
-export const parsePortfolioSessionState = (
-  serializedState: string | null,
+const parsePortfolioSessionState = (
+  serializedState: string,
 ): PortfolioSessionState | null => {
-  if (!serializedState) {
-    return null;
-  }
-
   try {
     const parsedState: unknown =
       JSON.parse(
@@ -112,9 +99,9 @@ export const readPortfolioSessionState =
 
       if (!parsedState) {
         /*
-         * Do not leave malformed or obsolete data in the tab session.
-         * Future reads should start from a clean state instead of repeatedly
-         * attempting to decode invalid storage.
+         * Malformed or obsolete session data must not be retried on every
+         * render. Reset the persisted entry and continue with the safe
+         * default state.
          */
         window.sessionStorage.removeItem(
           PORTFOLIO_SESSION_STATE_STORAGE_KEY,
@@ -160,8 +147,7 @@ export const updatePortfolioSessionState = (
     );
   } catch {
     /*
-     * Session persistence is a progressive enhancement.
-     * Accordion interaction must keep working if storage is unavailable.
+     * A storage failure must never prevent accordion interaction.
      */
   }
 };
