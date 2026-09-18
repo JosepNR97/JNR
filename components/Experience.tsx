@@ -1,15 +1,22 @@
-import { useLanguage } from '../context/LanguageContext';
+import {
+  useLanguage,
+} from '../context/LanguageContext';
 import {
   BriefcaseIcon,
   ChevronDownIcon,
 } from './Icons';
+import {
+  ResponsiveImage,
+} from './ResponsiveImage';
 import {
   Reveal,
   RevealArticle,
 } from './Reveal';
 
 interface ExperienceProps {
-  expandedId: string | null;
+  expandedId:
+    | string
+    | null;
   onToggle: (
     itemId: string,
   ) => void;
@@ -52,7 +59,9 @@ export const Experience = ({
 
           <div className="space-y-8 md:space-y-12">
             {t.experience.items.map(
-              (item) => {
+              (
+                item,
+              ) => {
                 const isExpanded =
                   expandedId ===
                   item.id;
@@ -135,15 +144,21 @@ export const Experience = ({
                           </span>
 
                           <span className="flex shrink-0 flex-row-reverse items-center justify-between gap-3 md:flex-col md:items-end md:justify-start">
-                            <img
+                            <ResponsiveImage
                               src={
                                 item.logoUrl
                               }
                               alt={`Logo ${item.company}`}
-                              width="140"
-                              height="40"
+                              width={
+                                140
+                              }
+                              height={
+                                40
+                              }
+                              sizes="144px"
                               loading="lazy"
                               decoding="async"
+                              pictureClassName="contents"
                               className="h-8 max-w-36 object-contain"
                             />
 
