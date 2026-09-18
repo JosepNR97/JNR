@@ -48,12 +48,18 @@ describe(
         );
 
       const picture =
-        image.parentElement;
+        image.closest(
+          'picture',
+        );
 
       const sources =
         picture?.querySelectorAll(
           'source',
         );
+
+      expect(
+        picture,
+      ).not.toBeNull();
 
       expect(
         picture,
@@ -142,19 +148,22 @@ describe(
       expect(
         image,
       ).toHaveClass(
+        'block',
         'h-full',
         'w-full',
         'object-cover',
       );
     });
 
-    it('falls back to the original image when no optimized source exists', () => {
+    it('renders the original image directly when no optimized source exists', () => {
       render(
         <ResponsiveImage
           src="/small-logo.svg"
           alt="Small logo"
           width={64}
           height={64}
+          className="object-contain"
+          pictureClassName="grid h-full w-full place-items-center"
         />,
       );
 
@@ -168,19 +177,23 @@ describe(
         );
 
       expect(
-        image.parentElement
-          ?.querySelectorAll(
-            'source',
-          ),
-      ).toHaveLength(
-        0,
-      );
+        image.closest(
+          'picture',
+        ),
+      ).toBeNull();
 
       expect(
         image,
       ).toHaveAttribute(
         'src',
         '/small-logo.svg',
+      );
+
+      expect(
+        image,
+      ).toHaveClass(
+        'block',
+        'object-contain',
       );
     });
 
@@ -214,6 +227,18 @@ describe(
       ).not.toHaveAttribute(
         'src',
       );
+
+      expect(
+        image,
+      ).toHaveClass(
+        'block',
+      );
+
+      expect(
+        container.querySelector(
+          'picture',
+        ),
+      ).toBeNull();
 
       expect(
         container.querySelectorAll(
