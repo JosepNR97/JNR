@@ -20,6 +20,7 @@ const Portfolio = () => {
     (vendorId: string) => {
       const shouldExpand = expandedVendorId !== vendorId;
       setExpandedVendorId(shouldExpand ? vendorId : null);
+
       if (shouldExpand) {
         scrollToElementAfterLayout(`education-card-${vendorId}`);
       }
@@ -51,7 +52,11 @@ const Portfolio = () => {
       <main id="main-content" tabIndex={-1}>
         <Hero />
         <About />
-        <Certifications onSelectVendor={handleCertificationSelect} />
+
+        <div id="certifications" className="scroll-mt-20">
+          <Certifications onSelectVendor={handleCertificationSelect} />
+        </div>
+
         <Services />
         <Experience />
         <Education
