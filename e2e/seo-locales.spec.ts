@@ -19,8 +19,18 @@ const LOCALES = [
   },
 ] as const;
 
+const SECTION_CONTEXT_IDS = [
+  'about',
+  'certifications',
+  'services',
+  'experience',
+  'education',
+  'contact',
+] as const;
+
 type LocaleCode = (typeof LOCALES)[number]['code'];
 type Locale = (typeof LOCALES)[number];
+type SectionContextId = (typeof SECTION_CONTEXT_IDS)[number];
 
 const productionUrl = (locale: LocaleCode) =>
   `https://josepnr97.github.io/JNR/${locale}/`;
@@ -197,6 +207,23 @@ const expectPersistedBeforeNavigation = async (
   expect(persistedLanguage).toBe(language);
 };
 
+const scrollToSection = async (
+  page: Page,
+  sectionId: SectionContextId,
+) => {
+  await page.evaluate((id) => {
+    document
+      .getElementById(id)
+      ?.scrollIntoView({
+        block: 'start',
+      });
+  }, sectionId);
+
+  await expect(
+    page.locator(`#${sectionId}`),
+  ).toBeInViewport();
+};
+
 test.describe(
   'multilingual SEO routes',
   () => {
@@ -303,7 +330,7 @@ test.describe(
             targetLocale.code,
           ]);
 
-        test(`${originLocale.code} -> ${targetLocale.code} navigates directly to the selected locale`, async ({
+        test(`${originLocale.code} -> ${targetLocale.code} navigates directly to the selected locale from the top of the page`, async ({
           page,
         }) => {
           await blockAnalytics(page);
@@ -349,9 +376,7 @@ test.describe(
 
           /*
            * Capture which language was persisted by the old document before
-           * it was actually unloaded. This distinguishes persistence before
-           * navigation from the destination page merely correcting storage
-           * after it has already loaded.
+           * it was actually unloaded.
            */
           await installNavigationLanguageMarker(
             page,
@@ -370,6 +395,10 @@ test.describe(
             })
             .click();
 
+          /*
+           * The top of the page intentionally stays on the clean localized
+           * URL instead of adding a redundant #top fragment.
+           */
           await expect(page).toHaveURL(
             new RegExp(
               `/${targetLocale.code}/$`,
@@ -397,14 +426,9 @@ test.describe(
           );
 
           /*
-           * This is the core invariant:
-           *
-           * no root entry,
-           * no third locale,
-           * no temporary wrong locale.
-           *
-           * The only main-frame navigation allowed after the click is the
-           * explicitly selected destination.
+           * No root entry and no temporary locale are allowed. The only
+           * main-frame navigation after the click is the explicitly selected
+           * destination.
            */
           expect(
             navigationPathnames,
@@ -414,6 +438,117 @@ test.describe(
         });
       }
     }
+
+    for (const sectionId of SECTION_CONTEXT_IDS) {
+      test(`language selection preserves the visible ${sectionId} section`, async ({
+        page,
+      }) => {
+        await blockAnalytics(page);
+
+        await page.goto(
+          '/es/?source=section-context',
+        );
+
+        await expectLocaleState(
+          page,
+          LOCALES.find(
+            ({ code }) => code === 'es',
+          )!,
+        );
+
+        await scrollToSection(
+          page,
+          sectionId,
+        );
+
+        await page
+          .getByRole('banner')
+          .getByRole('button', {
+            name: 'English',
+          })
+          .click();
+
+        await expect(page).toHaveURL(
+          new RegExp(
+            `/en/\\?source=section-context#${sectionId}$`,
+          ),
+        );
+
+        await page.waitForLoadState(
+          'networkidle',
+        );
+
+        await expect(page).toHaveURL(
+          new RegExp(
+            `/en/\\?source=section-context#${sectionId}$`,
+          ),
+        );
+
+        await expectLocaleState(
+          page,
+          LOCALES.find(
+            ({ code }) => code === 'en',
+          )!,
+        );
+
+        await expect(
+          page.locator(`#${sectionId}`),
+        ).toBeInViewport();
+      });
+    }
+
+    test('the visible section replaces a stale section hash when changing language', async ({
+      page,
+    }) => {
+      await blockAnalytics(page);
+
+      await page.goto(
+        '/es/#about',
+      );
+
+      await expect(page).toHaveURL(
+        /\/es\/#about$/,
+      );
+
+      await scrollToSection(
+        page,
+        'services',
+      );
+
+      /*
+       * scrollIntoView does not modify the URL, so #about is deliberately
+       * stale at this point.
+       */
+      await expect(page).toHaveURL(
+        /\/es\/#about$/,
+      );
+
+      await page
+        .getByRole('banner')
+        .getByRole('button', {
+          name: 'English',
+        })
+        .click();
+
+      await expect(page).toHaveURL(
+        /\/en\/#services$/,
+      );
+
+      await page.waitForLoadState(
+        'networkidle',
+      );
+
+      await expect(
+        page.locator('#services'),
+      ).toBeInViewport();
+
+      await expectLocaleState(
+        page,
+        LOCALES.find(
+          ({ code }) => code === 'en',
+        )!,
+      );
+    });
 
     for (const locale of LOCALES) {
       test(`root entry respects stored ${locale.code} preference and preserves the section anchor`, async ({
