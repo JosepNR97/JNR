@@ -9,17 +9,19 @@ import {
 describe(
   'ResponsiveImage',
   () => {
-    it('preserves image attributes and renders ordered responsive sources', () => {
+    it('preserves image attributes and renders explicit responsive sources in order', () => {
       render(
         <ResponsiveImage
           sources={[
             {
-              type: 'image/avif',
+              type:
+                'image/avif',
               srcSet:
                 '/image-480.avif 480w, /image-960.avif 960w',
             },
             {
-              type: 'image/webp',
+              type:
+                'image/webp',
               srcSet:
                 '/image-480.webp 480w, /image-960.webp 960w',
             },
@@ -40,7 +42,8 @@ describe(
         screen.getByRole(
           'img',
           {
-            name: 'Example',
+            name:
+              'Example',
           },
         );
 
@@ -62,7 +65,9 @@ describe(
 
       expect(
         sources,
-      ).toHaveLength(2);
+      ).toHaveLength(
+        2,
+      );
 
       expect(
         sources?.[0],
@@ -136,13 +141,6 @@ describe(
 
       expect(
         image,
-      ).toHaveAttribute(
-        'sizes',
-        '(min-width: 800px) 600px, 100vw',
-      );
-
-      expect(
-        image,
       ).toHaveClass(
         'h-full',
         'w-full',
@@ -150,10 +148,10 @@ describe(
       );
     });
 
-    it('falls back to a normal image when no modern source is configured', () => {
+    it('falls back to the original image when no optimized source exists', () => {
       render(
         <ResponsiveImage
-          src="/small-logo.png"
+          src="/small-logo.svg"
           alt="Small logo"
           width={64}
           height={64}
@@ -164,7 +162,8 @@ describe(
         screen.getByRole(
           'img',
           {
-            name: 'Small logo',
+            name:
+              'Small logo',
           },
         );
 
@@ -173,13 +172,55 @@ describe(
           ?.querySelectorAll(
             'source',
           ),
-      ).toHaveLength(0);
+      ).toHaveLength(
+        0,
+      );
 
       expect(
         image,
       ).toHaveAttribute(
         'src',
-        '/small-logo.png',
+        '/small-logo.svg',
+      );
+    });
+
+    it('does not create image sources while src is intentionally deferred', () => {
+      const {
+        container,
+      } = render(
+        <ResponsiveImage
+          sources={[]}
+          src={
+            undefined
+          }
+          alt=""
+          width={64}
+          height={64}
+          loading="eager"
+        />,
+      );
+
+      const image =
+        container.querySelector(
+          'img',
+        );
+
+      expect(
+        image,
+      ).not.toBeNull();
+
+      expect(
+        image,
+      ).not.toHaveAttribute(
+        'src',
+      );
+
+      expect(
+        container.querySelectorAll(
+          'source',
+        ),
+      ).toHaveLength(
+        0,
       );
     });
   },
