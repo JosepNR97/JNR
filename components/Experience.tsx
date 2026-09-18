@@ -1,7 +1,4 @@
-import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { updatePortfolioSessionState } from '../portfolioSessionState';
-import { scrollToElementAfterLayout } from '../scrollToElement';
 import {
   BriefcaseIcon,
   ChevronDownIcon,
@@ -12,53 +9,18 @@ import {
 } from './Reveal';
 
 interface ExperienceProps {
-  initialExpandedId?:
-    | string
-    | null;
+  expandedId: string | null;
+  onToggle: (
+    itemId: string,
+  ) => void;
 }
 
 export const Experience = ({
-  initialExpandedId = null,
+  expandedId,
+  onToggle,
 }: ExperienceProps) => {
   const { t } =
     useLanguage();
-
-  const [
-    expandedId,
-    setExpandedId,
-  ] =
-    useState<string | null>(
-      initialExpandedId,
-    );
-
-  const handleToggle = (
-    itemId: string,
-  ) => {
-    const shouldExpand =
-      expandedId !== itemId;
-
-    const nextExpandedId =
-      shouldExpand
-        ? itemId
-        : null;
-
-    setExpandedId(
-      nextExpandedId,
-    );
-
-    updatePortfolioSessionState(
-      {
-        expandedExperienceId:
-          nextExpandedId,
-      },
-    );
-
-    if (shouldExpand) {
-      scrollToElementAfterLayout(
-        `experience-item-${itemId}`,
-      );
-    }
-  };
 
   return (
     <section
@@ -145,7 +107,7 @@ export const Experience = ({
                           panelId
                         }
                         onClick={() =>
-                          handleToggle(
+                          onToggle(
                             item.id,
                           )
                         }
