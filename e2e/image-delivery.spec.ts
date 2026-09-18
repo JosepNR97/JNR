@@ -52,59 +52,68 @@ const expectLoadedImage =
       .toBe(true);
   };
 
-const expectCenteredWithin =
+const expectImageCenteredInFrame =
   async (
-    frame: Locator,
     image: Locator,
   ) => {
-    const [
-      frameBox,
-      imageBox,
-    ] =
-      await Promise.all([
-        frame.boundingBox(),
-        image.boundingBox(),
-      ]);
+    const geometry =
+      await image.evaluate(
+        (
+          imageElement,
+        ) => {
+          const frameElement =
+            imageElement.closest(
+              '[data-image-frame]',
+            );
+
+          if (
+            !(frameElement instanceof HTMLElement)
+          ) {
+            return null;
+          }
+
+          const frameRect =
+            frameElement.getBoundingClientRect();
+
+          const imageRect =
+            imageElement.getBoundingClientRect();
+
+          return {
+            frameCenterX:
+              frameRect.left +
+              frameRect.width /
+                2,
+
+            frameCenterY:
+              frameRect.top +
+              frameRect.height /
+                2,
+
+            imageCenterX:
+              imageRect.left +
+              imageRect.width /
+                2,
+
+            imageCenterY:
+              imageRect.top +
+              imageRect.height /
+                2,
+          };
+        },
+      );
 
     expect(
-      frameBox,
+      geometry,
     ).not.toBeNull();
 
-    expect(
-      imageBox,
-    ).not.toBeNull();
-
-    if (
-      !frameBox ||
-      !imageBox
-    ) {
+    if (!geometry) {
       return;
     }
 
-    const frameCenterX =
-      frameBox.x +
-      frameBox.width /
-        2;
-
-    const frameCenterY =
-      frameBox.y +
-      frameBox.height /
-        2;
-
-    const imageCenterX =
-      imageBox.x +
-      imageBox.width /
-        2;
-
-    const imageCenterY =
-      imageBox.y +
-      imageBox.height /
-        2;
-
     expect(
       Math.abs(
-        frameCenterX -
-          imageCenterX,
+        geometry.frameCenterX -
+          geometry.imageCenterX,
       ),
     ).toBeLessThanOrEqual(
       2,
@@ -112,8 +121,8 @@ const expectCenteredWithin =
 
     expect(
       Math.abs(
-        frameCenterY -
-          imageCenterY,
+        geometry.frameCenterY -
+          geometry.imageCenterY,
       ),
     ).toBeLessThanOrEqual(
       2,
@@ -156,8 +165,7 @@ const expectAllFramesCentered =
         image,
       );
 
-      await expectCenteredWithin(
-        frame,
+      await expectImageCenteredInFrame(
         image,
       );
     }
@@ -550,6 +558,16 @@ test.describe(
       async ({
         page,
       }) => {
+        /*
+         * This test measures geometry rather than animation behaviour.
+         * Disable reveal/motion transitions so all bounding rectangles
+         * represent the final stable layout.
+         */
+        await page.emulateMedia({
+          reducedMotion:
+            'reduce',
+        });
+
         await blockAnalytics(
           page,
         );
@@ -801,8 +819,7 @@ test.describe(
               image,
             );
 
-            await expectCenteredWithin(
-              frame,
+            await expectImageCenteredInFrame(
               image,
             );
           }
