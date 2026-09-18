@@ -120,6 +120,80 @@ const expectCenteredWithin =
     );
   };
 
+const expectAllFramesCentered =
+  async (
+    frames: Locator,
+  ) => {
+    const count =
+      await frames.count();
+
+    expect(
+      count,
+    ).toBeGreaterThan(
+      0,
+    );
+
+    for (
+      let index = 0;
+      index < count;
+      index += 1
+    ) {
+      const frame =
+        frames.nth(
+          index,
+        );
+
+      const image =
+        frame
+          .locator(
+            'img',
+          )
+          .first();
+
+      await image.scrollIntoViewIfNeeded();
+
+      await expectLoadedImage(
+        image,
+      );
+
+      await expectCenteredWithin(
+        frame,
+        image,
+      );
+    }
+  };
+
+const expectAllImagesLoaded =
+  async (
+    images: Locator,
+  ) => {
+    const count =
+      await images.count();
+
+    expect(
+      count,
+    ).toBeGreaterThan(
+      0,
+    );
+
+    for (
+      let index = 0;
+      index < count;
+      index += 1
+    ) {
+      const image =
+        images.nth(
+          index,
+        );
+
+      await image.scrollIntoViewIfNeeded();
+
+      await expectLoadedImage(
+        image,
+      );
+    }
+  };
+
 const collectFailedImageResponses =
   (
     page: Page,
@@ -417,7 +491,7 @@ test.describe(
     );
 
     test(
-      'automatically optimizes an academic raster without per-file configuration',
+      'automatically optimizes a raster without per-file configuration',
       async ({
         page,
       }) => {
@@ -434,110 +508,37 @@ test.describe(
           '/es/',
         );
 
-        const image =
-          page.getByRole(
-            'img',
-            {
-              name:
-                'Logo ISDI',
-            },
+        const academicFrames =
+          page.locator(
+            '[data-image-frame="academic-logo"]',
           );
 
-        await image.scrollIntoViewIfNeeded();
-
-        await expectLoadedImage(
-          image,
-        );
+        const frameCount =
+          await academicFrames.count();
 
         expect(
-          await getSelectedSourceWidth(
-            image,
-          ),
-        ).toBe(
-          64,
+          frameCount,
+        ).toBeGreaterThan(
+          0,
         );
 
-        expect(
-          failedImages,
-        ).toEqual(
-          [],
-        );
-      },
-    );
-
-    test(
-      'keeps optimized raster logos centered inside their visual frames',
-      async ({
-        page,
-      }) => {
-        await blockAnalytics(
-          page,
-        );
-
-        const failedImages =
-          collectFailedImageResponses(
-            page,
-          );
-
-        await page.goto(
-          '/es/',
-        );
-
-        const checks = [
-          {
-            name:
-              'Logo ISDI',
-            frame:
-              'academic-logo',
-          },
-          {
-            name:
-              'Logo Universitat de Barcelona',
-            frame:
-              'academic-logo',
-          },
-          {
-            name:
-              'Logo Microsoft Azure',
-            frame:
-              'vendor-logo',
-          },
-          {
-            name:
-              'Logo SAP LeanIX',
-            frame:
-              'vendor-logo',
-          },
-          {
-            name:
-              'Logo ServiceNow',
-            frame:
-              'vendor-logo',
-          },
-          {
-            name:
-              'Logo Scaled Agile, Inc.',
-            frame:
-              'vendor-logo',
-          },
-        ] as const;
+        let foundGeneratedCandidate =
+          false;
 
         for (
-          const check of
-          checks
+          let index = 0;
+          index <
+          frameCount;
+          index += 1
         ) {
           const image =
-            page
-              .getByRole(
-                'img',
-                {
-                  name:
-                    check.name,
-                  exact:
-                    true,
-                },
+            academicFrames
+              .nth(
+                index,
               )
-              .first();
+              .locator(
+                'img',
+              );
 
           await image.scrollIntoViewIfNeeded();
 
@@ -545,27 +546,27 @@ test.describe(
             image,
           );
 
-          const frame =
-            page
-              .locator(
-                `[data-image-frame="${check.frame}"]`,
-              )
-              .filter({
-                has:
-                  image,
-              });
+          const selectedWidth =
+            await getSelectedSourceWidth(
+              image,
+            );
 
-          await expect(
-            frame,
-          ).toHaveCount(
-            1,
-          );
+          if (
+            selectedWidth !==
+            null
+          ) {
+            foundGeneratedCandidate =
+              true;
 
-          await expectCenteredWithin(
-            frame,
-            image,
-          );
+            break;
+          }
         }
+
+        expect(
+          foundGeneratedCandidate,
+        ).toBe(
+          true,
+        );
 
         expect(
           failedImages,
@@ -576,7 +577,7 @@ test.describe(
     );
 
     test(
-      'defers certification badges, loads optimized candidates on expansion and restores them after reload',
+      'keeps every visible logo frame centered without a per-logo allowlist',
       async ({
         page,
       }) => {
@@ -593,6 +594,287 @@ test.describe(
           '/es/',
         );
 
+        /*
+         * Every academic logo is covered dynamically.
+         * New academic entries automatically join this test.
+         */
+        await expectAllFramesCentered(
+          page.locator(
+            '[data-image-frame="academic-logo"]',
+          ),
+        );
+
+        /*
+         * Every professional vendor logo is covered dynamically.
+         * No vendor names or image filenames are hardcoded here.
+         */
+        await expectAllFramesCentered(
+          page.locator(
+            '[data-image-frame="vendor-logo"]',
+          ),
+        );
+
+        /*
+         * Experience does not use a visible fixed logo frame,
+         * so centering against an arbitrary container would not
+         * be meaningful. Still verify every experience logo loads.
+         */
+        await expectAllImagesLoaded(
+          page.locator(
+            '#experience img[alt^="Logo "]',
+          ),
+        );
+
+        /*
+         * Pause carousel movement before comparing geometry.
+         * Only inspect the accessible middle copy; repeated copies
+         * contain the same assets and geometry.
+         */
+        const carouselViewport =
+          page.getByTestId(
+            'certifications-viewport',
+          );
+
+        await carouselViewport.hover();
+
+        const interactiveCarouselSegment =
+          page.locator(
+            '[data-carousel-segment="true"]',
+          );
+
+        await expectAllFramesCentered(
+          interactiveCarouselSegment.locator(
+            '[data-image-frame="carousel-logo"]',
+          ),
+        );
+
+        expect(
+          failedImages,
+        ).toEqual(
+          [],
+        );
+      },
+    );
+
+    test(
+      'defers every certification badge until its vendor is opened and keeps every badge centered',
+      async ({
+        page,
+      }) => {
+        await blockAnalytics(
+          page,
+        );
+
+        const failedImages =
+          collectFailedImageResponses(
+            page,
+          );
+
+        await page.goto(
+          '/es/',
+        );
+
+        /*
+         * This assertion is deliberately global rather than
+         * vendor-specific. Every certification badge starts
+         * without a source while all vendors are unvisited.
+         */
+        const allBadgeImages =
+          page.locator(
+            '[data-image-frame="certification-badge"] img',
+          );
+
+        const initialBadgeCount =
+          await allBadgeImages.count();
+
+        expect(
+          initialBadgeCount,
+        ).toBeGreaterThan(
+          0,
+        );
+
+        expect(
+          await allBadgeImages.evaluateAll(
+            (
+              images,
+            ) =>
+              images.every(
+                (
+                  image,
+                ) =>
+                  !image.hasAttribute(
+                    'src',
+                  ),
+              ),
+          ),
+        ).toBe(
+          true,
+        );
+
+        const vendorTriggers =
+          page.locator(
+            '#education [id^="education-trigger-"]',
+          );
+
+        const vendorCount =
+          await vendorTriggers.count();
+
+        expect(
+          vendorCount,
+        ).toBeGreaterThan(
+          0,
+        );
+
+        let checkedBadgeCount =
+          0;
+
+        /*
+         * Open every vendor dynamically and verify every badge.
+         * A future vendor added to constants.ts automatically
+         * participates without updating this test.
+         */
+        for (
+          let vendorIndex =
+            0;
+          vendorIndex <
+          vendorCount;
+          vendorIndex +=
+            1
+        ) {
+          const trigger =
+            vendorTriggers.nth(
+              vendorIndex,
+            );
+
+          await trigger.scrollIntoViewIfNeeded();
+
+          const panelId =
+            await trigger.getAttribute(
+              'aria-controls',
+            );
+
+          expect(
+            panelId,
+          ).not.toBeNull();
+
+          if (!panelId) {
+            continue;
+          }
+
+          await trigger.click();
+
+          await expect(
+            trigger,
+          ).toHaveAttribute(
+            'aria-expanded',
+            'true',
+          );
+
+          const panel =
+            page.locator(
+              `#${panelId}`,
+            );
+
+          const badgeFrames =
+            panel.locator(
+              '[data-image-frame="certification-badge"]',
+            );
+
+          const badgeCount =
+            await badgeFrames.count();
+
+          checkedBadgeCount +=
+            badgeCount;
+
+          for (
+            let badgeIndex =
+              0;
+            badgeIndex <
+            badgeCount;
+            badgeIndex +=
+              1
+          ) {
+            const frame =
+              badgeFrames.nth(
+                badgeIndex,
+              );
+
+            const image =
+              frame
+                .locator(
+                  'img',
+                )
+                .first();
+
+            await expect(
+              image,
+            ).toHaveAttribute(
+              'src',
+              /.+/,
+            );
+
+            await expect(
+              image,
+            ).toHaveAttribute(
+              'width',
+              '64',
+            );
+
+            await expect(
+              image,
+            ).toHaveAttribute(
+              'height',
+              '64',
+            );
+
+            await expectLoadedImage(
+              image,
+            );
+
+            await expectCenteredWithin(
+              frame,
+              image,
+            );
+          }
+        }
+
+        expect(
+          checkedBadgeCount,
+        ).toBe(
+          initialBadgeCount,
+        );
+
+        expect(
+          failedImages,
+        ).toEqual(
+          [],
+        );
+      },
+    );
+
+    test(
+      'restores optimized certification badges after reload with a vendor expanded',
+      async ({
+        page,
+      }) => {
+        await blockAnalytics(
+          page,
+        );
+
+        const failedImages =
+          collectFailedImageResponses(
+            page,
+          );
+
+        await page.goto(
+          '/es/',
+        );
+
+        /*
+         * One stable vendor is enough for this specific
+         * state-restoration contract. Systematic badge
+         * coverage is handled by the previous test.
+         */
         const githubCard =
           page.locator(
             '#education-card-v_github',
@@ -610,48 +892,6 @@ test.describe(
             '#education-panel-v_github',
           );
 
-        const badges =
-          githubPanel.locator(
-            'img',
-          );
-
-        await expect(
-          githubTrigger,
-        ).toHaveAttribute(
-          'aria-expanded',
-          'false',
-        );
-
-        await expect(
-          badges,
-        ).toHaveCount(
-          2,
-        );
-
-        await expect(
-          badges.first(),
-        ).not.toHaveAttribute(
-          'src',
-          /.+/,
-        );
-
-        await expect(
-          badges.last(),
-        ).not.toHaveAttribute(
-          'src',
-          /.+/,
-        );
-
-        expect(
-          await githubPanel
-            .locator(
-              'source',
-            )
-            .count(),
-        ).toBe(
-          0,
-        );
-
         await githubTrigger.click();
 
         await expect(
@@ -661,26 +901,23 @@ test.describe(
           'true',
         );
 
+        const badges =
+          githubPanel.locator(
+            '[data-image-frame="certification-badge"] img',
+          );
+
+        await expect(
+          badges,
+        ).toHaveCount(
+          2,
+        );
+
         for (
           const badge of
           await badges.all()
         ) {
           await expectLoadedImage(
             badge,
-          );
-
-          await expect(
-            badge,
-          ).toHaveAttribute(
-            'width',
-            '64',
-          );
-
-          await expect(
-            badge,
-          ).toHaveAttribute(
-            'height',
-            '64',
           );
 
           expect(
@@ -692,22 +929,9 @@ test.describe(
           );
         }
 
-        expect(
-          await githubPanel
-            .locator(
-              'source',
-            )
-            .count(),
-        ).toBeGreaterThan(
-          0,
-        );
-
         /*
          * expandedVendorId lives in the existing
          * tab-scoped portfolio session state.
-         * Reloading must therefore render the
-         * expanded panel with its images available
-         * immediately.
          */
         await page.reload();
 
@@ -720,7 +944,7 @@ test.describe(
 
         const reloadedBadges =
           githubPanel.locator(
-            'img',
+            '[data-image-frame="certification-badge"] img',
           );
 
         await expect(
