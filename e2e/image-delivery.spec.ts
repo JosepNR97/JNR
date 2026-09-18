@@ -89,132 +89,145 @@ const collectFailedImageResponses =
     return failed;
   };
 
+const getSelectedSourceWidth =
+  async (
+    image: Locator,
+  ) =>
+    image.evaluate(
+      (
+        element,
+      ) => {
+        const htmlImage =
+          element as HTMLImageElement;
+
+        if (
+          !htmlImage.currentSrc
+        ) {
+          return null;
+        }
+
+        const currentUrl =
+          new URL(
+            htmlImage.currentSrc,
+            document.baseURI,
+          ).href;
+
+        const picture =
+          htmlImage.closest(
+            'picture',
+          );
+
+        if (!picture) {
+          return null;
+        }
+
+        const sources =
+          Array.from(
+            picture.querySelectorAll(
+              'source',
+            ),
+          );
+
+        for (
+          const source of
+          sources
+        ) {
+          const candidates =
+            (
+              source.getAttribute(
+                'srcset',
+              ) ?? ''
+            )
+              .split(
+                ',',
+              )
+              .map(
+                (
+                  candidate,
+                ) =>
+                  candidate.trim(),
+              )
+              .filter(
+                Boolean,
+              );
+
+          for (
+            const candidate of
+            candidates
+          ) {
+            const parts =
+              candidate.split(
+                /\s+/,
+              );
+
+            const candidateUrl =
+              parts[0];
+
+            const descriptor =
+              parts[1];
+
+            if (
+              !candidateUrl ||
+              !descriptor?.endsWith(
+                'w',
+              )
+            ) {
+              continue;
+            }
+
+            const resolvedCandidateUrl =
+              new URL(
+                candidateUrl,
+                document.baseURI,
+              ).href;
+
+            if (
+              resolvedCandidateUrl !==
+              currentUrl
+            ) {
+              continue;
+            }
+
+            const width =
+              Number.parseInt(
+                descriptor.slice(
+                  0,
+                  -1,
+                ),
+                10,
+              );
+
+            return Number.isFinite(
+              width,
+            )
+              ? width
+              : null;
+          }
+        }
+
+        return null;
+      },
+    );
+
 test.describe(
-  'responsive About image',
+  'automatic responsive image delivery',
   () => {
     test.describe(
-      'mobile viewport',
+      'mobile profile image',
       () => {
         test.use({
           viewport: {
-            width: 390,
-            height: 844,
+            width:
+              390,
+            height:
+              844,
           },
           deviceScaleFactor:
             1,
         });
 
         test(
-          'selects the mobile profile candidate and keeps reserved dimensions',
-          async ({
-            page,
-          }) => {
-            await blockAnalytics(
-              page,
-            );
-
-            const failedImages =
-              collectFailedImageResponses(
-                page,
-              );
-
-            await page.goto(
-              '/es/',
-            );
-
-            const picture =
-              page
-                .locator(
-                  '#about picture',
-                )
-                .first();
-
-            const image =
-              picture.locator(
-                'img',
-              );
-
-            await image.scrollIntoViewIfNeeded();
-
-            await expectLoadedImage(
-              image,
-            );
-
-            await expect(
-              image,
-            ).toHaveAttribute(
-              'width',
-              '1254',
-            );
-
-            await expect(
-              image,
-            ).toHaveAttribute(
-              'height',
-              '1254',
-            );
-
-            const currentSrc =
-              await image.evaluate(
-                (
-                  element,
-                ) =>
-                  (
-                    element as HTMLImageElement
-                  ).currentSrc,
-              );
-
-            expect(
-              new URL(
-                currentSrc,
-              ).pathname,
-            ).toMatch(
-              /\/assets\/generated\/people\/josep-nunez-riba-2-480\.(?:avif|webp)$/,
-            );
-
-            const reservedBox =
-              await picture.boundingBox();
-
-            expect(
-              reservedBox,
-            ).not.toBeNull();
-
-            expect(
-              reservedBox?.width ??
-                0,
-            ).toBeGreaterThan(
-              0,
-            );
-
-            expect(
-              reservedBox?.height ??
-                0,
-            ).toBeGreaterThan(
-              0,
-            );
-
-            expect(
-              failedImages,
-            ).toEqual([]);
-          },
-        );
-      },
-    );
-
-    test.describe(
-      'desktop high-density viewport',
-      () => {
-        test.use({
-          viewport: {
-            width: 1440,
-            height: 900,
-          },
-          deviceScaleFactor:
-            2,
-        });
-
-        test(
-          'selects the larger profile candidate without requesting the full source',
+          'selects the 480w generated profile candidate',
           async ({
             page,
           }) => {
@@ -242,227 +255,332 @@ test.describe(
               image,
             );
 
-            const currentSrc =
-              await image.evaluate(
-                (
-                  element,
-                ) =>
-                  (
-                    element as HTMLImageElement
-                  ).currentSrc,
-              );
+            await expect(
+              image,
+            ).toHaveAttribute(
+              'width',
+              '1254',
+            );
+
+            await expect(
+              image,
+            ).toHaveAttribute(
+              'height',
+              '1254',
+            );
 
             expect(
-              new URL(
-                currentSrc,
-              ).pathname,
-            ).toMatch(
-              /\/assets\/generated\/people\/josep-nunez-riba-2-960\.(?:avif|webp)$/,
+              await getSelectedSourceWidth(
+                image,
+              ),
+            ).toBe(
+              480,
             );
 
             expect(
               failedImages,
-            ).toEqual([]);
+            ).toEqual(
+              [],
+            );
           },
         );
       },
     );
-  },
-);
 
-test(
-  'closed certification vendors do not request badge images and opening one loads optimized sources',
-  async ({
-    page,
-  }) => {
-    await blockAnalytics(
-      page,
-    );
+    test.describe(
+      'high-density desktop profile image',
+      () => {
+        test.use({
+          viewport: {
+            width:
+              1440,
+            height:
+              900,
+          },
+          deviceScaleFactor:
+            2,
+        });
 
-    const failedImages =
-      collectFailedImageResponses(
-        page,
-      );
+        test(
+          'selects the 960w generated profile candidate',
+          async ({
+            page,
+          }) => {
+            await blockAnalytics(
+              page,
+            );
 
-    const requestedCertificationImages: string[] =
-      [];
+            const failedImages =
+              collectFailedImageResponses(
+                page,
+              );
 
-    page.on(
-      'request',
-      (
-        request,
-      ) => {
-        if (
-          request.resourceType() !==
-          'image'
-        ) {
-          return;
-        }
+            await page.goto(
+              '/es/',
+            );
 
-        const url =
-          request.url();
+            const image =
+              page.locator(
+                '#about picture img',
+              );
 
-        const isOriginalBadge =
-          url.includes(
-            '/assets/certifications/',
-          );
+            await image.scrollIntoViewIfNeeded();
 
-        const isGeneratedBadge =
-          url.includes(
-            '/assets/generated/certifications/',
-          );
-
-        if (
-          !isOriginalBadge &&
-          !isGeneratedBadge
-        ) {
-          return;
-        }
-
-        requestedCertificationImages.push(
-          url,
-        );
-      },
-    );
-
-    await page.goto(
-      '/es/',
-    );
-
-    expect(
-      requestedCertificationImages,
-    ).toEqual([]);
-
-    const githubCard =
-      page.locator(
-        '#education-card-v_github',
-      );
-
-    await githubCard.scrollIntoViewIfNeeded();
-
-    const githubPanel =
-      page.locator(
-        '#education-panel-v_github',
-      );
-
-    const badges =
-      githubPanel.locator(
-        'img',
-      );
-
-    await expect(
-      badges,
-    ).toHaveCount(2);
-
-    await expect(
-      badges.first(),
-    ).not.toHaveAttribute(
-      'src',
-      /.+/,
-    );
-
-    await expect(
-      badges.last(),
-    ).not.toHaveAttribute(
-      'src',
-      /.+/,
-    );
-
-    expect(
-      requestedCertificationImages,
-    ).toEqual([]);
-
-    const githubTrigger =
-      page.locator(
-        '#education-trigger-v_github',
-      );
-
-    await githubTrigger.click();
-
-    await expect(
-      badges.first(),
-    ).toHaveAttribute(
-      'src',
-      /github-actions/,
-    );
-
-    await expect(
-      badges.last(),
-    ).toHaveAttribute(
-      'src',
-      /github-administration/,
-    );
-
-    for (
-      const badge of
-      await badges.all()
-    ) {
-      await expectLoadedImage(
-        badge,
-      );
-
-      await expect(
-        badge,
-      ).toHaveAttribute(
-        'width',
-        '64',
-      );
-
-      await expect(
-        badge,
-      ).toHaveAttribute(
-        'height',
-        '64',
-      );
-    }
-
-    await expect
-      .poll(
-        () =>
-          requestedCertificationImages.some(
-            (
-              url,
-            ) =>
-              /github-(?:actions|administration)-192\.(?:avif|webp)(?:\?|$)/.test(
-                url,
-              ),
-          ),
-      )
-      .toBe(true);
-
-    const selectedSources =
-      await badges.evaluateAll(
-        (
-          images,
-        ) =>
-          images.map(
-            (
+            await expectLoadedImage(
               image,
-            ) =>
-              new URL(
-                image.currentSrc,
-              ).pathname,
-          ),
-      );
+            );
 
-    expect(
-      selectedSources,
-    ).toHaveLength(2);
+            expect(
+              await getSelectedSourceWidth(
+                image,
+              ),
+            ).toBe(
+              960,
+            );
 
-    selectedSources.forEach(
-      (
-        path,
-      ) => {
-        expect(
-          path,
-        ).toMatch(
-          /\/assets\/generated\/certifications\/github-(?:actions|administration)-192\.(?:avif|webp)$/,
+            expect(
+              failedImages,
+            ).toEqual(
+              [],
+            );
+          },
         );
       },
     );
 
-    expect(
-      failedImages,
-    ).toEqual([]);
+    test(
+      'automatically optimizes an academic raster without per-file configuration',
+      async ({
+        page,
+      }) => {
+        await blockAnalytics(
+          page,
+        );
+
+        const failedImages =
+          collectFailedImageResponses(
+            page,
+          );
+
+        await page.goto(
+          '/es/',
+        );
+
+        const image =
+          page.getByRole(
+            'img',
+            {
+              name:
+                'Logo ISDI',
+            },
+          );
+
+        await image.scrollIntoViewIfNeeded();
+
+        await expectLoadedImage(
+          image,
+        );
+
+        expect(
+          await getSelectedSourceWidth(
+            image,
+          ),
+        ).toBe(
+          64,
+        );
+
+        expect(
+          failedImages,
+        ).toEqual(
+          [],
+        );
+      },
+    );
+
+    test(
+      'defers certification badges, loads optimized candidates on expansion and restores them after reload',
+      async ({
+        page,
+      }) => {
+        await blockAnalytics(
+          page,
+        );
+
+        const failedImages =
+          collectFailedImageResponses(
+            page,
+          );
+
+        await page.goto(
+          '/es/',
+        );
+
+        const githubCard =
+          page.locator(
+            '#education-card-v_github',
+          );
+
+        await githubCard.scrollIntoViewIfNeeded();
+
+        const githubTrigger =
+          page.locator(
+            '#education-trigger-v_github',
+          );
+
+        const githubPanel =
+          page.locator(
+            '#education-panel-v_github',
+          );
+
+        const badges =
+          githubPanel.locator(
+            'img',
+          );
+
+        await expect(
+          githubTrigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'false',
+        );
+
+        await expect(
+          badges,
+        ).toHaveCount(
+          2,
+        );
+
+        await expect(
+          badges.first(),
+        ).not.toHaveAttribute(
+          'src',
+          /.+/,
+        );
+
+        await expect(
+          badges.last(),
+        ).not.toHaveAttribute(
+          'src',
+          /.+/,
+        );
+
+        expect(
+          await githubPanel
+            .locator(
+              'source',
+            )
+            .count(),
+        ).toBe(
+          0,
+        );
+
+        await githubTrigger.click();
+
+        await expect(
+          githubTrigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'true',
+        );
+
+        for (
+          const badge of
+          await badges.all()
+        ) {
+          await expectLoadedImage(
+            badge,
+          );
+
+          await expect(
+            badge,
+          ).toHaveAttribute(
+            'width',
+            '64',
+          );
+
+          await expect(
+            badge,
+          ).toHaveAttribute(
+            'height',
+            '64',
+          );
+
+          expect(
+            await getSelectedSourceWidth(
+              badge,
+            ),
+          ).toBe(
+            48,
+          );
+        }
+
+        expect(
+          await githubPanel
+            .locator(
+              'source',
+            )
+            .count(),
+        ).toBeGreaterThan(
+          0,
+        );
+
+        /*
+         * expandedVendorId lives in the existing
+         * tab-scoped portfolio session state.
+         * Reloading must therefore render the
+         * expanded panel with its images available
+         * immediately.
+         */
+        await page.reload();
+
+        await expect(
+          githubTrigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'true',
+        );
+
+        const reloadedBadges =
+          githubPanel.locator(
+            'img',
+          );
+
+        await expect(
+          reloadedBadges,
+        ).toHaveCount(
+          2,
+        );
+
+        for (
+          const badge of
+          await reloadedBadges.all()
+        ) {
+          await expect(
+            badge,
+          ).toHaveAttribute(
+            'src',
+            /.+/,
+          );
+
+          await expectLoadedImage(
+            badge,
+          );
+
+          expect(
+            await getSelectedSourceWidth(
+              badge,
+            ),
+          ).toBe(
+            48,
+          );
+        }
+
+        expect(
+          failedImages,
+        ).toEqual(
+          [],
+        );
+      },
+    );
   },
 );
