@@ -51,6 +51,29 @@ const LOCALES = [
   },
 ] as const;
 
+const VIEWPORTS = [
+  {
+    name: 'mobile',
+    width: 360,
+    height: 800,
+  },
+  {
+    name: 'tablet',
+    width: 768,
+    height: 1024,
+  },
+  {
+    name: 'desktop',
+    width: 1440,
+    height: 900,
+  },
+  {
+    name: 'ultrawide',
+    width: 2560,
+    height: 1080,
+  },
+] as const;
+
 type LocaleCode = (typeof LOCALES)[number]['code'];
 
 let notFoundHtml = '';
@@ -70,7 +93,10 @@ const initializeStoredLanguage = async (
 ) => {
   await page.addInitScript(
     ({ storageKey, storedLanguage }) => {
-      window.localStorage.setItem(storageKey, storedLanguage);
+      window.localStorage.setItem(
+        storageKey,
+        storedLanguage,
+      );
     },
     {
       storageKey: LANGUAGE_STORAGE_KEY,
@@ -104,11 +130,75 @@ const expectStoredLanguage = async (
     .poll(() =>
       page.evaluate(
         (storageKey) =>
-          window.localStorage.getItem(storageKey),
+          window.localStorage.getItem(
+            storageKey,
+          ),
         LANGUAGE_STORAGE_KEY,
       ),
     )
     .toBe(language);
+};
+
+const assertHeroAlignedStructure = async (
+  page: Page,
+) => {
+  await expect(
+    page.locator(
+      'meta[name="theme-color"]',
+    ),
+  ).toHaveAttribute(
+    'content',
+    '#0f172a',
+  );
+
+  await expect(
+    page.locator('main.page-shell'),
+  ).toHaveCount(1);
+
+  await expect(
+    page.locator('.brand'),
+  ).toHaveAttribute(
+    'aria-label',
+    'JNR',
+  );
+
+  await expect(
+    page.locator('.error-badge'),
+  ).toHaveText('Error 404');
+
+  const watermark =
+    page.locator('.watermark');
+
+  await expect(
+    watermark,
+  ).toHaveText('404');
+
+  await expect(
+    watermark,
+  ).toHaveAttribute(
+    'aria-hidden',
+    'true',
+  );
+
+  await expect(
+    page.locator('.route-art'),
+  ).toHaveAttribute(
+    'aria-hidden',
+    'true',
+  );
+
+  await expect(
+    page.locator(
+      '.route-art svg',
+    ),
+  ).toHaveAttribute(
+    'role',
+    'presentation',
+  );
+
+  await expect(
+    page.locator('.card'),
+  ).toHaveCount(0);
 };
 
 const trackMainFramePathnames = (
@@ -116,24 +206,31 @@ const trackMainFramePathnames = (
 ): string[] => {
   const pathnames: string[] = [];
 
-  page.on('framenavigated', (frame) => {
-    if (frame !== page.mainFrame()) {
-      return;
-    }
+  page.on(
+    'framenavigated',
+    (frame) => {
+      if (
+        frame !==
+        page.mainFrame()
+      ) {
+        return;
+      }
 
-    const url = frame.url();
+      const url =
+        frame.url();
 
-    if (
-      !url.startsWith('http://') &&
-      !url.startsWith('https://')
-    ) {
-      return;
-    }
+      if (
+        !url.startsWith('http://') &&
+        !url.startsWith('https://')
+      ) {
+        return;
+      }
 
-    pathnames.push(
-      new URL(url).pathname,
-    );
-  });
+      pathnames.push(
+        new URL(url).pathname,
+      );
+    },
+  );
 
   return pathnames;
 };
@@ -164,138 +261,147 @@ const assertAccessibilityBaseline = async (
   ).toEqual([]);
 };
 
-test.beforeAll(async ({ request }) => {
-  const response =
-    await request.get(
-      '/404.html',
-    );
+test.beforeAll(
+  async ({ request }) => {
+    const response =
+      await request.get(
+        '/404.html',
+      );
 
-  expect(response.ok()).toBe(true);
+    expect(
+      response.ok(),
+    ).toBe(true);
 
-  notFoundHtml =
-    await response.text();
-});
+    notFoundHtml =
+      await response.text();
+  },
+);
 
 test.describe(
   'localized 404 page',
   () => {
     for (const locale of LOCALES) {
-      test(`explicit ${locale.code} URL renders the ${locale.code} 404 and returns to the same locale`, async ({
-        page,
-      }) => {
-        await initializeStoredLanguage(
-          page,
-          locale.conflictingStoredLanguage,
-        );
+      test(
+        `explicit ${locale.code} URL renders the ${locale.code} 404 and returns to the same locale`,
+        async ({ page }) => {
+          await initializeStoredLanguage(
+            page,
+            locale.conflictingStoredLanguage,
+          );
 
-        const pathname =
-          `/JNR/${locale.code}/missing-page`;
+          const pathname =
+            `/JNR/${locale.code}/missing-page`;
 
-        await serveNotFoundAt(
-          page,
-          pathname,
-        );
-
-        const response =
-          await page.goto(
+          await serveNotFoundAt(
+            page,
             pathname,
           );
 
-        expect(
-          response?.status(),
-        ).toBe(404);
+          const response =
+            await page.goto(
+              pathname,
+            );
 
-        await expect(
-          page.locator('html'),
-        ).toHaveAttribute(
-          'lang',
-          locale.code,
-        );
+          expect(
+            response?.status(),
+          ).toBe(404);
 
-        await expect(
-          page,
-        ).toHaveTitle(
-          locale.title,
-        );
-
-        await expect(
-          page.locator(
-            'meta[name="description"]',
-          ),
-        ).toHaveAttribute(
-          'content',
-          locale.description,
-        );
-
-        await expect(
-          page.locator(
-            'meta[name="robots"]',
-          ),
-        ).toHaveAttribute(
-          'content',
-          'noindex',
-        );
-
-        await expect(
-          page.getByRole(
-            'heading',
-            {
-              name:
-                locale.heading,
-            },
-          ),
-        ).toBeVisible();
-
-        await expect(
-          page.locator(
-            '#not-found-message',
-          ),
-        ).toHaveText(
-          locale.message,
-        );
-
-        const returnLink =
-          page.getByRole(
-            'link',
-            {
-              name:
-                locale.returnLabel,
-            },
+          await expect(
+            page.locator('html'),
+          ).toHaveAttribute(
+            'lang',
+            locale.code,
           );
 
-        await expect(
-          returnLink,
-        ).toBeVisible();
+          await expect(
+            page,
+          ).toHaveTitle(
+            locale.title,
+          );
 
-        await expect(
-          returnLink,
-        ).toHaveAttribute(
-          'href',
-          `/JNR/${locale.code}/`,
-        );
+          await expect(
+            page.locator(
+              'meta[name="description"]',
+            ),
+          ).toHaveAttribute(
+            'content',
+            locale.description,
+          );
 
-        await expect(
-          page.locator(
-            'script[src]',
-          ),
-        ).toHaveCount(0);
+          await expect(
+            page.locator(
+              'meta[name="robots"]',
+            ),
+          ).toHaveAttribute(
+            'content',
+            'noindex',
+          );
 
-        await expect(
-          page.locator(
-            'link[rel="stylesheet"]',
-          ),
-        ).toHaveCount(0);
+          await assertHeroAlignedStructure(
+            page,
+          );
 
-        await expectStoredLanguage(
-          page,
-          locale.code,
-        );
+          await expect(
+            page.getByRole(
+              'heading',
+              {
+                name:
+                  locale.heading,
+              },
+            ),
+          ).toBeVisible();
 
-        await assertAccessibilityBaseline(
-          page,
-          `404 (${locale.code})`,
-        );
-      });
+          await expect(
+            page.locator(
+              '#not-found-message',
+            ),
+          ).toHaveText(
+            locale.message,
+          );
+
+          const returnLink =
+            page.getByRole(
+              'link',
+              {
+                name:
+                  locale.returnLabel,
+              },
+            );
+
+          await expect(
+            returnLink,
+          ).toBeVisible();
+
+          await expect(
+            returnLink,
+          ).toHaveAttribute(
+            'href',
+            `/JNR/${locale.code}/`,
+          );
+
+          await expect(
+            page.locator(
+              'script[src]',
+            ),
+          ).toHaveCount(0);
+
+          await expect(
+            page.locator(
+              'link[rel="stylesheet"]',
+            ),
+          ).toHaveCount(0);
+
+          await expectStoredLanguage(
+            page,
+            locale.code,
+          );
+
+          await assertAccessibilityBaseline(
+            page,
+            `404 (${locale.code})`,
+          );
+        },
+      );
     }
 
     test(
@@ -351,28 +457,11 @@ test.describe(
       },
     );
 
-    for (const locale of LOCALES) {
-      test(`returning from a ${locale.code} 404 navigates only to ${locale.code}`, async ({
-        page,
-      }) => {
-        await blockAnalytics(page);
-
-        /*
-         * Start with a deliberately conflicting stored preference. The 404
-         * URL itself must establish the correct language.
-         */
-        await initializeStoredLanguage(
-          page,
-          locale.conflictingStoredLanguage,
-        );
-
-        /*
-         * The local preview does not live below /JNR/, so use the equivalent
-         * local path for the roundtrip test. The static 404 supports both
-         * shapes and will therefore generate /<locale>/ as the return URL.
-         */
+    test(
+      'hero-aligned 404 remains usable across target viewports',
+      async ({ page }) => {
         const pathname =
-          `/${locale.code}/missing-page`;
+          '/JNR/es/missing-responsive';
 
         await serveNotFoundAt(
           page,
@@ -388,91 +477,277 @@ test.describe(
           response?.status(),
         ).toBe(404);
 
-        await expect(
-          page.locator('html'),
-        ).toHaveAttribute(
-          'lang',
-          locale.code,
-        );
+        for (
+          const viewport
+          of VIEWPORTS
+        ) {
+          await page.setViewportSize({
+            width:
+              viewport.width,
+            height:
+              viewport.height,
+          });
 
-        await expectStoredLanguage(
+          await expect(
+            page.locator(
+              '.error-badge',
+            ),
+          ).toBeVisible();
+
+          await expect(
+            page.getByRole(
+              'heading',
+              {
+                name:
+                  'Página no encontrada',
+              },
+            ),
+          ).toBeVisible();
+
+          await expect(
+            page.getByRole(
+              'link',
+              {
+                name:
+                  'Volver al portfolio',
+              },
+            ),
+          ).toBeVisible();
+
+          const layout =
+            await page.evaluate(
+              () => ({
+                documentWidth:
+                  document.documentElement
+                    .scrollWidth,
+                viewportWidth:
+                  document.documentElement
+                    .clientWidth,
+                documentHeight:
+                  document.documentElement
+                    .scrollHeight,
+                viewportHeight:
+                  document.documentElement
+                    .clientHeight,
+              }),
+            );
+
+          expect(
+            layout.documentWidth,
+            `${viewport.name} 404 must not overflow horizontally`,
+          ).toBeLessThanOrEqual(
+            layout.viewportWidth,
+          );
+
+          expect(
+            layout.documentHeight,
+            `${viewport.name} 404 must not overflow vertically`,
+          ).toBeLessThanOrEqual(
+            layout.viewportHeight,
+          );
+        }
+      },
+    );
+
+    test(
+      'decorative motion is disabled when reduced motion is requested',
+      async ({ page }) => {
+        await page.emulateMedia({
+          reducedMotion:
+            'reduce',
+        });
+
+        const pathname =
+          '/JNR/en/missing-reduced-motion';
+
+        await serveNotFoundAt(
           page,
-          locale.code,
+          pathname,
         );
 
-        const returnLink =
-          page.getByRole(
-            'link',
-            {
-              name:
-                locale.returnLabel,
+        const response =
+          await page.goto(
+            pathname,
+          );
+
+        expect(
+          response?.status(),
+        ).toBe(404);
+
+        const animations =
+          await page.evaluate(
+            () => {
+              const selectors = [
+                '.ambient-primary',
+                '.ambient-secondary',
+                '.route-line-active',
+                '.route-pulse',
+              ];
+
+              return selectors.map(
+                (selector) => {
+                  const element =
+                    document.querySelector(
+                      selector,
+                    );
+
+                  if (!element) {
+                    return null;
+                  }
+
+                  return window
+                    .getComputedStyle(
+                      element,
+                    )
+                    .animationName;
+                },
+              );
             },
           );
 
-        await expect(
-          returnLink,
-        ).toHaveAttribute(
-          'href',
-          `/${locale.code}/`,
-        );
+        expect(
+          animations,
+        ).toEqual([
+          'none',
+          'none',
+          'none',
+          'none',
+        ]);
+      },
+    );
 
-        const navigationPathnames =
-          trackMainFramePathnames(
+    for (const locale of LOCALES) {
+      test(
+        `returning from a ${locale.code} 404 navigates only to ${locale.code}`,
+        async ({ page }) => {
+          await blockAnalytics(
             page,
           );
 
-        await returnLink.click();
+          /*
+           * Start with a deliberately conflicting stored preference. The 404
+           * URL itself must establish the correct language.
+           */
+          await initializeStoredLanguage(
+            page,
+            locale.conflictingStoredLanguage,
+          );
 
-        await expect(page).toHaveURL(
-          new RegExp(
-            `/${locale.code}/$`,
-          ),
-        );
+          /*
+           * The local preview does not live below /JNR/, so use the equivalent
+           * local path for the roundtrip test. The static 404 supports both
+           * shapes and will therefore generate /<locale>/ as the return URL.
+           */
+          const pathname =
+            `/${locale.code}/missing-page`;
 
-        await page.waitForLoadState(
-          'networkidle',
-        );
+          await serveNotFoundAt(
+            page,
+            pathname,
+          );
 
-        await expect(page).toHaveURL(
-          new RegExp(
-            `/${locale.code}/$`,
-          ),
-        );
+          const response =
+            await page.goto(
+              pathname,
+            );
 
-        await expect(
-          page.locator('html'),
-        ).toHaveAttribute(
-          'lang',
-          locale.code,
-        );
+          expect(
+            response?.status(),
+          ).toBe(404);
 
-        await expect(
-          page
-            .getByRole('banner')
-            .getByRole('button', {
-              name:
-                locale.name,
-            }),
-        ).toHaveAttribute(
-          'aria-pressed',
-          'true',
-        );
+          await expect(
+            page.locator('html'),
+          ).toHaveAttribute(
+            'lang',
+            locale.code,
+          );
 
-        await expectStoredLanguage(
-          page,
-          locale.code,
-        );
+          await expectStoredLanguage(
+            page,
+            locale.code,
+          );
 
-        /*
-         * No root and no alternative locale may appear between the 404 and
-         * its destination. This assertion is symmetric for CA, ES and EN.
-         */
-        expect(
-          navigationPathnames,
-        ).toEqual([
-          `/${locale.code}/`,
-        ]);
-      });
+          const returnLink =
+            page.getByRole(
+              'link',
+              {
+                name:
+                  locale.returnLabel,
+              },
+            );
+
+          await expect(
+            returnLink,
+          ).toHaveAttribute(
+            'href',
+            `/${locale.code}/`,
+          );
+
+          const navigationPathnames =
+            trackMainFramePathnames(
+              page,
+            );
+
+          await returnLink.click();
+
+          await expect(
+            page,
+          ).toHaveURL(
+            new RegExp(
+              `/${locale.code}/$`,
+            ),
+          );
+
+          await page.waitForLoadState(
+            'networkidle',
+          );
+
+          await expect(
+            page,
+          ).toHaveURL(
+            new RegExp(
+              `/${locale.code}/$`,
+            ),
+          );
+
+          await expect(
+            page.locator('html'),
+          ).toHaveAttribute(
+            'lang',
+            locale.code,
+          );
+
+          await expect(
+            page
+              .getByRole('banner')
+              .getByRole(
+                'button',
+                {
+                  name:
+                    locale.name,
+                },
+              ),
+          ).toHaveAttribute(
+            'aria-pressed',
+            'true',
+          );
+
+          await expectStoredLanguage(
+            page,
+            locale.code,
+          );
+
+          /*
+           * No root and no alternative locale may appear between the 404 and
+           * its destination. This assertion is symmetric for CA, ES and EN.
+           */
+          expect(
+            navigationPathnames,
+          ).toEqual([
+            `/${locale.code}/`,
+          ]);
+        },
+      );
     }
   },
 );
