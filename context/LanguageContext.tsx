@@ -28,6 +28,26 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined,
 );
 
+const LANGUAGE_NAVIGATION_SECTION_IDS = [
+  'top',
+  'about',
+  'certifications',
+  'services',
+  'experience',
+  'education',
+  'contact',
+] as const;
+
+type LanguageNavigationSectionId =
+  (typeof LANGUAGE_NAVIGATION_SECTION_IDS)[number];
+
+const isLanguageNavigationSectionId = (
+  value: string,
+): value is LanguageNavigationSectionId =>
+  LANGUAGE_NAVIGATION_SECTION_IDS.includes(
+    value as LanguageNavigationSectionId,
+  );
+
 const getInitialLanguage = (): Language => {
   if (typeof window === 'undefined') return 'es';
 
@@ -54,6 +74,99 @@ const persistLanguage = (language: Language): void => {
   } catch {
     // The explicit URL remains authoritative if storage is unavailable.
   }
+};
+
+const getLanguageNavigationHash = (): string => {
+  const currentHash = window.location.hash;
+  const currentHashId = currentHash.startsWith('#')
+    ? currentHash.slice(1)
+    : currentHash;
+
+  /*
+   * Preserve hashes that do not represent one of the portfolio's main
+   * sections. They may point to a more specific deep link that should not
+   * be replaced by the section-level navigation logic.
+   */
+  if (
+    currentHash &&
+    !isLanguageNavigationSectionId(currentHashId)
+  ) {
+    return currentHash;
+  }
+
+  const sections = LANGUAGE_NAVIGATION_SECTION_IDS
+    .map((sectionId) => document.getElementById(sectionId))
+    .filter((element): element is HTMLElement => element !== null);
+
+  if (sections.length === 0) {
+    return currentHash;
+  }
+
+  const documentHeight = Math.max(
+    document.documentElement.scrollHeight,
+    document.body.scrollHeight,
+  );
+
+  const viewportBottom = window.scrollY + window.innerHeight;
+
+  /*
+   * At the very bottom of the document, a short final section may never
+   * reach the normal reading line because there is not enough content below
+   * it. In that case the last portfolio section is the intended context.
+   */
+  if (
+    documentHeight > 0 &&
+    viewportBottom >= documentHeight - 2
+  ) {
+    const finalSection = sections.at(-1);
+
+    if (!finalSection || finalSection.id === 'top') {
+      return '';
+    }
+
+    return `#${finalSection.id}`;
+  }
+
+  /*
+   * Use a stable reading line below the fixed header instead of copying a
+   * raw scrollY value. This keeps the same semantic section across
+   * translations even when their content heights differ.
+   */
+  const referenceY = Math.max(
+    96,
+    Math.min(window.innerHeight * 0.25, 240),
+  );
+
+  let currentSection = sections.find((section) => {
+    const rect = section.getBoundingClientRect();
+
+    return rect.top <= referenceY && rect.bottom > referenceY;
+  });
+
+  /*
+   * A layout gap should not prevent context preservation. If the reading
+   * line happens to sit between sections, use the section whose top edge is
+   * closest to it.
+   */
+  if (!currentSection) {
+    currentSection = sections.reduce((nearestSection, section) => {
+      const nearestDistance = Math.abs(
+        nearestSection.getBoundingClientRect().top - referenceY,
+      );
+
+      const sectionDistance = Math.abs(
+        section.getBoundingClientRect().top - referenceY,
+      );
+
+      return sectionDistance < nearestDistance
+        ? section
+        : nearestSection;
+    });
+  }
+
+  return currentSection.id === 'top'
+    ? ''
+    : `#${currentSection.id}`;
 };
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
@@ -85,18 +198,22 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
         /*
          * Persist the explicit user choice before leaving the current
-         * document. The destination URL remains authoritative, but an
-         * intermediate document can no longer fall back to an older
-         * preference or to the browser language.
+         * document. The destination URL remains authoritative.
          */
         persistLanguage(nextLanguage);
+
+        /*
+         * Preserve the user's semantic position in the portfolio instead of
+         * copying a raw pixel offset between translations.
+         */
+        const navigationHash = getLanguageNavigationHash();
 
         window.location.assign(
           getLocalizedHref(
             window.location.pathname,
             nextLanguage,
             window.location.search,
-            window.location.hash,
+            navigationHash,
           ),
         );
 
