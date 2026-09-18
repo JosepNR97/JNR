@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useState,
 } from 'react';
 import {
@@ -74,48 +73,16 @@ export const Education = ({
       );
     };
 
-  /*
-   * expandedVendorId can change without the
-   * Education trigger being clicked, for
-   * example after a carousel selection or
-   * when tab-scoped state is restored.
-   *
-   * Persist the fact that this vendor has
-   * been displayed so its images remain
-   * mounted during later closing animations.
-   */
-  useEffect(() => {
-    if (
-      !expandedVendorId
-    ) {
-      return;
-    }
-
-    setLoadedVendorIds(
-      (
-        current,
-      ) => {
-        if (
-          current.has(
-            expandedVendorId,
-          )
-        ) {
-          return current;
-        }
-
-        return new Set([
-          ...current,
-          expandedVendorId,
-        ]);
-      },
-    );
-  }, [
-    expandedVendorId,
-  ]);
-
   const handleVendorToggle = (
     vendorId: string,
   ) => {
+    /*
+     * A vendor opened through its own trigger
+     * must keep its badge URLs after closing
+     * so the closing animation does not blank
+     * the content and later opens can reuse
+     * the browser cache.
+     */
     markVendorImagesLoaded(
       vendorId,
     );
@@ -428,6 +395,11 @@ export const Education = ({
                                       sizes="48px"
                                       loading="eager"
                                       decoding="async"
+                                      onLoad={() =>
+                                        markVendorImagesLoaded(
+                                          vendor.id,
+                                        )
+                                      }
                                       pictureClassName="contents"
                                       className="h-12 w-12 object-contain"
                                     />
