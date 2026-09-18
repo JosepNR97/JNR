@@ -1,9 +1,3 @@
-import { assetPath } from './assetPath';
-import {
-  CERTIFICATION_BADGE_DELIVERY,
-  PROFILE_IMAGE_DELIVERY,
-} from './imageDeliveryConfig';
-
 export interface ResponsiveImageSource {
   type:
     | 'image/avif'
@@ -11,112 +5,244 @@ export interface ResponsiveImageSource {
   srcSet: string;
 }
 
-const getStem = (
-  filename: string,
-) =>
-  filename.replace(
-    /\.[^.]+$/,
-    '',
-  );
+interface GeneratedImageVariant {
+  type:
+    | 'image/avif'
+    | 'image/webp';
+  width: number;
+  url: string;
+}
 
-const getFilename = (
+const generatedImageModules =
+  import.meta.glob(
+    './generated-images/**/*.{avif,webp}',
+    {
+      eager: true,
+      query:
+        '?no-inline',
+      import:
+        'default',
+    },
+  ) as Record<
+    string,
+    string
+  >;
+
+const GENERATED_VARIANT_PATTERN =
+  /^\.\/generated-images\/(.+)\/(\d+)\.(avif|webp)$/;
+
+const generatedVariantsByAsset =
+  new Map<
+    string,
+    GeneratedImageVariant[]
+  >();
+
+for (
+  const [
+    modulePath,
+    url,
+  ] of Object.entries(
+    generatedImageModules,
+  )
+) {
+  const match =
+    GENERATED_VARIANT_PATTERN.exec(
+      modulePath,
+    );
+
+  const logicalAssetKey =
+    match?.[1];
+
+  const widthText =
+    match?.[2];
+
+  const format =
+    match?.[3];
+
+  if (
+    !logicalAssetKey ||
+    !widthText ||
+    (format !==
+      'avif' &&
+      format !==
+        'webp')
+  ) {
+    continue;
+  }
+
+  const width =
+    Number.parseInt(
+      widthText,
+      10,
+    );
+
+  if (
+    !Number.isFinite(
+      width,
+    ) ||
+    width <= 0
+  ) {
+    continue;
+  }
+
+  const variants =
+    generatedVariantsByAsset.get(
+      logicalAssetKey,
+    ) ?? [];
+
+  variants.push({
+    type:
+      format ===
+      'avif'
+        ? 'image/avif'
+        : 'image/webp',
+    width,
+    url,
+  });
+
+  generatedVariantsByAsset.set(
+    logicalAssetKey,
+    variants,
+  );
+}
+
+const getAssetLogicalKey = (
   src: string,
-) => {
-  const pathname =
-    src.split(/[?#]/, 1)[0] ??
-    src;
+):
+  | string
+  | null => {
+  const pathWithoutQuery =
+    src.split(
+      /[?#]/,
+      1,
+    )[0];
 
-  return (
-    pathname
-      .split('/')
-      .pop() ?? pathname
-  );
+  if (!pathWithoutQuery) {
+    return null;
+  }
+
+  const normalizedPath =
+    pathWithoutQuery.replaceAll(
+      '\\',
+      '/',
+    );
+
+  const assetMatch =
+    normalizedPath.match(
+      /(?:^|\/)assets\/(.+)$/,
+    );
+
+  const relativeAssetPath =
+    assetMatch?.[1];
+
+  if (
+    !relativeAssetPath
+  ) {
+    return null;
+  }
+
+  const logicalAssetKey =
+    relativeAssetPath.replace(
+      /\.(?:png|jpe?g|webp)$/i,
+      '',
+    );
+
+  if (
+    logicalAssetKey ===
+    relativeAssetPath
+  ) {
+    return null;
+  }
+
+  return logicalAssetKey;
 };
 
-const certificationBadgeFilenames =
-  new Set<string>(
-    CERTIFICATION_BADGE_DELIVERY.filenames,
-  );
-
-export const PROFILE_IMAGE_SIZES =
-  '(min-width: 480px) 448px, calc(100vw - 32px)';
-
-export const getProfileImageSources = (
-  fallbackSrc: string,
-): ResponsiveImageSource[] => {
-  const sourceFilename =
-    PROFILE_IMAGE_DELIVERY.source
-      .split('/')
-      .pop() ?? 'profile.png';
-
-  const stem =
-    getStem(sourceFilename);
-
-  const avifSrcSet =
-    PROFILE_IMAGE_DELIVERY.responsiveWidths
-      .map(
-        (width) =>
-          `${assetPath(
-            `generated/people/${stem}-${width}.avif`,
-          )} ${width}w`,
-      )
-      .join(', ');
-
-  const webpSrcSet = [
-    ...PROFILE_IMAGE_DELIVERY.responsiveWidths.map(
-      (width) =>
-        `${assetPath(
-          `generated/people/${stem}-${width}.webp`,
-        )} ${width}w`,
-    ),
-    `${fallbackSrc} ${PROFILE_IMAGE_DELIVERY.width}w`,
-  ].join(', ');
-
-  return [
-    {
-      type: 'image/avif',
-      srcSet: avifSrcSet,
-    },
-    {
-      type: 'image/webp',
-      srcSet: webpSrcSet,
-    },
-  ];
-};
-
-export const getCertificationBadgeSources =
+export const getResponsiveImageSources =
   (
-    src: string,
+    src?: string,
   ): ResponsiveImageSource[] => {
-    const filename =
-      getFilename(src);
+    if (!src) {
+      return [];
+    }
+
+    const logicalAssetKey =
+      getAssetLogicalKey(
+        src,
+      );
 
     if (
-      !certificationBadgeFilenames.has(
-        filename,
-      )
+      !logicalAssetKey
     ) {
       return [];
     }
 
-    const stem =
-      getStem(filename);
+    const variants =
+      generatedVariantsByAsset.get(
+        logicalAssetKey,
+      );
 
-    const width =
-      CERTIFICATION_BADGE_DELIVERY.width;
+    if (
+      !variants ||
+      variants.length ===
+        0
+    ) {
+      return [];
+    }
 
-    return [
-      {
-        type: 'image/avif',
-        srcSet: assetPath(
-          `generated/certifications/${stem}-${width}.avif`,
-        ),
+    const sourceOrder =
+      [
+        'image/avif',
+        'image/webp',
+      ] as const;
+
+    return sourceOrder.flatMap(
+      (
+        type,
+      ) => {
+        const matchingVariants =
+          variants
+            .filter(
+              (
+                variant,
+              ) =>
+                variant.type ===
+                type,
+            )
+            .sort(
+              (
+                left,
+                right,
+              ) =>
+                left.width -
+                right.width,
+            );
+
+        if (
+          matchingVariants.length ===
+          0
+        ) {
+          return [];
+        }
+
+        return [
+          {
+            type,
+            srcSet:
+              matchingVariants
+                .map(
+                  (
+                    variant,
+                  ) =>
+                    `${variant.url} ${variant.width}w`,
+                )
+                .join(
+                  ', ',
+                ),
+          },
+        ];
       },
-      {
-        type: 'image/webp',
-        srcSet: assetPath(
-          `generated/certifications/${stem}-${width}.webp`,
-        ),
-      },
-    ];
+    );
   };
+
+export const PROFILE_IMAGE_SIZES =
+  '(min-width: 480px) 448px, calc(100vw - 32px)';
