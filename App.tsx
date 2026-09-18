@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useState,
 } from 'react';
@@ -22,7 +23,86 @@ import {
   readLanguageNavigationState,
   restoreLanguageNavigationPosition,
 } from './languageNavigationState';
+import {
+  persistExpandedExperienceId,
+  persistExpandedVendorId,
+  persistPortfolioReloadPosition,
+  readPortfolioSessionState,
+} from './portfolioSessionState';
 import { scrollToElementAfterLayout } from './scrollToElement';
+
+const getCurrentLocation =
+  (): string =>
+    `${window.location.pathname}${window.location.search}${window.location.hash}`;
+
+const isReloadNavigation =
+  (): boolean => {
+    if (
+      typeof PerformanceNavigationTiming ===
+      'undefined'
+    ) {
+      return false;
+    }
+
+    return performance
+      .getEntriesByType(
+        'navigation',
+      )
+      .some(
+        (
+          entry,
+        ) =>
+          entry instanceof
+            PerformanceNavigationTiming &&
+          entry.type ===
+            'reload',
+      );
+  };
+
+const restoreDocumentScrollY = (
+  scrollY: number,
+): void => {
+  const maximumScrollY =
+    Math.max(
+      0,
+      document.documentElement
+        .scrollHeight -
+        window.innerHeight,
+    );
+
+  const clampedScrollY =
+    Math.max(
+      0,
+      Math.min(
+        scrollY,
+        maximumScrollY,
+      ),
+    );
+
+  const documentElement =
+    document.documentElement;
+
+  const previousScrollBehavior =
+    documentElement.style
+      .scrollBehavior;
+
+  documentElement.style
+    .scrollBehavior =
+    'auto';
+
+  window.scrollTo({
+    top:
+      clampedScrollY,
+    left:
+      0,
+    behavior:
+      'auto',
+  });
+
+  documentElement.style
+    .scrollBehavior =
+    previousScrollBehavior;
+};
 
 const restoreHashPositionAfterMount =
   () => {
@@ -33,7 +113,8 @@ const restoreHashPositionAfterMount =
       return;
     }
 
-    let targetId = rawHash;
+    let targetId =
+      rawHash;
 
     try {
       targetId =
@@ -53,12 +134,6 @@ const restoreHashPositionAfterMount =
       return;
     }
 
-    /*
-     * Localized pages are separate HTML documents whose section elements only
-     * exist after React mounts. Explicitly restore the hash target now that
-     * the DOM exists instead of relying solely on the browser's initial hash
-     * navigation.
-     */
     const documentElement =
       document.documentElement;
 
@@ -67,11 +142,14 @@ const restoreHashPositionAfterMount =
         .scrollBehavior;
 
     documentElement.style
-      .scrollBehavior = 'auto';
+      .scrollBehavior =
+      'auto';
 
     target.scrollIntoView({
-      block: 'start',
-      behavior: 'auto',
+      block:
+        'start',
+      behavior:
+        'auto',
     });
 
     documentElement.style
@@ -85,12 +163,6 @@ const Portfolio = () => {
     t,
   } = useLanguage();
 
-  /*
-   * Reading does not consume the snapshot. This is important for React
-   * StrictMode, which can invoke initial render logic more than once in
-   * development. The snapshot is cleared only after the mounted application
-   * has accepted it.
-   */
   const [
     languageNavigationState,
   ] = useState(
@@ -101,50 +173,122 @@ const Portfolio = () => {
   );
 
   const [
-    expandedVendorId,
-    setExpandedVendorId,
-  ] =
-    useState<string | null>(
-      () =>
-        languageNavigationState
-          ?.expandedVendorId ??
-        null,
+    portfolioSessionState,
+    setPortfolioSessionState,
+  ] = useState(
+    readPortfolioSessionState,
+  );
+
+  /*
+   * Only a real browser reload may consume the persisted reload position.
+   * Direct navigation, Back/Forward and locale navigation must not replay it.
+   */
+  const [
+    reloadPosition,
+  ] = useState(
+    () => {
+      if (
+        !isReloadNavigation()
+      ) {
+        return null;
+      }
+
+      const candidate =
+        portfolioSessionState
+          .reloadPosition;
+
+      if (
+        !candidate ||
+        candidate.location !==
+          getCurrentLocation()
+      ) {
+        return null;
+      }
+
+      return candidate;
+    },
+  );
+
+  /*
+   * pagehide runs immediately before a reload or document navigation and is
+   * compatible with the browser page lifecycle. The captured coordinate is
+   * only consumed by a later document when that navigation is confirmed to
+   * have been an actual reload.
+   */
+  useEffect(() => {
+    const handlePageHide =
+      () => {
+        persistPortfolioReloadPosition({
+          location:
+            getCurrentLocation(),
+          scrollY:
+            Math.max(
+              0,
+              window.scrollY,
+            ),
+        });
+      };
+
+    window.addEventListener(
+      'pagehide',
+      handlePageHide,
     );
 
+    return () => {
+      window.removeEventListener(
+        'pagehide',
+        handlePageHide,
+      );
+    };
+  }, []);
+
   useLayoutEffect(() => {
-    if (
-      !languageNavigationState
-    ) {
+    const restorePosition =
+      languageNavigationState
+        ? () => {
+            restoreLanguageNavigationPosition(
+              languageNavigationState,
+            );
+          }
+        : reloadPosition
+          ? () => {
+              restoreDocumentScrollY(
+                reloadPosition.scrollY,
+              );
+            }
+          : null;
+
+    if (!restorePosition) {
       /*
-       * Normal entry, reload or shared URL: no locale-transition snapshot
-       * exists, so the explicit URL fragment remains authoritative.
+       * A normal document entry has no transient viewport snapshot.
+       * Explicit URL fragments therefore remain authoritative.
        */
       restoreHashPositionAfterMount();
 
       return undefined;
     }
 
-    let cancelled = false;
+    let cancelled =
+      false;
 
     const pendingAnimationFrames =
       new Set<number>();
 
-    const restorePosition =
+    const applyRestoration =
       () => {
         if (cancelled) {
           return;
         }
 
-        restoreLanguageNavigationPosition(
-          languageNavigationState,
-        );
+        restorePosition();
       };
 
     const requestTrackedAnimationFrame =
       (
         callback: () => void,
       ) => {
-        let animationFrame = 0;
+        let animationFrame =
+          0;
 
         animationFrame =
           window.requestAnimationFrame(
@@ -153,9 +297,7 @@ const Portfolio = () => {
                 animationFrame,
               );
 
-              if (
-                cancelled
-              ) {
+              if (cancelled) {
                 return;
               }
 
@@ -172,11 +314,11 @@ const Portfolio = () => {
       () => {
         requestTrackedAnimationFrame(
           () => {
-            restorePosition();
+            applyRestoration();
 
             requestTrackedAnimationFrame(
               () => {
-                restorePosition();
+                applyRestoration();
               },
             );
           },
@@ -184,27 +326,20 @@ const Portfolio = () => {
       };
 
     /*
-     * The accordion states were already applied during the initial React
-     * render, so start by restoring against the layout currently available
-     * before the browser paints the mounted application.
+     * Expanded panels already exist in the first React layout because their
+     * state was synchronously reconstructed from portfolioSessionState.
      */
-    restorePosition();
+    applyRestoration();
     restoreAcrossAnimationFrames();
 
-    /*
-     * Local webfonts can finish loading after the first React layout pass.
-     * Their final metrics may reflow translated content above the restored
-     * anchor. Correct the viewport again only after the browser reports that
-     * all fonts required by the current document have finished loading.
-     */
     const restoreAfterFonts =
       async () => {
         try {
           await document.fonts.ready;
         } catch {
           /*
-           * Font readiness is an enhancement to geometric stability. A
-           * failure must never prevent the locale navigation itself.
+           * Font readiness improves geometric stability but must never make
+           * navigation dependent on successful font loading.
            */
         }
 
@@ -212,26 +347,19 @@ const Portfolio = () => {
           return;
         }
 
-        restorePosition();
+        applyRestoration();
         restoreAcrossAnimationFrames();
       };
 
     void restoreAfterFonts();
 
-    /*
-     * The document load event provides a second deterministic settlement
-     * point for resources that can complete after the initial React commit.
-     * Images that affect layout already reserve their dimensions, but this
-     * final pass makes the hand-off resilient to any remaining initial
-     * document layout work.
-     */
     const restoreAfterLoad =
       () => {
         if (cancelled) {
           return;
         }
 
-        restorePosition();
+        applyRestoration();
         restoreAcrossAnimationFrames();
       };
 
@@ -245,20 +373,25 @@ const Portfolio = () => {
         'load',
         restoreAfterLoad,
         {
-          once: true,
+          once:
+            true,
         },
       );
     }
 
     /*
-     * The sessionStorage hand-off is one-shot. The in-memory state retained
-     * by this mounted component is enough for the remaining corrective
-     * passes, so the persisted snapshot can be removed immediately.
+     * Only the locale-transition geometry is one-shot. Reload position is
+     * tab-scoped and will simply be replaced by the next pagehide.
      */
-    clearLanguageNavigationState();
+    if (
+      languageNavigationState
+    ) {
+      clearLanguageNavigationState();
+    }
 
     return () => {
-      cancelled = true;
+      cancelled =
+        true;
 
       window.removeEventListener(
         'load',
@@ -278,7 +411,85 @@ const Portfolio = () => {
     };
   }, [
     languageNavigationState,
+    reloadPosition,
   ]);
+
+  /*
+   * These two setters are the single synchronization boundary between React
+   * UI state and its tab-scoped persisted representation.
+   */
+  const setExpandedExperienceId =
+    useCallback(
+      (
+        expandedExperienceId:
+          string | null,
+      ) => {
+        setPortfolioSessionState(
+          (
+            currentState,
+          ) => ({
+            ...currentState,
+            expandedExperienceId,
+          }),
+        );
+
+        persistExpandedExperienceId(
+          expandedExperienceId,
+        );
+      },
+      [],
+    );
+
+  const setExpandedVendorId =
+    useCallback(
+      (
+        expandedVendorId:
+          string | null,
+      ) => {
+        setPortfolioSessionState(
+          (
+            currentState,
+          ) => ({
+            ...currentState,
+            expandedVendorId,
+          }),
+        );
+
+        persistExpandedVendorId(
+          expandedVendorId,
+        );
+      },
+      [],
+    );
+
+  const handleExperienceToggle =
+    useCallback(
+      (
+        itemId: string,
+      ) => {
+        const shouldExpand =
+          portfolioSessionState
+            .expandedExperienceId !==
+          itemId;
+
+        setExpandedExperienceId(
+          shouldExpand
+            ? itemId
+            : null,
+        );
+
+        if (shouldExpand) {
+          scrollToElementAfterLayout(
+            `experience-item-${itemId}`,
+          );
+        }
+      },
+      [
+        portfolioSessionState
+          .expandedExperienceId,
+        setExpandedExperienceId,
+      ],
+    );
 
   const handleVendorToggle =
     useCallback(
@@ -286,7 +497,8 @@ const Portfolio = () => {
         vendorId: string,
       ) => {
         const shouldExpand =
-          expandedVendorId !==
+          portfolioSessionState
+            .expandedVendorId !==
           vendorId;
 
         setExpandedVendorId(
@@ -301,7 +513,11 @@ const Portfolio = () => {
           );
         }
       },
-      [expandedVendorId],
+      [
+        portfolioSessionState
+          .expandedVendorId,
+        setExpandedVendorId,
+      ],
     );
 
   const handleCertificationSelect =
@@ -317,7 +533,9 @@ const Portfolio = () => {
           `education-card-${vendorId}`,
         );
       },
-      [],
+      [
+        setExpandedVendorId,
+      ],
     );
 
   const handleSkipToContent =
@@ -367,16 +585,19 @@ const Portfolio = () => {
         <Services />
 
         <Experience
-          initialExpandedId={
-            languageNavigationState
-              ?.expandedExperienceId ??
-            null
+          expandedId={
+            portfolioSessionState
+              .expandedExperienceId
+          }
+          onToggle={
+            handleExperienceToggle
           }
         />
 
         <Education
           expandedVendorId={
-            expandedVendorId
+            portfolioSessionState
+              .expandedVendorId
           }
           onVendorToggle={
             handleVendorToggle

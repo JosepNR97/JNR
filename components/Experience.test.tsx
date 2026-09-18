@@ -1,59 +1,156 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
+import {
+  render,
+  screen,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
 import { LanguageProvider } from '../context/LanguageContext';
 import { Experience } from './Experience';
 
-describe('Experience', () => {
-  it('exposes expandable project details to keyboard and assistive technology', async () => {
-    window.localStorage.setItem('jnr-language-v1', 'en');
-
-    const requestAnimationFrame = vi
-      .spyOn(window, 'requestAnimationFrame')
-      .mockImplementation((callback) =>
-        window.setTimeout(() => callback(0), 0),
+const ExperienceHarness =
+  () => {
+    const [
+      expandedId,
+      setExpandedId,
+    ] =
+      useState<string | null>(
+        null,
       );
 
-    const scrollIntoView = vi.spyOn(
-      Element.prototype,
-      'scrollIntoView',
+    const handleToggle = (
+      itemId: string,
+    ) => {
+      setExpandedId(
+        (
+          currentId,
+        ) =>
+          currentId ===
+          itemId
+            ? null
+            : itemId,
+      );
+    };
+
+    return (
+      <Experience
+        expandedId={
+          expandedId
+        }
+        onToggle={
+          handleToggle
+        }
+      />
     );
-    scrollIntoView.mockClear();
+  };
 
-    const user = userEvent.setup();
+describe(
+  'Experience',
+  () => {
+    beforeEach(() => {
+      window.localStorage.clear();
 
-    render(
-      <LanguageProvider>
-        <Experience />
-      </LanguageProvider>,
-    );
-
-    const trigger = screen.getByRole('button', {
-      name: /Senior Consultant/i,
+      window.localStorage.setItem(
+        'jnr-language-v1',
+        'en',
+      );
     });
-    const panelId = trigger.getAttribute('aria-controls');
-    const panel = panelId ? document.getElementById(panelId) : null;
 
-    expect(trigger).toHaveAttribute('aria-expanded', 'false');
-    expect(panel).toHaveAttribute('aria-hidden', 'true');
-
-    await act(async () => {
-      await user.click(trigger);
+    afterEach(() => {
+      window.localStorage.clear();
     });
 
-    expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    expect(panel).not.toHaveAttribute('aria-hidden');
-    expect(
-      screen.getByRole('region', {
-        name: /Senior Consultant/i,
-      }),
-    ).toBeVisible();
+    it(
+      'exposes controlled expandable project details to keyboard and assistive technology',
+      async () => {
+        const user =
+          userEvent.setup();
 
-    await waitFor(() =>
-      expect(scrollIntoView).toHaveBeenCalled(),
+        render(
+          <LanguageProvider>
+            <ExperienceHarness />
+          </LanguageProvider>,
+        );
+
+        const trigger =
+          screen.getByRole(
+            'button',
+            {
+              name:
+                /Senior Consultant/i,
+            },
+          );
+
+        const panelId =
+          trigger.getAttribute(
+            'aria-controls',
+          );
+
+        const panel =
+          panelId
+            ? document.getElementById(
+                panelId,
+              )
+            : null;
+
+        expect(
+          trigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'false',
+        );
+
+        expect(
+          panel,
+        ).toHaveAttribute(
+          'aria-hidden',
+          'true',
+        );
+
+        await user.click(
+          trigger,
+        );
+
+        expect(
+          trigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'true',
+        );
+
+        expect(
+          panel,
+        ).not.toHaveAttribute(
+          'aria-hidden',
+        );
+
+        expect(
+          screen.getByRole(
+            'region',
+            {
+              name:
+                /Senior Consultant/i,
+            },
+          ),
+        ).toBeVisible();
+
+        await user.click(
+          trigger,
+        );
+
+        expect(
+          trigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'false',
+        );
+
+        expect(
+          panel,
+        ).toHaveAttribute(
+          'aria-hidden',
+          'true',
+        );
+      },
     );
-
-    scrollIntoView.mockRestore();
-    requestAnimationFrame.mockRestore();
-  });
-});
+  },
+);
