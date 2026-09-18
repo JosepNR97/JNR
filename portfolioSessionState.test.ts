@@ -1,6 +1,5 @@
 import {
   PORTFOLIO_SESSION_STATE_STORAGE_KEY,
-  parsePortfolioSessionState,
   readPortfolioSessionState,
   updatePortfolioSessionState,
 } from './portfolioSessionState';
@@ -12,22 +11,41 @@ describe(
       window.sessionStorage.clear();
     });
 
+    afterEach(() => {
+      window.sessionStorage.clear();
+    });
+
     it(
-      'parses a valid serialized portfolio session state',
+      'returns the empty state when no session state exists',
       () => {
-        const serializedState =
+        expect(
+          readPortfolioSessionState(),
+        ).toEqual({
+          version: 1,
+          expandedExperienceId:
+            null,
+          expandedVendorId:
+            null,
+        });
+      },
+    );
+
+    it(
+      'reads valid persisted session state',
+      () => {
+        window.sessionStorage.setItem(
+          PORTFOLIO_SESSION_STATE_STORAGE_KEY,
           JSON.stringify({
             version: 1,
             expandedExperienceId:
               'experience-1',
             expandedVendorId:
               'vendor-1',
-          });
+          }),
+        );
 
         expect(
-          parsePortfolioSessionState(
-            serializedState,
-          ),
+          readPortfolioSessionState(),
         ).toEqual({
           version: 1,
           expandedExperienceId:
@@ -39,43 +57,70 @@ describe(
     );
 
     it(
-      'rejects malformed JSON',
+      'removes malformed JSON and returns the empty state',
       () => {
+        window.sessionStorage.setItem(
+          PORTFOLIO_SESSION_STATE_STORAGE_KEY,
+          '{not-valid-json',
+        );
+
         expect(
-          parsePortfolioSessionState(
-            '{not-valid-json',
+          readPortfolioSessionState(),
+        ).toEqual({
+          version: 1,
+          expandedExperienceId:
+            null,
+          expandedVendorId:
+            null,
+        });
+
+        expect(
+          window.sessionStorage.getItem(
+            PORTFOLIO_SESSION_STATE_STORAGE_KEY,
           ),
         ).toBeNull();
       },
     );
 
     it(
-      'rejects data that does not satisfy the persisted contract',
+      'removes persisted data that does not satisfy the current contract',
       () => {
-        const serializedState =
+        window.sessionStorage.setItem(
+          PORTFOLIO_SESSION_STATE_STORAGE_KEY,
           JSON.stringify({
             version: 1,
             expandedExperienceId:
               123,
             expandedVendorId:
               null,
-          });
+          }),
+        );
 
         expect(
-          parsePortfolioSessionState(
-            serializedState,
+          readPortfolioSessionState(),
+        ).toEqual({
+          version: 1,
+          expandedExperienceId:
+            null,
+          expandedVendorId:
+            null,
+        });
+
+        expect(
+          window.sessionStorage.getItem(
+            PORTFOLIO_SESSION_STATE_STORAGE_KEY,
           ),
         ).toBeNull();
       },
     );
 
     it(
-      'returns an empty state and removes invalid persisted data',
+      'removes persisted data from an unsupported version',
       () => {
         window.sessionStorage.setItem(
           PORTFOLIO_SESSION_STATE_STORAGE_KEY,
           JSON.stringify({
-            version: 999,
+            version: 2,
             expandedExperienceId:
               'experience-1',
             expandedVendorId:
