@@ -11,9 +11,7 @@ import type {
 interface ResponsiveImageProps
   extends Omit<
     ImgHTMLAttributes<HTMLImageElement>,
-    | 'alt'
-    | 'sizes'
-    | 'srcSet'
+    'alt' | 'sizes' | 'srcSet'
   > {
   alt: string;
   sources?: readonly ResponsiveImageSource[];
@@ -26,6 +24,7 @@ export const ResponsiveImage = ({
   sizes,
   pictureClassName,
   alt,
+  className,
   ...imageProps
 }: ResponsiveImageProps) => {
   const automaticSources =
@@ -37,8 +36,32 @@ export const ResponsiveImage = ({
     );
 
   const resolvedSources =
-    sources ??
-    automaticSources;
+    sources ?? automaticSources;
+
+  const imageClassName = [
+    'block',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const image = (
+    <img
+      {...imageProps}
+      alt={alt}
+      sizes={sizes}
+      className={
+        imageClassName
+      }
+    />
+  );
+
+  if (
+    resolvedSources.length ===
+    0
+  ) {
+    return image;
+  }
 
   return (
     <picture
@@ -65,11 +88,7 @@ export const ResponsiveImage = ({
         ),
       )}
 
-      <img
-        {...imageProps}
-        alt={alt}
-        sizes={sizes}
-      />
+      {image}
     </picture>
   );
 };
