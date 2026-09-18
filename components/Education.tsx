@@ -148,7 +148,10 @@ export const Education = ({
                 >
                   <div className="grid grid-cols-1 items-center gap-6 md:grid-cols-[2fr_1fr]">
                     <div className="flex items-center gap-5 text-left sm:gap-6">
-                      <div className="grid h-20 w-20 shrink-0 place-items-center rounded-lg border border-slate-100 bg-white p-2 shadow-xs">
+                      <div
+                        data-image-frame="academic-logo"
+                        className="grid h-20 w-20 shrink-0 place-items-center rounded-lg border border-slate-100 bg-white p-2 shadow-xs"
+                      >
                         {item.logoUrl ? (
                           <ResponsiveImage
                             src={
@@ -164,8 +167,8 @@ export const Education = ({
                             sizes="64px"
                             loading="lazy"
                             decoding="async"
-                            pictureClassName="contents"
-                            className="h-full w-full object-contain"
+                            pictureClassName="relative block h-full w-full"
+                            className="absolute inset-0 h-full w-full object-contain object-center"
                           />
                         ) : (
                           <EducationIcon className="h-8 w-8 text-brand-600" />
@@ -275,7 +278,10 @@ export const Education = ({
                       className="flex w-full items-center justify-between gap-4 p-5 text-left sm:p-6"
                     >
                       <span className="flex min-w-0 flex-1 items-center gap-4 sm:gap-6">
-                        <span className="grid h-16 w-20 shrink-0 place-items-center rounded-lg border border-slate-100 bg-white p-2 sm:h-20">
+                        <span
+                          data-image-frame="vendor-logo"
+                          className="grid h-16 w-20 shrink-0 place-items-center rounded-lg border border-slate-100 bg-white p-2 sm:h-20"
+                        >
                           <ResponsiveImage
                             src={
                               vendor.logoUrl
@@ -290,8 +296,8 @@ export const Education = ({
                             sizes="64px"
                             loading="lazy"
                             decoding="async"
-                            pictureClassName="contents"
-                            className="max-h-full max-w-full object-contain"
+                            pictureClassName="relative block h-full w-full"
+                            className="absolute inset-0 h-full w-full object-contain object-center"
                           />
                         </span>
 
@@ -378,7 +384,10 @@ export const Education = ({
                                   }
                                   className="flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-brand-200"
                                 >
-                                  <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-100 bg-white p-1">
+                                  <span
+                                    data-image-frame="certification-badge"
+                                    className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-100 bg-white p-1"
+                                  >
                                     <ResponsiveImage
                                       src={
                                         shouldLoadCertificationImages
@@ -400,8 +409,8 @@ export const Education = ({
                                           vendor.id,
                                         )
                                       }
-                                      pictureClassName="contents"
-                                      className="h-12 w-12 object-contain"
+                                      pictureClassName="relative block h-12 w-12"
+                                      className="absolute inset-0 h-full w-full object-contain object-center"
                                     />
                                   </span>
 

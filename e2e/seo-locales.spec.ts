@@ -397,6 +397,38 @@ const getLocatorViewportTop =
           .top,
     );
 
+const waitForAnimationFrames =
+  async (
+    page: Page,
+    frameCount = 3,
+  ) => {
+    await page.evaluate(
+      async (
+        frames,
+      ) => {
+        for (
+          let index = 0;
+          index <
+          frames;
+          index += 1
+        ) {
+          await new Promise<void>(
+            (
+              resolve,
+            ) => {
+              window.requestAnimationFrame(
+                () => {
+                  resolve();
+                },
+              );
+            },
+          );
+        }
+      },
+      frameCount,
+    );
+  };
+
 test.describe(
   'multilingual SEO routes',
   () => {
@@ -782,6 +814,18 @@ test.describe(
         ).toHaveAttribute(
           'aria-expanded',
           'true',
+        );
+
+        /*
+         * Opening an accordion schedules its positioning through
+         * scrollToElementAfterLayout, which deliberately waits for
+         * two animation frames. Let that application-controlled
+         * scroll complete before setting the exact viewport position
+         * used by this test.
+         */
+        await waitForAnimationFrames(
+          page,
+          3,
         );
 
         const educationTriggerId =

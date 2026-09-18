@@ -144,23 +144,28 @@ export const Experience = ({
                           </span>
 
                           <span className="flex shrink-0 flex-row-reverse items-center justify-between gap-3 md:flex-col md:items-end md:justify-start">
-                            <ResponsiveImage
-                              src={
-                                item.logoUrl
-                              }
-                              alt={`Logo ${item.company}`}
-                              width={
-                                140
-                              }
-                              height={
-                                40
-                              }
-                              sizes="144px"
-                              loading="lazy"
-                              decoding="async"
-                              pictureClassName="contents"
-                              className="h-8 max-w-36 object-contain"
-                            />
+                            <span
+                              data-image-frame="experience-logo"
+                              className="grid h-10 w-36 shrink-0 place-items-center"
+                            >
+                              <ResponsiveImage
+                                src={
+                                  item.logoUrl
+                                }
+                                alt={`Logo ${item.company}`}
+                                width={
+                                  140
+                                }
+                                height={
+                                  40
+                                }
+                                sizes="144px"
+                                loading="lazy"
+                                decoding="async"
+                                pictureClassName="relative block h-8 w-full"
+                                className="absolute inset-0 h-full w-full object-contain object-center"
+                              />
+                            </span>
 
                             <span className="rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-center text-xs font-bold text-brand-700">
                               {
