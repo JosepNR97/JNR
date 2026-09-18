@@ -780,6 +780,7 @@ export const Certifications =
                             : -1
                         }
                         aria-label={`${t.certifications.openVendor} ${logo.name}`}
+                        data-image-frame="carousel-logo"
                         onClick={() =>
                           handleLogoClick(
                             logo.educationId,
