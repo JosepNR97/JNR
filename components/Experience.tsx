@@ -158,8 +158,8 @@ export const Experience = ({
                               sizes="144px"
                               loading="lazy"
                               decoding="async"
-                              pictureClassName="contents"
-                              className="h-8 max-w-36 object-contain"
+                              pictureClassName="inline-grid shrink-0 place-items-center"
+                              className="h-8 max-w-36 object-contain object-center"
                             />
 
                             <span className="rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-center text-xs font-bold text-brand-700">
