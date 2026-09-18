@@ -52,6 +52,74 @@ const expectLoadedImage =
       .toBe(true);
   };
 
+const expectCenteredWithin =
+  async (
+    frame: Locator,
+    image: Locator,
+  ) => {
+    const [
+      frameBox,
+      imageBox,
+    ] =
+      await Promise.all([
+        frame.boundingBox(),
+        image.boundingBox(),
+      ]);
+
+    expect(
+      frameBox,
+    ).not.toBeNull();
+
+    expect(
+      imageBox,
+    ).not.toBeNull();
+
+    if (
+      !frameBox ||
+      !imageBox
+    ) {
+      return;
+    }
+
+    const frameCenterX =
+      frameBox.x +
+      frameBox.width /
+        2;
+
+    const frameCenterY =
+      frameBox.y +
+      frameBox.height /
+        2;
+
+    const imageCenterX =
+      imageBox.x +
+      imageBox.width /
+        2;
+
+    const imageCenterY =
+      imageBox.y +
+      imageBox.height /
+        2;
+
+    expect(
+      Math.abs(
+        frameCenterX -
+          imageCenterX,
+      ),
+    ).toBeLessThanOrEqual(
+      2,
+    );
+
+    expect(
+      Math.abs(
+        frameCenterY -
+          imageCenterY,
+      ),
+    ).toBeLessThanOrEqual(
+      2,
+    );
+  };
+
 const collectFailedImageResponses =
   (
     page: Page,
@@ -388,6 +456,116 @@ test.describe(
         ).toBe(
           64,
         );
+
+        expect(
+          failedImages,
+        ).toEqual(
+          [],
+        );
+      },
+    );
+
+    test(
+      'keeps optimized raster logos centered inside their visual frames',
+      async ({
+        page,
+      }) => {
+        await blockAnalytics(
+          page,
+        );
+
+        const failedImages =
+          collectFailedImageResponses(
+            page,
+          );
+
+        await page.goto(
+          '/es/',
+        );
+
+        const checks = [
+          {
+            name:
+              'Logo ISDI',
+            frame:
+              'academic-logo',
+          },
+          {
+            name:
+              'Logo Universitat de Barcelona',
+            frame:
+              'academic-logo',
+          },
+          {
+            name:
+              'Logo Microsoft Azure',
+            frame:
+              'vendor-logo',
+          },
+          {
+            name:
+              'Logo SAP LeanIX',
+            frame:
+              'vendor-logo',
+          },
+          {
+            name:
+              'Logo ServiceNow',
+            frame:
+              'vendor-logo',
+          },
+          {
+            name:
+              'Logo Scaled Agile, Inc.',
+            frame:
+              'vendor-logo',
+          },
+        ] as const;
+
+        for (
+          const check of
+          checks
+        ) {
+          const image =
+            page
+              .getByRole(
+                'img',
+                {
+                  name:
+                    check.name,
+                  exact:
+                    true,
+                },
+              )
+              .first();
+
+          await image.scrollIntoViewIfNeeded();
+
+          await expectLoadedImage(
+            image,
+          );
+
+          const frame =
+            page
+              .locator(
+                `[data-image-frame="${check.frame}"]`,
+              )
+              .filter({
+                has:
+                  image,
+              });
+
+          await expect(
+            frame,
+          ).toHaveCount(
+            1,
+          );
+
+          await expectCenteredWithin(
+            frame,
+            image,
+          );
+        }
 
         expect(
           failedImages,
