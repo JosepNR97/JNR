@@ -62,7 +62,7 @@ The snapshot contains:
 - the source and destination locale;
 - the exact expected destination location;
 - a stable DOM anchor representing the current viewport context;
-- the user's relative position within that anchor;
+- the anchor's vertical position within the viewport;
 - the current absolute scroll position as a defensive fallback;
 - the currently expanded Experience item, if any;
 - the currently expanded professional Education provider, if any.
@@ -76,7 +76,7 @@ The destination document accepts the snapshot only when all of the following are
 3. its destination locale matches the explicit locale in the loaded URL;
 4. its expected pathname, query string, and fragment match the loaded location exactly.
 
-Invalid, stale, or mismatched snapshots are discarded.
+Invalid, stale, mismatched, or obsolete snapshot versions are discarded.
 
 ## Viewport restoration
 
@@ -84,15 +84,23 @@ The portfolio does not simply copy an absolute `scrollY` value between translati
 
 Catalan, Spanish, and English copy can occupy different amounts of vertical space, so the same absolute page coordinate can correspond to a different piece of content after translation.
 
-Instead, the source document identifies a stable DOM element at a reading point within the viewport. Stable section, accordion, trigger, and panel IDs remain equivalent across localized documents because they are derived from shared content identifiers rather than translated labels.
+Instead, the source document identifies a stable DOM element around a reading point within the viewport. Stable section, accordion, trigger, and panel IDs remain equivalent across localized documents because they are derived from shared content identifiers rather than translated labels.
 
-The snapshot stores the relative progress through that element at the reading point.
+The snapshot stores the exact vertical viewport position of that stable anchor.
 
-After the destination React application has mounted and any expanded content has been restored, the same stable element is located in the translated document and the viewport is positioned so that the equivalent relative point remains at the same screen position.
+For example, if an Education trigger begins 120 pixels below the top of the viewport before changing language, the destination document positions the equivalent trigger 120 pixels below the top of the viewport after translation.
 
-This allows a user who was partway through an expanded Experience or Education item to remain effectively at the same browsing position even when the translated text has a different height.
+This intentionally differs from preserving proportional progress through an element. Translated labels and descriptions can change the height of a card or trigger. Preserving a percentage within that differently sized element would move the element itself on screen, even though the user only changed language.
 
-An absolute scroll position is retained only as a fallback if the stable anchor cannot be found.
+After the destination React application has mounted and any expanded content has been restored, the equivalent stable element is located in the translated document. The application then scrolls by exactly the difference between its current viewport position and the viewport position captured in the source document.
+
+This keeps the surrounding interface visually stationary across the locale switch even when translated content changes element heights.
+
+The anchor's viewport position may be negative when the user is reading further down inside a large element whose top has already moved above the visible viewport. Negative positions are valid and are preserved.
+
+An absolute scroll position is retained only as a fallback if the stable anchor cannot be found in the destination document.
+
+At the very beginning or end of the document, the browser's valid scroll range may make an exact geometric match impossible. In those boundary cases, the restored scroll position is clamped to the available document range.
 
 Viewport restoration is applied without smooth scrolling so a locale change does not visibly animate from the top of the destination document.
 
@@ -199,7 +207,7 @@ It covers:
 - restoration of direct fragment URLs after React mounts;
 - preservation of expanded Experience state across a locale change;
 - preservation of expanded professional Education state across a locale change;
-- preservation of the user's viewport context across translations;
+- preservation of the stable viewport-anchor position across translations;
 - one-shot consumption of the temporary navigation snapshot;
 - root-entry behavior.
 
