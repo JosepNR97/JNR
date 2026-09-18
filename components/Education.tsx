@@ -167,8 +167,8 @@ export const Education = ({
                             sizes="64px"
                             loading="lazy"
                             decoding="async"
-                            pictureClassName="grid h-full w-full place-items-center"
-                            className="h-full w-full object-contain object-center"
+                            pictureClassName="relative block h-full w-full"
+                            className="absolute inset-0 h-full w-full object-contain object-center"
                           />
                         ) : (
                           <EducationIcon className="h-8 w-8 text-brand-600" />
@@ -296,8 +296,8 @@ export const Education = ({
                             sizes="64px"
                             loading="lazy"
                             decoding="async"
-                            pictureClassName="grid h-full w-full place-items-center"
-                            className="max-h-full max-w-full object-contain object-center"
+                            pictureClassName="relative block h-full w-full"
+                            className="absolute inset-0 h-full w-full object-contain object-center"
                           />
                         </span>
 
@@ -409,8 +409,8 @@ export const Education = ({
                                           vendor.id,
                                         )
                                       }
-                                      pictureClassName="grid h-full w-full place-items-center"
-                                      className="h-12 w-12 object-contain object-center"
+                                      pictureClassName="relative block h-12 w-12"
+                                      className="absolute inset-0 h-full w-full object-contain object-center"
                                     />
                                   </span>
 
