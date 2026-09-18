@@ -432,11 +432,6 @@ export const Certifications =
           null;
       }
 
-      /*
-       * Mouse focus must not permanently pause autoplay.
-       * Keyboard focus is handled independently through
-       * :focus-visible.
-       */
       keyboardFocusPausedRef.current =
         false;
 
@@ -506,10 +501,6 @@ export const Certifications =
         pointer.moved =
           true;
 
-        /*
-         * Include the pixels consumed by the threshold so
-         * that dragging starts without a visible jump.
-         */
         deltaX =
           distanceFromStart;
 
@@ -573,11 +564,6 @@ export const Certifications =
         );
       }
 
-      /*
-       * Browsers emit click immediately after pointerup.
-       * Preserve the moved flag until that click can be
-       * discarded, then allow normal clicks again.
-       */
       if (moved) {
         dragResetTimeoutRef.current =
           window.setTimeout(
@@ -630,10 +616,6 @@ export const Certifications =
           }
         })();
 
-      /*
-       * Mouse clicks also focus buttons. Only keyboard-visible
-       * focus should keep the carousel paused after hover ends.
-       */
       if (
         !isFocusVisible
       ) {
@@ -649,10 +631,6 @@ export const Certifications =
       const segmentWidth =
         segmentWidthRef.current;
 
-      /*
-       * Recenter the accessible sequence before keyboard
-       * navigation so all keyboard targets are predictable.
-       */
       if (
         track &&
         segmentWidth >
@@ -801,8 +779,8 @@ export const Certifications =
                           loading="eager"
                           decoding="async"
                           draggable="false"
-                          pictureClassName="grid h-full w-full place-items-center"
-                          className="max-h-14 max-w-full object-contain object-center opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
+                          pictureClassName="relative block h-14 w-full"
+                          className="absolute inset-0 h-full w-full object-contain object-center opacity-50 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0"
                         />
                       </button>
                     ),
