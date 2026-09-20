@@ -24,6 +24,12 @@ const LANGUAGES = [
   'en',
 ] as const;
 
+const ISO_DATE_PATTERN =
+  /^\d{4}-\d{2}-\d{2}$/;
+
+const ISO_DATE_TIME_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})$/;
+
 describe(
   'SEO identity contract',
   () => {
@@ -233,6 +239,85 @@ describe(
     );
 
     it(
+      'publishes a valid DateTime for ProfilePage dateModified',
+      () => {
+        for (
+          const language
+          of LANGUAGES
+        ) {
+          const seo =
+            getSeoLocaleData(
+              language,
+            );
+
+          expect(
+            seo.dateModified,
+          ).toMatch(
+            ISO_DATE_TIME_PATTERN,
+          );
+
+          expect(
+            Number.isNaN(
+              Date.parse(
+                seo.dateModified,
+              ),
+            ),
+          ).toBe(
+            false,
+          );
+
+          const structuredData =
+            getProfilePageJsonLd(
+              language,
+            );
+
+          expect(
+            structuredData
+              ['@graph'][0],
+          ).toMatchObject({
+            '@type':
+              'ProfilePage',
+            dateModified:
+              seo.dateModified,
+          });
+        }
+      },
+    );
+
+    it(
+      'keeps sitemap lastmod as a date independently from ProfilePage dateModified',
+      () => {
+        for (
+          const language
+          of LANGUAGES
+        ) {
+          const seo =
+            getSeoLocaleData(
+              language,
+            );
+
+          expect(
+            seo.lastModified,
+          ).toMatch(
+            ISO_DATE_PATTERN,
+          );
+
+          expect(
+            seo.lastModified,
+          ).not.toContain(
+            'T',
+          );
+
+          expect(
+            seo.dateModified,
+          ).not.toBe(
+            seo.lastModified,
+          );
+        }
+      },
+    );
+
+    it(
       'renders the structured identity data into every initial locale HTML document',
       () => {
         for (
@@ -241,6 +326,11 @@ describe(
         ) {
           const html =
             renderLocalizedHtml(
+              language,
+            );
+
+          const seo =
+            getSeoLocaleData(
               language,
             );
 
@@ -266,6 +356,12 @@ describe(
             html,
           ).toContain(
             PERSON_ID,
+          );
+
+          expect(
+            html,
+          ).toContain(
+            `"dateModified": "${seo.dateModified}"`,
           );
         }
       },
