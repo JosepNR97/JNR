@@ -323,5 +323,153 @@ test.describe(
         );
       },
     );
+
+    test(
+      'direct URL navigation starts with collapsed accordions and does not restore stale state on reload',
+      async ({
+        page,
+      }) => {
+        await page.goto(
+          '/ca/',
+        );
+
+        const experienceTrigger =
+          page
+            .locator(
+              '[id^="experience-trigger-"]',
+            )
+            .first();
+
+        await experienceTrigger.scrollIntoViewIfNeeded();
+
+        await experienceTrigger.click();
+
+        await expect(
+          experienceTrigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'true',
+        );
+
+        const experienceTriggerId =
+          await experienceTrigger.getAttribute(
+            'id',
+          );
+
+        const educationTrigger =
+          page
+            .locator(
+              '[id^="education-trigger-"]',
+            )
+            .first();
+
+        await educationTrigger.scrollIntoViewIfNeeded();
+
+        await educationTrigger.click();
+
+        await expect(
+          educationTrigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'true',
+        );
+
+        const educationTriggerId =
+          await educationTrigger.getAttribute(
+            'id',
+          );
+
+        if (
+          !experienceTriggerId ||
+          !educationTriggerId
+        ) {
+          throw new Error(
+            'Expected stable accordion trigger IDs.',
+          );
+        }
+
+        /*
+         * A top-level navigation to another locale without using the language
+         * selector is equivalent to entering that URL directly in the address
+         * bar. It is a new browsing context, not a locale continuity hand-off.
+         */
+        await page.goto(
+          '/en/',
+          {
+            waitUntil:
+              'networkidle',
+          },
+        );
+
+        await expect(
+          page,
+        ).toHaveURL(
+          /\/en\/$/,
+        );
+
+        const directExperienceTrigger =
+          page.locator(
+            `#${experienceTriggerId}`,
+          );
+
+        const directEducationTrigger =
+          page.locator(
+            `#${educationTriggerId}`,
+          );
+
+        await expect(
+          directExperienceTrigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'false',
+        );
+
+        await expect(
+          directEducationTrigger,
+        ).toHaveAttribute(
+          'aria-expanded',
+          'false',
+        );
+
+        await expect
+          .poll(
+            () =>
+              page.evaluate(
+                () =>
+                  window.scrollY,
+              ),
+          )
+          .toBeLessThanOrEqual(
+            1,
+          );
+
+        /*
+         * The normal entry must also remove stale persisted expansion state,
+         * otherwise the old Catalan accordions would reappear on the next F5.
+         */
+        await page.reload({
+          waitUntil:
+            'networkidle',
+        });
+
+        await expect(
+          page.locator(
+            `#${experienceTriggerId}`,
+          ),
+        ).toHaveAttribute(
+          'aria-expanded',
+          'false',
+        );
+
+        await expect(
+          page.locator(
+            `#${educationTriggerId}`,
+          ),
+        ).toHaveAttribute(
+          'aria-expanded',
+          'false',
+        );
+      },
+    );
   },
 );
