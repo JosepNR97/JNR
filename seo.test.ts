@@ -272,8 +272,7 @@ describe(
             );
 
           expect(
-            structuredData
-              ['@graph'][0],
+            structuredData['@graph'][0],
           ).toMatchObject({
             '@type':
               'ProfilePage',
