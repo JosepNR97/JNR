@@ -6,7 +6,7 @@ The portfolio exposes three stable, indexable locale URLs:
 - `https://josepnr97.github.io/JNR/es/`
 - `https://josepnr97.github.io/JNR/en/`
 
-Each locale is a real Vite HTML entry. The HTML shells are generated from the existing typed portfolio content plus the SEO locale mapping in `seo.ts`; the React application and translation data remain shared. This avoids maintaining three hand-written copies of the page while ensuring that crawlers receive the correct `lang`, title, description, canonical, hreflang, Open Graph, Twitter, and JSON-LD metadata before JavaScript runs.
+Each locale is a real Vite HTML entry. The HTML shells are generated from the existing typed portfolio content plus the SEO locale mapping in `seo.ts`; the React application and translation data remain shared. This avoids maintaining three hand-written copies of the page while ensuring that crawlers receive the correct `lang`, title, description, canonical, hreflang, Open Graph, Twitter and structured JSON-LD metadata before JavaScript runs.
 
 `vite.config.ts` generates the locale shells before Vite resolves its multipage inputs. The project keeps `base: './'`, so Vite emits relative asset references that continue to work below the GitHub Pages project path. The generated source directories (`/ca/`, `/es/`, `/en/`) are build inputs only and are ignored by Git; their built equivalents are emitted inside `dist/` and deployed normally by the existing Pages workflow.
 
@@ -18,6 +18,93 @@ The root `/JNR/` is intentionally not a second indexable copy of the Spanish pag
 4. Spanish as the final fallback.
 
 The same-origin referrer safeguard preserves an existing explicit locale if the root entry point is reached from a localized portfolio page. Its canonical and `x-default` point to `/JNR/es/`. The root redirect preserves the current section hash and never runs on an explicit locale URL, preventing redirect loops.
+
+## Search identity model
+
+SEO identity metadata is deliberately separated from visible portfolio copy.
+
+`seoIdentity.ts` owns SEO-only identity attributes such as:
+
+- given and family name;
+- the stable public alias `JosepNR97`;
+- the current profile-image path;
+- approved external identity profiles;
+- current employer;
+- academic institutions;
+- professional knowledge areas.
+
+These values are used only to produce metadata and structured data. They do not modify the React components or visible portfolio copy.
+
+The three localized pages describe one shared person entity.
+
+The stable `Person` identifier is:
+
+`https://josepnr97.github.io/JNR/#person`
+
+This `@id` is identical in Catalan, Spanish and English. It acts as a stable entity identifier rather than as an additional indexable page.
+
+Each locale has its own `ProfilePage` node:
+
+- `https://josepnr97.github.io/JNR/ca/#profile-page`
+- `https://josepnr97.github.io/JNR/es/#profile-page`
+- `https://josepnr97.github.io/JNR/en/#profile-page`
+
+Every localized `ProfilePage` points through `mainEntity` to the same shared `Person` `@id`.
+
+The `Person` entity includes:
+
+- `name`;
+- `givenName`;
+- `familyName`;
+- `alternateName`;
+- the current profile image;
+- localized `jobTitle`;
+- localized SEO description;
+- `sameAs` links to approved public identity profiles;
+- current `worksFor`;
+- `alumniOf`;
+- `knowsAbout`;
+- Barcelona as the public location.
+
+The Spanish canonical page is used as the stable primary `url` of the `Person` entity while Catalan and English remain fully canonical and indexable localized `ProfilePage` documents.
+
+The resulting identity graph is conceptually:
+
+`/JNR/ca/ ProfilePage` → `/JNR/#person`
+
+`/JNR/es/ ProfilePage` → `/JNR/#person`
+
+`/JNR/en/ ProfilePage` → `/JNR/#person`
+
+This prevents the three localized documents from accidentally describing three unrelated `Person` identities.
+
+## SEO descriptions
+
+The visual hero tagline remains part of the editorial portfolio copy and is not reused as the search description.
+
+Each locale instead has a dedicated SEO description in `seo.ts`.
+
+The SEO descriptions are designed to provide explicit identity context around:
+
+- Josep Núñez Riba;
+- technology strategy;
+- Barcelona;
+- digital transformation;
+- enterprise architecture;
+- cloud;
+- artificial intelligence.
+
+Open Graph and Twitter descriptions reuse the same SEO-specific localized descriptions.
+
+This separation allows search metadata to evolve without changing the visible design or wording of the portfolio.
+
+## Profile image
+
+The structured `Person.image`, Open Graph image and Twitter image all reference the current public profile portrait:
+
+`https://josepnr97.github.io/JNR/assets/people/josep-nunez-riba-2.webp`
+
+The SEO image must remain aligned with the portrait currently used by the portfolio.
 
 ## Localized application navigation
 
@@ -231,17 +318,107 @@ The document remains `noindex` and localizes its `lang`, title, description, mes
 
 Its return action points directly to the resolved localized portfolio URL instead of navigating through `/JNR/`.
 
-## Sitemap and robots
+## Sitemap
 
-`robots.txt` points to the sitemap.
+The sitemap lists only the three canonical locale URLs.
 
-The sitemap lists only the three canonical locale URLs and includes reciprocal `xhtml:link` hreflang alternates plus `x-default`.
+Each entry contains:
+
+- its canonical `<loc>`;
+- a manually maintained `<lastmod>`;
+- reciprocal `xhtml:link` hreflang alternates;
+- an `x-default` alternate pointing to Spanish.
+
+`lastmod` must represent the latest significant change to the indexable page.
+
+Changes that justify updating `lastmod` include:
+
+- primary portfolio content;
+- SEO metadata;
+- structured data;
+- important links.
+
+A build, deployment, formatting-only change or automatically updated copyright year does not justify changing `lastmod`.
+
+The current `lastmod` values live in `seo.ts`.
+
+`scripts/generate-localized-html.ts` uses them when regenerating `public/sitemap.xml`, ensuring that the versioned sitemap and the production build derive from the same SEO contract.
+
+## GitHub Pages and robots.txt
+
+The portfolio is intentionally hosted as a GitHub Pages project site:
+
+`https://josepnr97.github.io/JNR/`
+
+A standards-compliant robots file for this host would have to exist at:
+
+`https://josepnr97.github.io/robots.txt`
+
+The `JNR` repository cannot publish a file at that host-root location because its deployed scope begins at `/JNR/`.
+
+The repository therefore does not rely on:
+
+`https://josepnr97.github.io/JNR/robots.txt`
+
+for crawl control.
+
+`public/robots.txt` is retained only as an explicitly documented informational file and as a human-readable reference to the sitemap.
+
+Indexing and crawling behavior that this repository can control is expressed through:
+
+- page-level robots metadata;
+- canonical URLs;
+- hreflang;
+- structured data;
+- the sitemap.
+
+The sitemap is submitted directly through Google Search Console.
+
+A custom domain is intentionally not part of the portfolio architecture.
+
+## Search Console lifecycle
+
+Google Search Console uses the existing URL-prefix property:
+
+`https://josepnr97.github.io/JNR/`
+
+No new property is required when metadata, structured data or sitemap content changes.
+
+After a significant SEO change is deployed:
+
+1. wait for the GitHub Pages deployment to complete;
+2. verify the production localized URLs;
+3. inspect `/JNR/es/`, `/JNR/ca/` and `/JNR/en/`;
+4. use the live URL test;
+5. request indexing once for each localized URL;
+6. verify that the existing sitemap remains available and submitted.
+
+The sitemap URL remains:
+
+`https://josepnr97.github.io/JNR/sitemap.xml`
+
+It should not be replaced or duplicated merely because its contents or `lastmod` values have changed.
+
+Repeated indexing requests are not part of the normal maintenance flow. After requesting a recrawl, the Search Console URL Inspection report and its last crawl date are used to determine whether Google has retrieved the newer version.
 
 ## Validation strategy
 
 Different test layers intentionally validate different responsibilities.
 
-Vitest validates the `portfolioSessionState` persistence contract, including:
+`seo.test.ts` validates the deterministic SEO-generation contract, including:
+
+- a single shared `Person` `@id`;
+- the `ProfilePage` → `Person` relationship;
+- approved `sameAs` identity profiles;
+- the stable public alias;
+- the current SEO image;
+- localized SEO descriptions;
+- employer, education and professional knowledge context;
+- generated structured data in the initial HTML;
+- canonical locale URLs in the sitemap;
+- reliable sitemap `lastmod` values.
+
+Vitest also validates the `portfolioSessionState` persistence contract, including:
 
 - safe empty defaults;
 - valid persisted state;
@@ -256,6 +433,10 @@ Component tests validate controlled accordion behavior and accessibility semanti
 
 Playwright validates user-visible behavior in Chromium, including:
 
+- initial localized SEO documents being reachable;
+- localized `lang`;
+- canonical URLs;
+- initial metadata and JSON-LD availability;
 - expanded Experience and Education content surviving reload;
 - viewport context surviving reload;
 - a provider opened from the Certifications carousel surviving reload;
