@@ -172,12 +172,79 @@ const Portfolio = () => {
       ),
   );
 
+  /*
+   * Capture the browser entry type once. A reload is the only ordinary
+   * document navigation that is allowed to restore persisted accordion
+   * state. Locale changes initiated by the UI are authorised separately
+   * through languageNavigationState.
+   */
+  const [
+    reloadNavigation,
+  ] = useState(
+    isReloadNavigation,
+  );
+
+  const shouldRestoreExpandedPanels =
+    languageNavigationState !== null ||
+    reloadNavigation;
+
   const [
     portfolioSessionState,
     setPortfolioSessionState,
   ] = useState(
-    readPortfolioSessionState,
+    () => {
+      const persistedState =
+        readPortfolioSessionState();
+
+      if (
+        shouldRestoreExpandedPanels
+      ) {
+        return persistedState;
+      }
+
+      /*
+       * A normal document entry represents a new browsing context.
+       * Stale accordion state from an earlier visit must therefore not
+       * influence the first React render.
+       */
+      return {
+        ...persistedState,
+        expandedExperienceId:
+          null,
+        expandedVendorId:
+          null,
+      };
+    },
   );
+
+  /*
+   * Keep storage aligned with the clean React state on a normal entry.
+   *
+   * This is deliberately a layout effect: stale expansion markers are
+   * removed before the page is painted and before the user can trigger a
+   * subsequent locale change or reload.
+   *
+   * Reloads and explicit locale-selector navigation retain the persisted
+   * accordion state because they represent continuity of the same browsing
+   * context.
+   */
+  useLayoutEffect(() => {
+    if (
+      shouldRestoreExpandedPanels
+    ) {
+      return;
+    }
+
+    persistExpandedExperienceId(
+      null,
+    );
+
+    persistExpandedVendorId(
+      null,
+    );
+  }, [
+    shouldRestoreExpandedPanels,
+  ]);
 
   /*
    * Only a real browser reload may consume the persisted reload position.
@@ -188,7 +255,7 @@ const Portfolio = () => {
   ] = useState(
     () => {
       if (
-        !isReloadNavigation()
+        !reloadNavigation
       ) {
         return null;
       }
