@@ -1,3 +1,18 @@
+# GitHub Pages serves this project below /JNR/.
+#
+# Search-engine robots.txt rules are only authoritative when served from
+# the root of the host:
+#
+#   https://josepnr97.github.io/robots.txt
+#
+# This repository can only publish:
+#
+#   https://josepnr97.github.io/JNR/robots.txt
+#
+# Therefore this file is informational and is not relied upon for crawl
+# control. Indexing directives are defined by each HTML document and the
+# sitemap is submitted directly through Google Search Console.
+
 User-agent: *
 Allow: /
 
