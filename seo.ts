@@ -54,17 +54,42 @@ const NOSCRIPT_COPY:
   };
 
 /*
+ * Sitemap <lastmod>.
+ *
  * Update a locale only when its indexable page receives a meaningful
  * change: main content, structured data, important links or SEO metadata.
  *
  * Do not update this merely because the site was rebuilt or because a
  * cosmetic/non-content change was deployed.
+ *
+ * Sitemap lastmod intentionally uses a Date (YYYY-MM-DD).
  */
 const LAST_SIGNIFICANT_UPDATE:
   Record<Language, string> = {
     ca: '2026-09-20',
     es: '2026-09-20',
     en: '2026-09-20',
+  };
+
+/*
+ * ProfilePage dateModified.
+ *
+ * Google expects ProfilePage.dateModified to be a DateTime rather than
+ * the date-only value used by the sitemap.
+ *
+ * This timestamp corresponds to the SEO profile update introduced on
+ * 2026-09-20. Keep it independent from sitemap lastmod so each consumer
+ * receives the format it expects.
+ *
+ * When the profile's indexable content or structured identity changes
+ * meaningfully in the future, update both this value and the corresponding
+ * sitemap date above.
+ */
+const LAST_PROFILE_UPDATE:
+  Record<Language, string> = {
+    ca: '2026-09-20T19:28:22Z',
+    es: '2026-09-20T19:28:22Z',
+    en: '2026-09-20T19:28:22Z',
   };
 
 export interface SeoLocaleData {
@@ -78,6 +103,7 @@ export interface SeoLocaleData {
   imageAlt: string;
   noScriptText: string;
   lastModified: string;
+  dateModified: string;
 }
 
 export const getLocalizedUrl = (
@@ -115,6 +141,10 @@ export const getSeoLocaleData = (
     NOSCRIPT_COPY[language],
   lastModified:
     LAST_SIGNIFICANT_UPDATE[
+      language
+    ],
+  dateModified:
+    LAST_PROFILE_UPDATE[
       language
     ],
 });
@@ -236,7 +266,7 @@ export const getProfilePageJsonLd = (
           language,
 
         dateModified:
-          seo.lastModified,
+          seo.dateModified,
 
         mainEntity: {
           '@id':
