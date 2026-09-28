@@ -1,4 +1,7 @@
-import { PROFILE_DATA } from '../aboutMe';
+import {
+  PROFILE_DATA,
+  PROFILE_IMAGE_ASSET_STEM,
+} from '../aboutMe';
 import { translations } from '../translations';
 import type { Language } from '../types';
 import { fileURLToPath } from 'node:url';
@@ -139,7 +142,12 @@ export const buildCvModel = (language: Language): CvModel => {
       linkedin: PROFILE_DATA.linkedin,
       website: PROFILE_DATA.website,
       location: sanitizePdfText(t.contact.location),
-      imagePath: fileURLToPath(new URL('../public/assets/people/josep-nunez-riba.png', import.meta.url)),
+      imagePath: fileURLToPath(
+        new URL(
+          `../public/assets/${PROFILE_IMAGE_ASSET_STEM}.png`,
+          import.meta.url,
+        ),
+      ),
       summary: [t.about.p1, t.about.p2, t.about.p3].map(sanitizePdfText),
       languages: sanitizePdfText(t.about.languagesText),
     },

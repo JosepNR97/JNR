@@ -4,11 +4,15 @@ import {
   it,
 } from 'vitest';
 import {
+  PROFILE_IMAGE_ASSET_STEM,
+} from './aboutMe.ts';
+import {
   renderLocalizedHtml,
   renderSitemap,
 } from './scripts/generate-localized-html.ts';
 import {
   PERSON_ID,
+  SITE_BASE_URL,
   getPersonJsonLd,
   getProfilePageJsonLd,
   getSeoLocaleData,
@@ -137,7 +141,7 @@ describe(
     );
 
     it(
-      'publishes the current profile image rather than the superseded portrait',
+      'publishes the centrally configured current profile image',
       () => {
         for (
           const language
@@ -151,7 +155,7 @@ describe(
           expect(
             seo.imageUrl,
           ).toBe(
-            'https://josepnr97.github.io/JNR/assets/people/josep-nunez-riba-2.webp',
+            `${SITE_BASE_URL}assets/${PROFILE_IMAGE_ASSET_STEM}.webp`,
           );
         }
       },
