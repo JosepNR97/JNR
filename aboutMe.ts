@@ -1,12 +1,15 @@
 import { assetPath } from './assetPath.ts';
 import type { MultiLanguageString, ServiceItem } from './types.ts';
 
+export const PROFILE_IMAGE_ASSET_STEM =
+  'people/josep-nunez-riba-2' as const;
+
 export const PROFILE_DATA = {
   name: "Josep Núñez Riba",
   email: "josepnunez97@gmail.com",
   linkedin: "https://www.linkedin.com/in/josep-nunez-riba",
   website: "https://josepnr97.github.io/JNR/",
-  image: assetPath('people/josep-nunez-riba-2.webp'),
+  image: assetPath(`${PROFILE_IMAGE_ASSET_STEM}.webp`),
   location: {
     ca: "Barcelona",
     es: "Barcelona",
@@ -98,7 +101,7 @@ export const SERVICES_DATA = {
       title: { ca: "Estratègia IT i govern", es: "Estrategia IT y gobierno", en: "IT Strategy & Governance" },
       description: {
         ca: "Gestió de projectes i programes de transformació digital mitjançant l'alineació del roadmap tecnològic amb resultats, objectius i indicadors de negoci, procurant el retorn de les inversions.",
-        es: "Gestión de proyectos y programas de transformación digital mediante la alineación del roadmap tecnológico con resultados, objetivos e indicadores de negocio, procurando el retorno de las inversiones.",
+        es: "Gestión de proyectos y programas de transformación digital mediante la alineación del roadmap tecnológico con resultados, objectivos e indicadores de negocio, procurando el retorno de las inversiones.",
         en: "Digital transformation projects and programs management by aligning the technology roadmap with business outcomes, objectives, and indicators, ensuring return on investment."
       },
       iconName: "Strategy"
