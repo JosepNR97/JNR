@@ -2,6 +2,10 @@ import { defineConfig } from '@playwright/test';
 
 const baseURL = 'http://127.0.0.1:4173';
 
+const webServerCommand = process.env.CI
+  ? 'npm run preview -- --host 127.0.0.1 --port 4173 --strictPort'
+  : 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173 --strictPort';
+
 export default defineConfig({
   testDir: './e2e',
   timeout: 20_000,
@@ -10,7 +14,7 @@ export default defineConfig({
   },
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 2 : undefined,
 
   use: {
     baseURL,
@@ -35,8 +39,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command:
-      'npm run build && npm run preview -- --host 127.0.0.1 --port 4173 --strictPort',
+    command: webServerCommand,
     url: baseURL,
     reuseExistingServer: false,
     timeout: 120_000,
