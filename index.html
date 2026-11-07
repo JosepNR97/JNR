@@ -49,13 +49,9 @@
           const projectIndex = segments.indexOf('JNR');
 
           const candidate =
-            projectIndex >= 0
-              ? segments[projectIndex + 1]
-              : segments[0];
+            projectIndex >= 0 ? segments[projectIndex + 1] : segments[0];
 
-          return supportedLanguages.includes(candidate)
-            ? candidate
-            : null;
+          return supportedLanguages.includes(candidate) ? candidate : null;
         };
 
         const getReferrerLanguage = () => {
@@ -78,8 +74,7 @@
 
         const getStoredLanguage = () => {
           try {
-            const storedLanguage =
-              window.localStorage.getItem(storageKey);
+            const storedLanguage = window.localStorage.getItem(storageKey);
 
             return supportedLanguages.includes(storedLanguage)
               ? storedLanguage
@@ -98,9 +93,7 @@
           return (
             browserLanguages
               .map((language) => language.split('-')[0])
-              .find((language) =>
-                supportedLanguages.includes(language),
-              ) ?? null
+              .find((language) => supportedLanguages.includes(language)) ?? null
           );
         };
 

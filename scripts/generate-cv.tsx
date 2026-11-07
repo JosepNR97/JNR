@@ -530,15 +530,10 @@ const Footer = ({
   model: CvModel;
   firstPage?: boolean;
 }) => (
-  <View
-    style={[styles.footer, firstPage ? styles.firstPageFooter : {}]}
-    fixed
-  >
+  <View style={[styles.footer, firstPage ? styles.firstPageFooter : {}]} fixed>
     <Text>{model.labels.generatedFrom}</Text>
     <Text
-      render={({ pageNumber, totalPages }) =>
-        `${pageNumber} / ${totalPages}`
-      }
+      render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
     />
   </View>
 );
@@ -560,10 +555,7 @@ const Sidebar = ({ model }: { model: CvModel }) => (
 
       <Text style={styles.contactLabel}>{model.labels.email}</Text>
 
-      <Link
-        src={`mailto:${model.profile.email}`}
-        style={styles.contactValue}
-      >
+      <Link src={`mailto:${model.profile.email}`} style={styles.contactValue}>
         {model.profile.email}
       </Link>
 
@@ -599,13 +591,7 @@ const Sidebar = ({ model }: { model: CvModel }) => (
   </View>
 );
 
-const PageHeader = ({
-  title,
-  model,
-}: {
-  title: string;
-  model: CvModel;
-}) => (
+const PageHeader = ({ title, model }: { title: string; model: CvModel }) => (
   <View style={styles.pageHeader}>
     <Text style={styles.pageHeaderTitle}>{title}</Text>
 
@@ -638,10 +624,7 @@ const ProjectGroups = ({ projects }: { projects: CvProject[] }) => {
   >((result, project) => {
     const current = result.at(-1);
 
-    if (
-      current?.role === project.role &&
-      current.company === project.company
-    ) {
+    if (current?.role === project.role && current.company === project.company) {
       current.projects.push(project);
     } else {
       result.push({
@@ -655,10 +638,7 @@ const ProjectGroups = ({ projects }: { projects: CvProject[] }) => {
   }, []);
 
   return groups.map((group) => (
-    <View
-      key={`${group.role}-${group.company}`}
-      style={styles.projectGroup}
-    >
+    <View key={`${group.role}-${group.company}`} style={styles.projectGroup}>
       <View style={styles.projectGroupHeading} wrap={false}>
         <Text style={styles.projectGroupRole}>{group.role}</Text>
         <Text style={styles.projectGroupCompany}>{group.company}</Text>
@@ -689,14 +669,10 @@ const CertificationGroup = ({
         key={`${provider.name}-${certification.name}`}
         style={styles.certificationItem}
       >
-        <Text style={styles.certificationName}>
-          {certification.name}
-        </Text>
+        <Text style={styles.certificationName}>{certification.name}</Text>
 
         <View style={styles.certificationMetaRow}>
-          <Text style={styles.certificationDate}>
-            {certification.date}
-          </Text>
+          <Text style={styles.certificationDate}>{certification.date}</Text>
 
           {certification.credentialUrl ? (
             <Link
@@ -714,24 +690,17 @@ const CertificationGroup = ({
 
 export const CvDocument = ({ model }: { model: CvModel }) => {
   const providerColumns = model.certificationProviders.reduce<
-    [
-      CvModel['certificationProviders'],
-      CvModel['certificationProviders'],
-    ]
+    [CvModel['certificationProviders'], CvModel['certificationProviders']]
   >(
     (columns, provider) => {
-      const getColumnWeight = (
-        column: CvModel['certificationProviders'],
-      ) =>
+      const getColumnWeight = (column: CvModel['certificationProviders']) =>
         column.reduce(
-          (total, item) =>
-            total + item.certifications.length + 1,
+          (total, item) => total + item.certifications.length + 1,
           0,
         );
 
       const targetColumn =
-        getColumnWeight(columns[0]) <=
-        getColumnWeight(columns[1])
+        getColumnWeight(columns[0]) <= getColumnWeight(columns[1])
           ? columns[0]
           : columns[1];
 
@@ -747,26 +716,18 @@ export const CvDocument = ({ model }: { model: CvModel }) => {
       title={`${model.profile.name} - CV ${model.language.toUpperCase()}`}
       author={model.profile.name}
       subject={model.profile.title}
-      keywords={model.expertise
-        .map((item) => item.title)
-        .join(', ')}
+      keywords={model.expertise.map((item) => item.title).join(', ')}
       creator="JNR Portfolio CV Generator"
     >
       <Page size="A4" style={styles.firstPage}>
         <Sidebar model={model} />
 
         <View style={styles.firstPageMain}>
-          <Text style={styles.eyebrow}>
-            {model.labels.profile}
-          </Text>
+          <Text style={styles.eyebrow}>{model.labels.profile}</Text>
 
-          <Text style={styles.title}>
-            {model.profile.name}
-          </Text>
+          <Text style={styles.title}>{model.profile.name}</Text>
 
-          <Text style={styles.tagline}>
-            {model.profile.tagline}
-          </Text>
+          <Text style={styles.tagline}>{model.profile.tagline}</Text>
 
           {model.profile.summary.map((paragraph) => (
             <Text key={paragraph} style={styles.summaryText}>
@@ -774,9 +735,7 @@ export const CvDocument = ({ model }: { model: CvModel }) => {
             </Text>
           ))}
 
-          <Text style={styles.sectionHeading}>
-            {model.labels.experience}
-          </Text>
+          <Text style={styles.sectionHeading}>{model.labels.experience}</Text>
 
           {model.experience.map((item) => (
             <View
@@ -786,21 +745,13 @@ export const CvDocument = ({ model }: { model: CvModel }) => {
             >
               <View style={styles.timelineDot} />
 
-              <Text style={styles.itemPeriod}>
-                {item.period}
-              </Text>
+              <Text style={styles.itemPeriod}>{item.period}</Text>
 
-              <Text style={styles.itemTitle}>
-                {item.role}
-              </Text>
+              <Text style={styles.itemTitle}>{item.role}</Text>
 
-              <Text style={styles.itemCompany}>
-                {item.company}
-              </Text>
+              <Text style={styles.itemCompany}>{item.company}</Text>
 
-              <Text style={styles.itemDescription}>
-                {item.description}
-              </Text>
+              <Text style={styles.itemDescription}>{item.description}</Text>
             </View>
           ))}
         </View>
@@ -809,10 +760,7 @@ export const CvDocument = ({ model }: { model: CvModel }) => {
       </Page>
 
       <Page size="A4" style={styles.page}>
-        <PageHeader
-          title={model.labels.projects}
-          model={model}
-        />
+        <PageHeader title={model.labels.projects} model={model} />
 
         <ProjectGroups projects={model.recentProjects} />
 
@@ -820,16 +768,11 @@ export const CvDocument = ({ model }: { model: CvModel }) => {
       </Page>
 
       <Page size="A4" style={styles.page}>
-        <PageHeader
-          title={model.labels.projects}
-          model={model}
-        />
+        <PageHeader title={model.labels.projects} model={model} />
 
         <ProjectGroups projects={model.earlierProjects} />
 
-        <Text style={styles.sectionHeading}>
-          {model.labels.education}
-        </Text>
+        <Text style={styles.sectionHeading}>{model.labels.education}</Text>
 
         <View style={styles.educationGrid}>
           {model.education.map((item) => (
@@ -838,13 +781,9 @@ export const CvDocument = ({ model }: { model: CvModel }) => {
               style={styles.educationCard}
               wrap={false}
             >
-              <Text style={styles.educationPeriod}>
-                {item.period}
-              </Text>
+              <Text style={styles.educationPeriod}>{item.period}</Text>
 
-              <Text style={styles.educationDegree}>
-                {item.degree}
-              </Text>
+              <Text style={styles.educationDegree}>{item.degree}</Text>
 
               <Text style={styles.educationInstitution}>
                 {item.institution}
@@ -862,34 +801,24 @@ export const CvDocument = ({ model }: { model: CvModel }) => {
         <Footer model={model} />
       </Page>
 
-      <Page
-        size="A4"
-        style={[styles.page, styles.certificationPage]}
-      >
-        <PageHeader
-          title={model.labels.certifications}
-          model={model}
-        />
+      <Page size="A4" style={[styles.page, styles.certificationPage]}>
+        <PageHeader title={model.labels.certifications} model={model} />
 
         <View style={styles.certificationColumns}>
-          {providerColumns.map(
-            (providers, columnIndex) => (
-              <View
-                key={`certification-column-${columnIndex}`}
-                style={styles.certificationColumn}
-              >
-                {providers.map((provider) => (
-                  <CertificationGroup
-                    key={provider.name}
-                    provider={provider}
-                    credentialLabel={
-                      model.labels.credential
-                    }
-                  />
-                ))}
-              </View>
-            ),
-          )}
+          {providerColumns.map((providers, columnIndex) => (
+            <View
+              key={`certification-column-${columnIndex}`}
+              style={styles.certificationColumn}
+            >
+              {providers.map((provider) => (
+                <CertificationGroup
+                  key={provider.name}
+                  provider={provider}
+                  credentialLabel={model.labels.credential}
+                />
+              ))}
+            </View>
+          ))}
         </View>
 
         <Footer model={model} />
@@ -907,25 +836,18 @@ export const generateCvDocuments = async (
   const generatedFiles: string[] = [];
   const imagePath = buildCvModel('es').profile.imagePath;
 
-  const portraitDataUri =
-    `data:image/png;base64,${(
-      await readFile(imagePath)
-    ).toString('base64')}`;
+  const portraitDataUri = `data:image/png;base64,${(
+    await readFile(imagePath)
+  ).toString('base64')}`;
 
   for (const language of languages) {
-    const outputPath = path.join(
-      outputDirectory,
-      CV_FILENAMES[language],
-    );
+    const outputPath = path.join(outputDirectory, CV_FILENAMES[language]);
 
     const model = buildCvModel(language);
 
     model.profile.imagePath = portraitDataUri;
 
-    await renderToFile(
-      <CvDocument model={model} />,
-      outputPath,
-    );
+    await renderToFile(<CvDocument model={model} />, outputPath);
 
     await markExternalLinksForNewWindow(outputPath);
 
@@ -935,40 +857,23 @@ export const generateCvDocuments = async (
   return generatedFiles;
 };
 
-const markExternalLinksForNewWindow = async (
-  pdfPath: string,
-) => {
-  const pdf = await PDFDocument.load(
-    await readFile(pdfPath),
-  );
+const markExternalLinksForNewWindow = async (pdfPath: string) => {
+  const pdf = await PDFDocument.load(await readFile(pdfPath));
 
   pdf.getPages().forEach((page) => {
     const annotations = page.node.Annots();
 
     if (!annotations) return;
 
-    for (
-      let index = 0;
-      index < annotations.size();
-      index += 1
-    ) {
-      const annotation = pdf.context.lookup(
-        annotations.get(index),
-        PDFDict,
-      );
+    for (let index = 0; index < annotations.size(); index += 1) {
+      const annotation = pdf.context.lookup(annotations.get(index), PDFDict);
 
-      const action = annotation.lookup(
-        PDFName.of('A'),
-        PDFDict,
-      );
+      const action = annotation.lookup(PDFName.of('A'), PDFDict);
 
       const actionType = action.get(PDFName.of('S'));
 
       if (actionType?.toString() === '/URI') {
-        action.set(
-          PDFName.of('NewWindow'),
-          PDFBool.True,
-        );
+        action.set(PDFName.of('NewWindow'), PDFBool.True);
       }
     }
   });
@@ -977,16 +882,13 @@ const markExternalLinksForNewWindow = async (
 };
 
 const isExecutedDirectly = process.argv[1]
-  ? path.resolve(process.argv[1]) ===
-    fileURLToPath(import.meta.url)
+  ? path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
   : false;
 
 if (isExecutedDirectly) {
   generateCvDocuments()
     .then((generatedFiles) => {
-      console.log(
-        `Generated ${generatedFiles.length} CV documents.`,
-      );
+      console.log(`Generated ${generatedFiles.length} CV documents.`);
     })
     .catch((error: unknown) => {
       console.error(error);

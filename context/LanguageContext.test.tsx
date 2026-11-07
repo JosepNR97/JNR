@@ -36,8 +36,12 @@ describe('LanguageProvider', () => {
     );
 
     expect(screen.getByLabelText('current-language')).toHaveTextContent('en');
-    await waitFor(() => expect(document.documentElement).toHaveAttribute('lang', 'en'));
-    await waitFor(() => expect(window.localStorage.getItem('jnr-language-v1')).toBe('en'));
+    await waitFor(() =>
+      expect(document.documentElement).toHaveAttribute('lang', 'en'),
+    );
+    await waitFor(() =>
+      expect(window.localStorage.getItem('jnr-language-v1')).toBe('en'),
+    );
   });
 
   it('restores the stored language when no locale is present in the URL', async () => {
@@ -50,7 +54,9 @@ describe('LanguageProvider', () => {
     );
 
     expect(screen.getByLabelText('current-language')).toHaveTextContent('en');
-    await waitFor(() => expect(document.documentElement).toHaveAttribute('lang', 'en'));
+    await waitFor(() =>
+      expect(document.documentElement).toHaveAttribute('lang', 'en'),
+    );
   });
 
   it('persists a new language selection when rendered without an explicit locale', async () => {
@@ -68,6 +74,8 @@ describe('LanguageProvider', () => {
     });
 
     expect(screen.getByLabelText('current-language')).toHaveTextContent('ca');
-    await waitFor(() => expect(window.localStorage.getItem('jnr-language-v1')).toBe('ca'));
+    await waitFor(() =>
+      expect(window.localStorage.getItem('jnr-language-v1')).toBe('ca'),
+    );
   });
 });

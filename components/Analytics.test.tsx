@@ -3,7 +3,9 @@ import { Analytics } from './Analytics';
 
 describe('Analytics', () => {
   beforeEach(() => {
-    document.querySelectorAll('script[data-analytics-id]').forEach((script) => script.remove());
+    document
+      .querySelectorAll('script[data-analytics-id]')
+      .forEach((script) => script.remove());
     delete document.documentElement.dataset.analyticsInitialized;
     window.dataLayer = [];
     window.gtag = undefined;
@@ -13,12 +15,16 @@ describe('Analytics', () => {
     const { container } = render(<Analytics />);
 
     expect(container).toBeEmptyDOMElement();
-    expect(document.querySelector('script[data-analytics-id="G-WH1JZPMVQ5"]')).toHaveAttribute(
+    expect(
+      document.querySelector('script[data-analytics-id="G-WH1JZPMVQ5"]'),
+    ).toHaveAttribute(
       'src',
       'https://www.googletagmanager.com/gtag/js?id=G-WH1JZPMVQ5',
     );
     expect(window.dataLayer).toEqual(
-      expect.arrayContaining([['config', 'G-WH1JZPMVQ5', { anonymize_ip: true }]]),
+      expect.arrayContaining([
+        ['config', 'G-WH1JZPMVQ5', { anonymize_ip: true }],
+      ]),
     );
   });
 });

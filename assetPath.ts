@@ -10,5 +10,4 @@ const getAssetBaseUrl = (): string => {
   return getLanguageFromPathname(window.location.pathname) ? '../' : baseUrl;
 };
 
-export const assetPath = (path: string) =>
-  `${getAssetBaseUrl()}assets/${path}`;
+export const assetPath = (path: string) => `${getAssetBaseUrl()}assets/${path}`;

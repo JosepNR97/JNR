@@ -1,8 +1,5 @@
 import react from '@vitejs/plugin-react';
-import {
-  configDefaults,
-  defineConfig,
-} from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [react()],
@@ -13,9 +10,6 @@ export default defineConfig({
     globals: true,
     pool: 'vmThreads',
     maxWorkers: 2,
-    exclude: [
-      ...configDefaults.exclude,
-      'e2e/**',
-    ],
+    exclude: [...configDefaults.exclude, 'e2e/**'],
   },
 });

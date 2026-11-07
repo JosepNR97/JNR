@@ -1,7 +1,4 @@
-import {
-  PROFILE_DATA,
-  PROFILE_IMAGE_ASSET_STEM,
-} from '../aboutMe';
+import { PROFILE_DATA, PROFILE_IMAGE_ASSET_STEM } from '../aboutMe';
 import { translations } from '../translations';
 import type { Language } from '../types';
 import { fileURLToPath } from 'node:url';
@@ -67,7 +64,8 @@ export const sanitizePdfText = (value: string) =>
   return `${truncated.slice(0, Math.max(lastSpace, maximumLength - 24)).trim()}...`;
 };*/
 
-const validCredentialUrl = (value: string) => (/^https?:\/\//i.test(value) ? value : null);
+const validCredentialUrl = (value: string) =>
+  /^https?:\/\//i.test(value) ? value : null;
 
 export interface CvProject {
   year: string;

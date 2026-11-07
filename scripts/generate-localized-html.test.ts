@@ -40,9 +40,7 @@ describe('localized HTML generator', () => {
   it('renders sitemap alternates for all indexable locale URLs', () => {
     const sitemap = renderSitemap();
 
-    expect(sitemap).toContain(
-      'xmlns:xhtml="http://www.w3.org/1999/xhtml"',
-    );
+    expect(sitemap).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"');
 
     for (const language of SUPPORTED_LANGUAGES) {
       expect(sitemap).toContain(`<loc>${getLocalizedUrl(language)}</loc>`);

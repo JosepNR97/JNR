@@ -84,9 +84,8 @@ describe('Header', () => {
       'focus-visible:bg-white/10',
     );
 
-    const contactLinks = container.querySelectorAll<HTMLAnchorElement>(
-      'a[href="#contact"]',
-    );
+    const contactLinks =
+      container.querySelectorAll<HTMLAnchorElement>('a[href="#contact"]');
 
     expect(contactLinks).toHaveLength(2);
 

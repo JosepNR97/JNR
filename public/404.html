@@ -23,7 +23,11 @@
       :root {
         color-scheme: dark;
         font-family:
-          system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
         color: #f8fafc;
         background: #0f172a;
       }
@@ -52,9 +56,7 @@
         min-height: 100dvh;
         place-items: center;
         overflow: hidden;
-        padding:
-          clamp(6rem, 12vh, 8rem)
-          clamp(1.25rem, 5vw, 4rem)
+        padding: clamp(6rem, 12vh, 8rem) clamp(1.25rem, 5vw, 4rem)
           clamp(3rem, 7vh, 5rem);
         background: #0f172a;
       }
@@ -64,15 +66,8 @@
         inset: 0;
         z-index: -4;
         background-image:
-          linear-gradient(
-            rgb(255 255 255 / 3%) 1px,
-            transparent 1px
-          ),
-          linear-gradient(
-            90deg,
-            rgb(255 255 255 / 3%) 1px,
-            transparent 1px
-          );
+          linear-gradient(rgb(255 255 255 / 3%) 1px, transparent 1px),
+          linear-gradient(90deg, rgb(255 255 255 / 3%) 1px, transparent 1px);
         background-size: 64px 64px;
         pointer-events: none;
       }
@@ -117,7 +112,7 @@
         z-index: 2;
         margin: 0;
         color: #f8fafc;
-        font-family: Georgia, Cambria, "Times New Roman", serif;
+        font-family: Georgia, Cambria, 'Times New Roman', serif;
         font-size: 1.125rem;
         font-weight: 700;
         letter-spacing: -0.035em;
@@ -134,7 +129,7 @@
         z-index: -2;
         margin: 0;
         color: rgb(255 255 255 / 4.5%);
-        font-family: Georgia, Cambria, "Times New Roman", serif;
+        font-family: Georgia, Cambria, 'Times New Roman', serif;
         font-size: clamp(10rem, 28vw, 28rem);
         font-weight: 700;
         line-height: 0.75;
@@ -241,14 +236,14 @@
         border-radius: 50%;
         background: #38bdf8;
         box-shadow: 0 0 0.75rem rgb(56 189 248 / 75%);
-        content: "";
+        content: '';
       }
 
       h1 {
         max-width: 44rem;
         margin: 0 auto;
         color: #ffffff;
-        font-family: Georgia, Cambria, "Times New Roman", serif;
+        font-family: Georgia, Cambria, 'Times New Roman', serif;
         font-size: clamp(2.75rem, 7vw, 5rem);
         font-weight: 700;
         line-height: 1.01;
@@ -412,10 +407,7 @@
 
       @media (min-width: 100rem) {
         .route-art {
-          right: max(
-            4rem,
-            calc((100vw - 100rem) / 2)
-          );
+          right: max(4rem, calc((100vw - 100rem) / 2));
         }
 
         .content {
@@ -452,57 +444,23 @@
 
   <body>
     <main class="page-shell">
-      <div
-        class="grid-layer"
-        aria-hidden="true"
-      ></div>
+      <div class="grid-layer" aria-hidden="true"></div>
 
-      <div
-        class="ambient ambient-primary"
-        aria-hidden="true"
-      ></div>
+      <div class="ambient ambient-primary" aria-hidden="true"></div>
 
-      <div
-        class="ambient ambient-secondary"
-        aria-hidden="true"
-      ></div>
+      <div class="ambient ambient-secondary" aria-hidden="true"></div>
 
-      <p
-        class="brand"
-        aria-label="JNR"
-      >
+      <p class="brand" aria-label="JNR">
         JNR<span class="brand-accent">.</span>
       </p>
 
-      <p
-        class="watermark"
-        aria-hidden="true"
-      >
-        404
-      </p>
+      <p class="watermark" aria-hidden="true">404</p>
 
-      <div
-        class="route-art"
-        aria-hidden="true"
-      >
-        <svg
-          viewBox="0 0 520 520"
-          role="presentation"
-          focusable="false"
-        >
-          <circle
-            class="route-ring"
-            cx="260"
-            cy="260"
-            r="214"
-          />
+      <div class="route-art" aria-hidden="true">
+        <svg viewBox="0 0 520 520" role="presentation" focusable="false">
+          <circle class="route-ring" cx="260" cy="260" r="214" />
 
-          <circle
-            class="route-ring"
-            cx="260"
-            cy="260"
-            r="154"
-          />
+          <circle class="route-ring" cx="260" cy="260" r="154" />
 
           <path
             class="route-line route-line-muted"
@@ -525,78 +483,32 @@
             d="M94 354 C150 328 166 262 217 244 C271 225 310 260 336 214 C352 186 354 157 374 148"
           />
 
-          <circle
-            class="route-node"
-            cx="94"
-            cy="354"
-            r="7"
-          />
+          <circle class="route-node" cx="94" cy="354" r="7" />
 
-          <circle
-            class="route-node"
-            cx="217"
-            cy="244"
-            r="7"
-          />
+          <circle class="route-node" cx="217" cy="244" r="7" />
 
-          <circle
-            class="route-node"
-            cx="317"
-            cy="349"
-            r="6"
-          />
+          <circle class="route-node" cx="317" cy="349" r="6" />
 
-          <circle
-            class="route-node"
-            cx="112"
-            cy="204"
-            r="6"
-          />
+          <circle class="route-node" cx="112" cy="204" r="6" />
 
-          <circle
-            class="route-pulse"
-            cx="374"
-            cy="148"
-            r="24"
-          />
+          <circle class="route-pulse" cx="374" cy="148" r="24" />
 
-          <circle
-            class="route-node-active"
-            cx="374"
-            cy="148"
-            r="8"
-          />
+          <circle class="route-node-active" cx="374" cy="148" r="8" />
         </svg>
       </div>
 
-      <section
-        class="content"
-        aria-labelledby="not-found-title"
-      >
-        <p class="error-badge">
-          Error 404
-        </p>
+      <section class="content" aria-labelledby="not-found-title">
+        <p class="error-badge">Error 404</p>
 
-        <h1 id="not-found-title">
-          Página no encontrada
-        </h1>
+        <h1 id="not-found-title">Página no encontrada</h1>
 
-        <p
-          class="message"
-          id="not-found-message"
-        >
+        <p class="message" id="not-found-message">
           La dirección que buscas no está disponible. Vuelve al portfolio para
           seguir navegando.
         </p>
 
-        <a
-          class="return-link"
-          id="return-link"
-          href="/JNR/es/"
-        >
-          <span id="return-link-label">
-            Volver al portfolio
-          </span>
+        <a class="return-link" id="return-link" href="/JNR/es/">
+          <span id="return-link-label"> Volver al portfolio </span>
 
           <svg
             viewBox="0 0 20 20"
@@ -624,8 +536,7 @@
         const translations = {
           ca: {
             title: 'Pàgina no trobada | Josep Núñez Riba',
-            description:
-              'Pàgina no trobada al portafoli de Josep Núñez Riba.',
+            description: 'Pàgina no trobada al portafoli de Josep Núñez Riba.',
             heading: 'Pàgina no trobada',
             message:
               "L'adreça que busques no està disponible. Torna al portafoli per continuar navegant.",
@@ -642,8 +553,7 @@
           },
           en: {
             title: 'Page not found | Josep Núñez Riba',
-            description:
-              "Page not found in Josep Núñez Riba's portfolio.",
+            description: "Page not found in Josep Núñez Riba's portfolio.",
             heading: 'Page not found',
             message:
               "The address you're looking for isn't available. Return to the portfolio to continue browsing.",
@@ -656,13 +566,9 @@
           const projectIndex = segments.indexOf('JNR');
 
           const candidate =
-            projectIndex >= 0
-              ? segments[projectIndex + 1]
-              : segments[0];
+            projectIndex >= 0 ? segments[projectIndex + 1] : segments[0];
 
-          return supportedLanguages.includes(candidate)
-            ? candidate
-            : null;
+          return supportedLanguages.includes(candidate) ? candidate : null;
         };
 
         const getReferrerLanguage = () => {
@@ -677,9 +583,7 @@
               return null;
             }
 
-            return getLanguageFromPathname(
-              referrerUrl.pathname,
-            );
+            return getLanguageFromPathname(referrerUrl.pathname);
           } catch {
             return null;
           }
@@ -687,12 +591,9 @@
 
         const getStoredLanguage = () => {
           try {
-            const storedLanguage =
-              window.localStorage.getItem(storageKey);
+            const storedLanguage = window.localStorage.getItem(storageKey);
 
-            return supportedLanguages.includes(
-              storedLanguage,
-            )
+            return supportedLanguages.includes(storedLanguage)
               ? storedLanguage
               : null;
           } catch {
@@ -702,45 +603,31 @@
 
         const getBrowserLanguage = () => {
           const browserLanguages =
-            navigator.languages &&
-            navigator.languages.length > 0
+            navigator.languages && navigator.languages.length > 0
               ? navigator.languages
               : [navigator.language];
 
           return (
             browserLanguages
-              .map(
-                (language) =>
-                  language.split('-')[0],
-              )
-              .find((language) =>
-                supportedLanguages.includes(language),
-              ) ?? null
+              .map((language) => language.split('-')[0])
+              .find((language) => supportedLanguages.includes(language)) ?? null
           );
         };
 
         const getPortfolioBasePath = () => {
-          const segments =
-            window.location.pathname
-              .split('/')
-              .filter(Boolean);
+          const segments = window.location.pathname.split('/').filter(Boolean);
 
-          const projectIndex =
-            segments.indexOf('JNR');
+          const projectIndex = segments.indexOf('JNR');
 
           if (projectIndex < 0) {
             return '/';
           }
 
-          return `/${segments
-            .slice(0, projectIndex + 1)
-            .join('/')}/`;
+          return `/${segments.slice(0, projectIndex + 1).join('/')}/`;
         };
 
         const language =
-          getLanguageFromPathname(
-            window.location.pathname,
-          ) ??
+          getLanguageFromPathname(window.location.pathname) ??
           getReferrerLanguage() ??
           getStoredLanguage() ??
           getBrowserLanguage() ??
@@ -752,30 +639,17 @@
         document.title = copy.title;
 
         document
-          .querySelector(
-            'meta[name="description"]',
-          )
-          ?.setAttribute(
-            'content',
-            copy.description,
-          );
+          .querySelector('meta[name="description"]')
+          ?.setAttribute('content', copy.description);
 
-        document.getElementById(
-          'not-found-title',
-        ).textContent = copy.heading;
+        document.getElementById('not-found-title').textContent = copy.heading;
 
-        document.getElementById(
-          'not-found-message',
-        ).textContent = copy.message;
+        document.getElementById('not-found-message').textContent = copy.message;
 
-        const returnLink =
-          document.getElementById(
-            'return-link',
-          );
+        const returnLink = document.getElementById('return-link');
 
-        document.getElementById(
-          'return-link-label',
-        ).textContent = copy.returnLabel;
+        document.getElementById('return-link-label').textContent =
+          copy.returnLabel;
 
         returnLink.setAttribute(
           'href',
@@ -783,10 +657,7 @@
         );
 
         try {
-          window.localStorage.setItem(
-            storageKey,
-            language,
-          );
+          window.localStorage.setItem(storageKey, language);
         } catch {
           // The page still uses the resolved language if storage is unavailable.
         }

@@ -1,46 +1,28 @@
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-} from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import { LanguageProvider } from '../context/LanguageContext';
 import { Certifications } from './Certifications';
 
-let animationCallback:
-  | FrameRequestCallback
-  | undefined;
+let animationCallback: FrameRequestCallback | undefined;
 
-const runAnimationFrame = (
-  timestamp: number,
-) => {
+const runAnimationFrame = (timestamp: number) => {
   act(() => {
     animationCallback?.(timestamp);
   });
 };
 
-const mockMatchMedia = (
-  reducedMotion = false,
-) => {
-  window.matchMedia = vi
-    .fn()
-    .mockImplementation(
-      (query: string) => ({
-        matches:
-          query ===
-            '(prefers-reduced-motion: reduce)' &&
-          reducedMotion,
-        media: query,
-        onchange: null,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      }),
-    );
+const mockMatchMedia = (reducedMotion = false) => {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches: query === '(prefers-reduced-motion: reduce)' && reducedMotion,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
 };
 
 describe('Certifications', () => {
@@ -49,53 +31,36 @@ describe('Certifications', () => {
 
     mockMatchMedia(false);
 
-    vi.spyOn(
-      window,
-      'requestAnimationFrame',
-    ).mockImplementation((callback) => {
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
       animationCallback = callback;
       return 1;
     });
 
-    vi.spyOn(
-      window,
-      'cancelAnimationFrame',
-    ).mockImplementation(
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(
       () => undefined,
     );
 
-    vi.spyOn(
-      HTMLElement.prototype,
-      'getBoundingClientRect',
-    ).mockImplementation(function (
-      this: HTMLElement,
-    ) {
-      const isCarouselSegment =
-        this.dataset.carouselSegment ===
-        'true';
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        const isCarouselSegment = this.dataset.carouselSegment === 'true';
 
-      const width =
-        isCarouselSegment
-          ? 1000
-          : 0;
+        const width = isCarouselSegment ? 1000 : 0;
 
-      const height =
-        isCarouselSegment
-          ? 80
-          : 0;
+        const height = isCarouselSegment ? 80 : 0;
 
-      return {
-        x: 0,
-        y: 0,
-        width,
-        height,
-        top: 0,
-        right: width,
-        bottom: height,
-        left: 0,
-        toJSON: () => ({}),
-      };
-    });
+        return {
+          x: 0,
+          y: 0,
+          width,
+          height,
+          top: 0,
+          right: width,
+          bottom: height,
+          left: 0,
+          toJSON: () => ({}),
+        };
+      },
+    );
   });
 
   afterEach(() => {
@@ -105,85 +70,51 @@ describe('Certifications', () => {
   it('renders enough repeated segments for very wide viewports', () => {
     render(
       <LanguageProvider>
-        <Certifications
-          onSelectVendor={vi.fn()}
-        />
+        <Certifications onSelectVendor={vi.fn()} />
       </LanguageProvider>,
     );
 
-    expect(
-      screen.getAllByTestId(
-        'certifications-segment',
-      ),
-    ).toHaveLength(9);
+    expect(screen.getAllByTestId('certifications-segment')).toHaveLength(9);
   });
 
   it('eagerly loads every repeated carousel logo', () => {
     render(
       <LanguageProvider>
-        <Certifications
-          onSelectVendor={vi.fn()}
-        />
+        <Certifications onSelectVendor={vi.fn()} />
       </LanguageProvider>,
     );
 
-    const viewport =
-      screen.getByTestId(
-        'certifications-viewport',
-      );
+    const viewport = screen.getByTestId('certifications-viewport');
 
-    const images =
-      viewport.querySelectorAll('img');
+    const images = viewport.querySelectorAll('img');
 
-    expect(
-      images.length,
-    ).toBeGreaterThan(0);
+    expect(images.length).toBeGreaterThan(0);
 
     images.forEach((image) => {
-      expect(image).toHaveAttribute(
-        'loading',
-        'eager',
-      );
+      expect(image).toHaveAttribute('loading', 'eager');
     });
   });
 
   it('advertises draggable space and clickable logos with distinct idle cursors', () => {
     render(
       <LanguageProvider>
-        <Certifications
-          onSelectVendor={vi.fn()}
-        />
+        <Certifications onSelectVendor={vi.fn()} />
       </LanguageProvider>,
     );
 
-    const viewport =
-      screen.getByTestId(
-        'certifications-viewport',
-      );
+    const viewport = screen.getByTestId('certifications-viewport');
 
-    const awsButton =
-      screen.getByRole(
-        'button',
-        {
-          name: /AWS/i,
-        },
-      );
+    const awsButton = screen.getByRole('button', {
+      name: /AWS/i,
+    });
 
-    expect(viewport).toHaveClass(
-      'cursor-grab',
-    );
+    expect(viewport).toHaveClass('cursor-grab');
 
-    expect(viewport).not.toHaveClass(
-      'cursor-grabbing',
-    );
+    expect(viewport).not.toHaveClass('cursor-grabbing');
 
-    expect(awsButton).toHaveClass(
-      'cursor-pointer',
-    );
+    expect(awsButton).toHaveClass('cursor-pointer');
 
-    expect(awsButton).not.toHaveClass(
-      'cursor-grabbing',
-    );
+    expect(awsButton).not.toHaveClass('cursor-grabbing');
   });
 
   it('selects the certification vendor on a regular click', async () => {
@@ -192,193 +123,116 @@ describe('Certifications', () => {
 
     render(
       <LanguageProvider>
-        <Certifications
-          onSelectVendor={
-            onSelectVendor
-          }
-        />
+        <Certifications onSelectVendor={onSelectVendor} />
       </LanguageProvider>,
     );
 
     await user.click(
-      screen.getByRole(
-        'button',
-        {
-          name: /AWS/i,
-        },
-      ),
+      screen.getByRole('button', {
+        name: /AWS/i,
+      }),
     );
 
-    expect(
-      onSelectVendor,
-    ).toHaveBeenCalledWith(
-      'v_aws',
-    );
+    expect(onSelectVendor).toHaveBeenCalledWith('v_aws');
   });
 
   it('starts from the middle copy and moves automatically over time', () => {
     render(
       <LanguageProvider>
-        <Certifications
-          onSelectVendor={vi.fn()}
-        />
+        <Certifications onSelectVendor={vi.fn()} />
       </LanguageProvider>,
     );
 
-    const track =
-      screen.getByTestId(
-        'certifications-track',
-      );
+    const track = screen.getByTestId('certifications-track');
 
-    expect(
-      track.style.transform,
-    ).toBe(
-      'translate3d(-4000px, 0, 0)',
-    );
+    expect(track.style.transform).toBe('translate3d(-4000px, 0, 0)');
 
     runAnimationFrame(1000);
 
-    const initialTransform =
-      track.style.transform;
+    const initialTransform = track.style.transform;
 
     runAnimationFrame(1016);
 
-    expect(
-      track.style.transform,
-    ).not.toBe(initialTransform);
+    expect(track.style.transform).not.toBe(initialTransform);
   });
 
   it('pauses while the pointer is hovering and resumes when it leaves', () => {
     render(
       <LanguageProvider>
-        <Certifications
-          onSelectVendor={vi.fn()}
-        />
+        <Certifications onSelectVendor={vi.fn()} />
       </LanguageProvider>,
     );
 
-    const viewport =
-      screen.getByTestId(
-        'certifications-viewport',
-      );
+    const viewport = screen.getByTestId('certifications-viewport');
 
-    const track =
-      screen.getByTestId(
-        'certifications-track',
-      );
+    const track = screen.getByTestId('certifications-track');
 
     runAnimationFrame(1000);
     runAnimationFrame(1016);
 
-    fireEvent.mouseEnter(
-      viewport,
-    );
+    fireEvent.mouseEnter(viewport);
 
-    const pausedTransform =
-      track.style.transform;
+    const pausedTransform = track.style.transform;
 
     runAnimationFrame(1032);
     runAnimationFrame(1048);
 
-    expect(
-      track.style.transform,
-    ).toBe(pausedTransform);
+    expect(track.style.transform).toBe(pausedTransform);
 
-    fireEvent.mouseLeave(
-      viewport,
-    );
+    fireEvent.mouseLeave(viewport);
 
     runAnimationFrame(1064);
 
-    expect(
-      track.style.transform,
-    ).not.toBe(pausedTransform);
+    expect(track.style.transform).not.toBe(pausedTransform);
   });
 
   it('allows manual dragging and suppresses the click generated by a drag', () => {
-    const onSelectVendor =
-      vi.fn();
+    const onSelectVendor = vi.fn();
 
     render(
       <LanguageProvider>
-        <Certifications
-          onSelectVendor={
-            onSelectVendor
-          }
-        />
+        <Certifications onSelectVendor={onSelectVendor} />
       </LanguageProvider>,
     );
 
-    const viewport =
-      screen.getByTestId(
-        'certifications-viewport',
-      );
+    const viewport = screen.getByTestId('certifications-viewport');
 
-    const track =
-      screen.getByTestId(
-        'certifications-track',
-      );
+    const track = screen.getByTestId('certifications-track');
 
-    const awsButton =
-      screen.getByRole(
-        'button',
-        {
-          name: /AWS/i,
-        },
-      );
+    const awsButton = screen.getByRole('button', {
+      name: /AWS/i,
+    });
 
-    const initialTransform =
-      track.style.transform;
+    const initialTransform = track.style.transform;
 
-    fireEvent.pointerDown(
-      awsButton,
-      {
-        pointerId: 1,
-        button: 0,
-        clientX: 500,
-      },
-    );
+    fireEvent.pointerDown(awsButton, {
+      pointerId: 1,
+      button: 0,
+      clientX: 500,
+    });
 
-    fireEvent.pointerMove(
-      viewport,
-      {
-        pointerId: 1,
-        clientX: 420,
-      },
-    );
+    fireEvent.pointerMove(viewport, {
+      pointerId: 1,
+      clientX: 420,
+    });
 
-    expect(
-      track.style.transform,
-    ).not.toBe(initialTransform);
+    expect(track.style.transform).not.toBe(initialTransform);
 
-    expect(viewport).toHaveClass(
-      'cursor-grabbing',
-    );
+    expect(viewport).toHaveClass('cursor-grabbing');
 
-    expect(awsButton).toHaveClass(
-      'cursor-grabbing',
-    );
+    expect(awsButton).toHaveClass('cursor-grabbing');
 
-    expect(awsButton).not.toHaveClass(
-      'cursor-pointer',
-    );
+    expect(awsButton).not.toHaveClass('cursor-pointer');
 
-    fireEvent.pointerUp(
-      viewport,
-      {
-        pointerId: 1,
-        button: 0,
-        clientX: 420,
-      },
-    );
+    fireEvent.pointerUp(viewport, {
+      pointerId: 1,
+      button: 0,
+      clientX: 420,
+    });
 
-    expect(viewport).toHaveClass(
-      'cursor-grab',
-    );
+    expect(viewport).toHaveClass('cursor-grab');
 
-    expect(awsButton).toHaveClass(
-      'cursor-pointer',
-    );
+    expect(awsButton).toHaveClass('cursor-pointer');
 
     /*
      * A browser emits a click after pointerup.
@@ -386,9 +240,7 @@ describe('Certifications', () => {
      */
     fireEvent.click(awsButton);
 
-    expect(
-      onSelectVendor,
-    ).not.toHaveBeenCalled();
+    expect(onSelectVendor).not.toHaveBeenCalled();
 
     /*
      * A subsequent independent click must
@@ -396,11 +248,7 @@ describe('Certifications', () => {
      */
     fireEvent.click(awsButton);
 
-    expect(
-      onSelectVendor,
-    ).toHaveBeenCalledWith(
-      'v_aws',
-    );
+    expect(onSelectVendor).toHaveBeenCalledWith('v_aws');
   });
 
   it('does not auto-scroll when reduced motion is requested', () => {
@@ -408,26 +256,18 @@ describe('Certifications', () => {
 
     render(
       <LanguageProvider>
-        <Certifications
-          onSelectVendor={vi.fn()}
-        />
+        <Certifications onSelectVendor={vi.fn()} />
       </LanguageProvider>,
     );
 
-    const track =
-      screen.getByTestId(
-        'certifications-track',
-      );
+    const track = screen.getByTestId('certifications-track');
 
-    const initialTransform =
-      track.style.transform;
+    const initialTransform = track.style.transform;
 
     runAnimationFrame(1000);
     runAnimationFrame(1016);
     runAnimationFrame(1032);
 
-    expect(
-      track.style.transform,
-    ).toBe(initialTransform);
+    expect(track.style.transform).toBe(initialTransform);
   });
 });
