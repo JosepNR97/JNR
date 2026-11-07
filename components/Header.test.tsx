@@ -20,11 +20,11 @@ describe('Header', () => {
     );
 
     const spanishButton = screen.getByRole('button', {
-      name: 'Español',
+      name: 'ES — Español',
     });
 
     const catalanButton = screen.getByRole('button', {
-      name: 'Català',
+      name: 'CA — Català',
     });
 
     expect(spanishButton).toHaveAttribute('aria-pressed', 'true');
@@ -54,8 +54,8 @@ describe('Header', () => {
       expect(button).toHaveClass('cursor-pointer', 'rounded-md');
     });
 
-    const spanishButtons = screen.getAllByLabelText('Español');
-    const catalanButtons = screen.getAllByLabelText('Català');
+    const spanishButtons = screen.getAllByLabelText('ES — Español');
+    const catalanButtons = screen.getAllByLabelText('CA — Català');
 
     expect(spanishButtons).toHaveLength(2);
     expect(catalanButtons).toHaveLength(2);
