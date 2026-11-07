@@ -1,12 +1,15 @@
 import { assetPath } from './assetPath.ts';
 import type { MultiLanguageString, ServiceItem } from './types.ts';
 
+export const PROFILE_IMAGE_ASSET_STEM =
+  'people/josep-nunez-riba-2' as const;
+
 export const PROFILE_DATA = {
   name: "Josep Núñez Riba",
   email: "josepnunez97@gmail.com",
   linkedin: "https://www.linkedin.com/in/josep-nunez-riba",
   website: "https://josepnr97.github.io/JNR/",
-  image: assetPath('people/josep-nunez-riba-2.webp'),
+  image: assetPath(`${PROFILE_IMAGE_ASSET_STEM}.webp`),
   location: {
     ca: "Barcelona",
     es: "Barcelona",
