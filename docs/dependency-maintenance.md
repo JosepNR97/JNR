@@ -41,21 +41,21 @@ Si una versión minor o patch cambia sin modificar una decisión arquitectónica
 
 Solo se documentan aquí las líneas tecnológicas que representan una decisión deliberada.
 
-| Componente | Política |
-| --- | --- |
-| Node.js | `>=24.15.0 <25` |
-| npm | `>=11.19.0 <12` |
-| Package manager de referencia | `npm@11.19.0` |
-| `@types/node` | Major 24 mientras Node 24 sea el runtime |
-| React | Major 19 |
-| TypeScript | Major 6 |
-| Vite | Major 8 |
-| Tailwind CSS | Major 4 mediante `@tailwindcss/vite` |
-| Vitest | Major 5 |
-| ESLint | Major 10 |
-| Prettier | Major 3 |
-| Playwright | Chromium como único navegador E2E |
-| Axe | Gestionado mediante `@axe-core/playwright` |
+| Componente                    | Política                                   |
+| ----------------------------- | ------------------------------------------ |
+| Node.js                       | `>=24.15.0 <25`                            |
+| npm                           | `>=11.19.0 <12`                            |
+| Package manager de referencia | `npm@11.19.0`                              |
+| `@types/node`                 | Major 24 mientras Node 24 sea el runtime   |
+| React                         | Major 19                                   |
+| TypeScript                    | Major 6                                    |
+| Vite                          | Major 8                                    |
+| Tailwind CSS                  | Major 4 mediante `@tailwindcss/vite`       |
+| Vitest                        | Major 5                                    |
+| ESLint                        | Major 10                                   |
+| Prettier                      | Major 3                                    |
+| Playwright                    | Chromium como único navegador E2E          |
+| Axe                           | Gestionado mediante `@axe-core/playwright` |
 
 Las versiones exactas deben consultarse en `package.json` y `package-lock.json`.
 
@@ -356,10 +356,10 @@ Dependency Review compara las dependencias modificadas por una PR respecto a `ma
 
 La política es:
 
-| Scope | Moderate | High | Critical |
-| --- | --- | --- | --- |
-| Runtime | ❌ Bloquea | ❌ Bloquea | ❌ Bloquea |
-| Unknown | ❌ Bloquea | ❌ Bloquea | ❌ Bloquea |
+| Scope       | Moderate      | High       | Critical   |
+| ----------- | ------------- | ---------- | ---------- |
+| Runtime     | ❌ Bloquea    | ❌ Bloquea | ❌ Bloquea |
+| Unknown     | ❌ Bloquea    | ❌ Bloquea | ❌ Bloquea |
 | Development | ⚠️ No bloquea | ❌ Bloquea | ❌ Bloquea |
 
 El workflow implementa dos controles:
