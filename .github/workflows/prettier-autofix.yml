@@ -1,0 +1,392 @@
+name: Prettier autofix
+
+on:
+  push:
+    branches-ignore:
+      - 'main'
+      - 'dependabot/**'
+    paths:
+      - '**/*.cjs'
+      - '**/*.css'
+      - '**/*.html'
+      - '**/*.js'
+      - '**/*.jsx'
+      - '**/*.json'
+      - '**/*.md'
+      - '**/*.mjs'
+      - '**/*.scss'
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.yaml'
+      - '**/*.yml'
+      - '.prettierignore'
+      - '.prettierrc.json'
+
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to format (never main or a Dependabot branch)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: prettier-autofix-${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    name: Apply Prettier formatting
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
+
+    steps:
+      - name: Validate target branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Target branch: $TARGET_BRANCH"
+
+          if [ -z "$TARGET_BRANCH" ]; then
+            echo "::error::A target branch is required."
+            exit 1
+          fi
+
+          if [ "$TARGET_BRANCH" = "main" ]; then
+            echo "::error::Prettier autofix must never write directly to main."
+            exit 1
+          fi
+
+          case "$TARGET_BRANCH" in
+            dependabot/*)
+              echo "::error::Prettier autofix must not modify Dependabot branches."
+              exit 1
+              ;;
+          esac
+
+          git check-ref-format --branch "$TARGET_BRANCH"
+
+      - name: Checkout target branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Read toolchain contract
+        id: toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          NODE_RANGE="$(jq -r '.engines.node // empty' package.json)"
+          PACKAGE_MANAGER="$(jq -r '.packageManager // empty' package.json)"
+
+          if [ -z "$NODE_RANGE" ]; then
+            echo "::error::package.json does not define engines.node."
+            exit 1
+          fi
+
+          case "$PACKAGE_MANAGER" in
+            npm@*)
+              NPM_VERSION="${PACKAGE_MANAGER#npm@}"
+              ;;
+            *)
+              echo "::error::package.json packageManager must use npm@version."
+              exit 1
+              ;;
+          esac
+
+          if [ -z "$NPM_VERSION" ]; then
+            echo "::error::Unable to determine npm version."
+            exit 1
+          fi
+
+          echo "Node contract: $NODE_RANGE"
+          echo "npm version:   $NPM_VERSION"
+
+          echo "node_range=$NODE_RANGE" >> "$GITHUB_OUTPUT"
+          echo "npm_version=$NPM_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ steps.toolchain.outputs.node_range }}
+          package-manager-cache: false
+
+      - name: Bootstrap project npm version
+        shell: bash
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+        run: |
+          set -euo pipefail
+
+          echo "Bundled npm before bootstrap:"
+          npm --version
+
+          cd "$RUNNER_TEMP"
+          npm install --global "npm@${REQUIRED_NPM_VERSION}"
+
+      - name: Verify runtime
+        shell: bash
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+          REQUIRED_NODE_RANGE: ${{ steps.toolchain.outputs.node_range }}
+        run: |
+          set -euo pipefail
+
+          NODE_VERSION="$(node --version)"
+          NPM_VERSION="$(npm --version)"
+
+          echo "Required Node range: $REQUIRED_NODE_RANGE"
+          echo "Actual Node:         $NODE_VERSION"
+          echo "Required npm:        $REQUIRED_NPM_VERSION"
+          echo "Actual npm:          $NPM_VERSION"
+
+          if [ "$NPM_VERSION" != "$REQUIRED_NPM_VERSION" ]; then
+            echo "::error::Expected npm $REQUIRED_NPM_VERSION but found $NPM_VERSION."
+            exit 1
+          fi
+
+      - name: Install formatting dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm ci \
+            --ignore-scripts \
+            --no-audit \
+            --fund=false
+
+      - name: Preserve protected files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cp package-lock.json "$RUNNER_TEMP/package-lock.json.before"
+
+      - name: Identify branch-changed files
+        id: changed_files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch --no-tags origin main
+
+          BASE_SHA="$(git merge-base origin/main HEAD)"
+          HEAD_SHA="$(git rev-parse HEAD)"
+
+          echo "Base commit: $BASE_SHA"
+          echo "Head commit: $HEAD_SHA"
+
+          : > "$RUNNER_TEMP/prettier-files"
+
+          mapfile -d '' CANDIDATES < <(
+            git diff \
+              --name-only \
+              --diff-filter=ACMRTUXB \
+              -z \
+              "$BASE_SHA" \
+              "$HEAD_SHA"
+          )
+
+          FORMAT_FILES=()
+
+          for file in "${CANDIDATES[@]}"; do
+            if [ ! -f "$file" ]; then
+              continue
+            fi
+
+            case "$file" in
+              package-lock.json)
+                echo "Protected file skipped: $file"
+                continue
+                ;;
+              .github/workflows/*)
+                echo "Protected workflow skipped: $file"
+                continue
+                ;;
+            esac
+
+            FORMAT_FILES+=("$file")
+          done
+
+          if [ "${#FORMAT_FILES[@]}" -gt 0 ]; then
+            printf '%s\0' "${FORMAT_FILES[@]}" > "$RUNNER_TEMP/prettier-files"
+          fi
+
+          echo "Files eligible for automatic formatting: ${#FORMAT_FILES[@]}"
+
+          for file in "${FORMAT_FILES[@]}"; do
+            echo "  - $file"
+          done
+
+          echo "count=${#FORMAT_FILES[@]}" >> "$GITHUB_OUTPUT"
+
+      - name: Apply Prettier to branch-changed files
+        if: steps.changed_files.outputs.count != '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -d '' FILES < "$RUNNER_TEMP/prettier-files"
+
+          npx prettier \
+            --write \
+            --ignore-unknown \
+            -- "${FILES[@]}"
+
+      - name: Verify complete Prettier baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm run format:check
+
+      - name: Verify autofix scope
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! cmp --silent "$RUNNER_TEMP/package-lock.json.before" package-lock.json; then
+            echo "::error::Prettier unexpectedly modified package-lock.json."
+            exit 1
+          fi
+
+          declare -A ALLOWED_FILES=()
+
+          if [ -s "$RUNNER_TEMP/prettier-files" ]; then
+            while IFS= read -r -d '' file; do
+              ALLOWED_FILES["$file"]=1
+            done < "$RUNNER_TEMP/prettier-files"
+          fi
+
+          while IFS= read -r -d '' file; do
+            case "$file" in
+              package-lock.json)
+                echo "::error::Refusing to modify package-lock.json."
+                exit 1
+                ;;
+              .github/workflows/*)
+                echo "::error::Refusing to modify GitHub Actions workflow files automatically."
+                exit 1
+                ;;
+            esac
+
+            if [ -z "${ALLOWED_FILES[$file]+x}" ]; then
+              echo "::error::Prettier modified a file outside the branch-change allowlist: $file"
+              exit 1
+            fi
+          done < <(git diff --name-only -z)
+
+          git diff --check
+
+      - name: Inspect formatting changes
+        id: formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -s "$RUNNER_TEMP/prettier-files" ]; then
+            echo "No branch-changed files were eligible for automatic formatting."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          mapfile -d '' FILES < "$RUNNER_TEMP/prettier-files"
+
+          git add -- "${FILES[@]}"
+
+          if git diff --cached --quiet; then
+            echo "Branch-changed files already match the Prettier baseline."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Files corrected by Prettier:"
+          git diff --cached --name-only
+
+          echo
+          echo "Formatting diff summary:"
+          git diff --cached --stat
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit formatting fixes
+        id: commit
+        if: steps.formatting.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git commit -m "style: apply Prettier formatting"
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger CI for formatted commit
+        if: steps.commit.outputs.changed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FORMATTED_COMMIT: ${{ steps.commit.outputs.commit_sha }}
+        run: |
+          set -euo pipefail
+
+          jq -n \
+            --arg ref "$TARGET_BRANCH" \
+            --arg head_ref "$FORMATTED_COMMIT" \
+            '{
+              ref: $ref,
+              inputs: {
+                base_ref: "main",
+                head_ref: $head_ref
+              }
+            }' |
+            gh api \
+              --method POST \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/dispatches" \
+              --input -
+
+          echo "CI dispatched for formatted commit: $FORMATTED_COMMIT"
+
+      - name: Summary
+        if: always()
+        shell: bash
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+          REQUIRED_NODE_RANGE: ${{ steps.toolchain.outputs.node_range }}
+        run: |
+          {
+            echo "## Prettier autofix"
+            echo
+            echo "- Branch: \`${TARGET_BRANCH}\`"
+            echo "- Node contract: \`${REQUIRED_NODE_RANGE}\`"
+            echo "- npm: \`${REQUIRED_NPM_VERSION}\`"
+            echo "- Automatic formatting scope: files changed by the branch relative to \`main\`"
+            echo "- Global Prettier baseline: checked across the repository"
+            echo "- \`package-lock.json\`: protected"
+            echo "- \`.github/workflows/**\`: protected from automated rewriting"
+            echo
+            if [ "${{ steps.commit.outputs.changed }}" = "true" ]; then
+              echo "Formatting fixes were committed automatically."
+              echo
+              echo "CI was explicitly dispatched against the corrected commit."
+            elif [ "${{ steps.formatting.outputs.changed }}" = "false" ]; then
+              echo "No formatting fixes were required."
+            else
+              echo "The autofix workflow did not produce a formatting commit."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
