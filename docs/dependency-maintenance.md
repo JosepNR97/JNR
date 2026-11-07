@@ -1,62 +1,86 @@
 # Mantenimiento de dependencias
 
-Este documento define las reglas de mantenimiento, actualización y validación de las dependencias del portfolio.
+Este documento define las reglas vigentes para actualizar, validar y remediar las dependencias del portfolio.
 
-## Baseline tecnológico actual
+La documentación describe **contratos y decisiones estables**.
 
-Baseline revisado tras la migración major realizada en septiembre de 2026, el endurecimiento posterior del contrato Node/npm, la incorporación de smoke testing E2E en navegador real y la capa mínima de accessibility smoke automatizado.
+Las versiones concretas declaradas e instaladas se consultan siempre en:
 
-| Componente                    | Baseline actual                    |
-| ----------------------------- | ---------------------------------- |
-| Node.js                       | `>=24.15.0 <25`                    |
-| npm                           | `>=11.19.0 <12`                    |
-| Package manager de referencia | `npm@11.19.0`                      |
-| `@types/node`                 | `24.x`                             |
-| React                         | `19.2.x`                           |
-| React DOM                     | `19.2.x`                           |
-| TypeScript                    | `6.0.x`                            |
-| typescript-eslint             | `8.69.x`                           |
-| Vite                          | `8.2.x`                            |
-| Tailwind CSS                  | `4.3.x`                            |
-| Integración Tailwind          | `@tailwindcss/vite` `4.3.x`        |
-| Lucide React                  | `1.x`                              |
-| Testing Library React         | `16.3.x`                           |
-| Testing Library DOM           | `10.4.x`                           |
-| Vitest                        | `5.0.x`                            |
-| Playwright                    | `@playwright/test` `1.63.x`        |
-| Accessibility E2E             | `@axe-core/playwright` `4.13.x`    |
-| Navegador E2E                 | Chromium gestionado por Playwright |
-| ESLint                        | `10.x`                             |
+```text
+package.json
+package-lock.json
+```
 
-`package.json` y `package-lock.json` son la fuente de verdad para las versiones concretas instaladas.
+No deben duplicarse en este documento versiones minor o patch que Dependabot pueda actualizar automáticamente.
 
-## Contrato de runtime y desarrollo Node/npm
+## Principio de fuente de verdad
 
-El proyecto soporta oficialmente una única rama de runtime:
+La responsabilidad se divide así:
+
+```text
+package.json
+  → dependencias declaradas
+  → rangos soportados
+  → contrato Node/npm
+  → scripts del proyecto
+
+package-lock.json
+  → resolución concreta del árbol
+  → dependencias transitivas
+  → integrities
+
+documentación
+  → decisiones arquitectónicas
+  → políticas de mantenimiento
+  → reglas de seguridad
+```
+
+Si una versión minor o patch cambia sin modificar una decisión arquitectónica, la documentación no necesita cambiar.
+
+## Baseline tecnológico
+
+Solo se documentan aquí las líneas tecnológicas que representan una decisión deliberada.
+
+| Componente | Política |
+| --- | --- |
+| Node.js | `>=24.15.0 <25` |
+| npm | `>=11.19.0 <12` |
+| Package manager de referencia | `npm@11.19.0` |
+| `@types/node` | Major 24 mientras Node 24 sea el runtime |
+| React | Major 19 |
+| TypeScript | Major 6 |
+| Vite | Major 8 |
+| Tailwind CSS | Major 4 mediante `@tailwindcss/vite` |
+| Vitest | Major 5 |
+| ESLint | Major 10 |
+| Prettier | Major 3 |
+| Playwright | Chromium como único navegador E2E |
+| Axe | Gestionado mediante `@axe-core/playwright` |
+
+Las versiones exactas deben consultarse en `package.json` y `package-lock.json`.
+
+## Contrato Node/npm
+
+El proyecto soporta oficialmente:
 
 ```text
 Node.js >=24.15.0 <25
+npm     >=11.19.0 <12
 ```
 
-Esto significa que:
-
-- Node 24.15.0 es el mínimo declarado;
-- se aceptan posteriores minor y patch de Node 24;
-- Node 25 no está soportado;
-- Node 26 no está soportado todavía;
-- ninguna major futura se incorpora automáticamente por existir o por ser compatible con alguna dependencia aislada.
-
-El contrato de npm es:
+y utiliza:
 
 ```text
-npm >=11.19.0 <12
+npm@11.19.0
 ```
 
-`npm@11.19.0` se mantiene además como versión exacta de referencia para CI, despliegue y regeneración del lockfile.
+como referencia reproducible en GitHub Actions.
+
+Estos valores sí se mantienen explícitamente en documentación porque son parte del contrato de entorno.
 
 ### `engines`
 
-`engines` expresa el contrato público de compatibilidad del proyecto:
+`engines` expresa el contrato público de compatibilidad:
 
 ```json
 {
@@ -66,8 +90,6 @@ npm >=11.19.0 <12
   }
 }
 ```
-
-Por sí solo, `engines` no se utiliza como mecanismo principal de bloqueo del entorno de desarrollo. Sin `engine-strict`, npm lo trata como metadata de compatibilidad y normalmente puede limitarse a advertir.
 
 ### `packageManager`
 
@@ -79,18 +101,13 @@ El proyecto declara:
 }
 ```
 
-Este campo identifica npm como package manager de referencia y fija una versión exacta para herramientas que consumen esta metadata.
+Este campo identifica npm como package manager de referencia.
 
-No debe confundirse con un rango de compatibilidad:
-
-- no sustituye a `engines.npm`;
-- no sustituye a `devEngines.packageManager`;
-- no hace que el binario `npm` instalado globalmente cambie automáticamente de versión;
-- la reproducibilidad de CI se consigue instalando explícitamente `npm@11.19.0` antes de las operaciones del proyecto.
+No sustituye los rangos de compatibilidad de `engines` ni `devEngines`.
 
 ### `devEngines`
 
-El proyecto utiliza `devEngines` para validar de forma estricta el runtime y el package manager en los comandos npm relevantes:
+El entorno utilizado para trabajar con el proyecto se valida estrictamente mediante:
 
 ```json
 {
@@ -109,169 +126,61 @@ El proyecto utiliza `devEngines` para validar de forma estricta el runtime y el 
 }
 ```
 
-La forma correcta para Node es `devEngines.runtime`; no se utiliza un campo arbitrario `devEngines.node`.
+Un entorno incompatible debe hacer fallar los comandos npm relevantes.
 
-La forma correcta para npm es `devEngines.packageManager`.
-
-Con `onFail: "error"`, un entorno incompatible hace fallar los comandos npm que aplican esta validación, entre ellos:
-
-```text
-npm install
-npm ci
-npm run <script>
-```
-
-Esto cubre, dentro del baseline soportado por npm 11, casos como:
-
-- Node 22;
-- Node 26;
-- npm anterior a 11.19.0;
-- npm 12 o posterior.
-
-`devEngines` existe también en versiones recientes de npm 10, pero el proyecto no declara soporte para npm 10. Clientes npm suficientemente antiguos pueden no conocer este campo; no se añade `engine-strict` únicamente para cubrir clientes fuera del baseline soportado.
+El proyecto no declara soporte para otros package managers.
 
 ### Bootstrap de npm
 
-Una instalación de Node 24 compatible puede incluir una versión de npm anterior a 11.19.0.
+Una instalación compatible de Node 24 puede incorporar una versión anterior de npm.
 
-Antes de ejecutar `npm ci` o cualquier `npm run <script>`, actualizar npm mediante:
+Puede actualizarse mediante:
 
 ```bash
 npm install --global npm@11.19.0
 ```
 
-Los workflows del repositorio realizan explícitamente este bootstrap.
+Los workflows realizan este bootstrap explícitamente cuando es necesario.
 
-### Por qué no se utiliza `engine-strict`
+### Node y `@types/node`
 
-El repositorio mantiene:
-
-```text
-strict-allow-scripts=true
-```
-
-pero no añade:
-
-```text
-engine-strict=true
-```
-
-`devEngines` ya proporciona el bloqueo específico que se necesita para el entorno de desarrollo del proyecto.
-
-Activar `engine-strict` ampliaría el alcance de la política a los `engines` declarados por las dependencias del árbol, alterando la semántica de instalación más allá del objetivo de esta política.
-
-Por tanto, `engine-strict` solo debería considerarse en una decisión separada si existe una necesidad explícita de endurecer también el árbol completo de dependencias.
-
-### Relación entre Node y `@types/node`
-
-Mientras el runtime oficialmente soportado sea Node 24, `@types/node` debe permanecer en la major 24.
-
-La intención es mantener alineación conceptual de major:
+Mientras Node 24 sea la única major soportada:
 
 ```text
 Runtime: Node 24
 Tipos:   @types/node 24.x
 ```
 
-No se exige que el patch de `@types/node` coincida con el patch del runtime.
+Dependabot puede actualizar `@types/node` dentro de esa major.
 
-Actualizar `@types/node` a 26 antes de adoptar Node 26 podría hacer disponibles en TypeScript APIs que no forman parte del runtime oficialmente soportado.
+Las actualizaciones semver-major de `@types/node` permanecen ignoradas mientras no cambie el runtime oficial.
 
-Dependabot puede seguir proponiendo actualizaciones minor y patch de `@types/node` dentro de 24.x, pero las actualizaciones semver-major permanecen bloqueadas mientras Node 24 siga siendo el runtime oficial.
+Una futura migración de Node debe revisar conjuntamente:
 
-### Futuras majors de Node
-
-Una nueva major de Node solo se declarará como soportada después de una validación deliberada.
-
-Cuando se evalúe una futura migración a Node 26 deberá revisarse como mínimo:
-
-1. compatibilidad real de todas las dependencias y herramientas directas;
-2. ejecución completa de lint, tests, generación de CV y build;
-3. ejecución de la smoke suite E2E con la versión de Playwright soportada;
-4. versión mínima concreta de Node 26 que se quiera soportar;
-5. actualización de `engines.node` con un rango acotado que no incluya Node 27 automáticamente;
-6. actualización equivalente de `devEngines.runtime`;
-7. estrategia de GitHub Actions para la nueva rama de Node;
-8. migración de `@types/node` a la major 26 cuando el runtime oficial cambie;
-9. revisión de la versión de npm soportada y de referencia;
-10. regeneración controlada de `package-lock.json`;
-11. actualización de README y de este documento.
-
-Si se decide mantener temporalmente más de una major de Node, cada major deberá aparecer mediante un rango explícitamente acotado.
-
-No utilizar un tramo abierto como:
-
-```text
->=26.0.0
-```
-
-La migración de Node y la migración de TypeScript son decisiones independientes. Adoptar Node 26 no implica adoptar TypeScript 7.
-
-## Controles automáticos
-
-El repositorio dispone de varios controles complementarios:
-
-- Dependabot revisa periódicamente paquetes npm y GitHub Actions.
-- Las pull requests dirigidas a `main` ejecutan el workflow de CI.
-- El workflow de CI utiliza una release actual de la rama Node 24.
-- CI instala explícitamente `npm@11.19.0` antes de los comandos del proyecto.
-- El workflow de CI instala las dependencias mediante `npm ci`.
-- La auditoría de seguridad se ejecuta antes de lint, tests y build.
-- `npm run check` ejecuta la validación rápida basada en ESLint, Vitest, TypeScript y Vite.
-- CI instala únicamente Chromium mediante el Playwright incluido en `node_modules`.
-- La smoke suite E2E se ejecuta mediante `npm run test:e2e` dentro del mismo job `validate`.
-- `npm run test:e2e` incluye los smoke tests funcionales y `e2e/accessibility.spec.ts`.
-- La capa de accessibility smoke reutiliza el mismo Playwright, Chromium, build, servidor y configuración E2E.
-- Axe analiza estados desktop en catalán, castellano e inglés, el menú móvil abierto y el carrusel en un estado interactivo real.
-- La baseline Axe bloquea violations `critical` y `serious` dentro de los tags WCAG A/AA configurados; `moderate` y `minor` no bloquean inicialmente.
-- No se excluyen componentes completos ni se desactivan reglas para ocultar violations de alto impacto.
-- El check de validación debe superar tanto los controles rápidos como los E2E antes del merge.
-- Los pushes a `main` vuelven a ejecutar instalación, auditoría, validación y build antes del despliegue en GitHub Pages.
-- El workflow de despliegue no instala Chromium ni ejecuta Playwright.
-- Existe además un workflow periódico específico para auditar vulnerabilidades.
-- Las vulnerabilidades de severidad `high` o `critical` bloquean los pipelines.
-- `strict-allow-scripts=true` restringe la ejecución de scripts de instalación de dependencias.
-- `devEngines` rechaza los entornos Node/npm incompatibles en los comandos npm relevantes.
-
-Axe no sustituye la evaluación manual de accesibilidad. Los controles automatizados deben complementarse con revisión de teclado, foco, lector de pantalla, contenido, zoom, reflow y cualquier criterio WCAG que no pueda evaluarse automáticamente.
+- `engines.node`;
+- `devEngines.runtime`;
+- `@types/node`;
+- versión de npm soportada;
+- GitHub Actions;
+- tooling;
+- tests;
+- build;
+- E2E.
 
 ## Instalaciones reproducibles
 
-El proyecto utiliza npm como único package manager soportado y mantiene `package-lock.json` versionado.
+El repositorio utiliza npm como único package manager y mantiene `package-lock.json` versionado.
 
-La instalación utilizada por CI y despliegue es:
-
-```bash
-npm ci
-```
-
-`package.json` y `package-lock.json` deben permanecer sincronizados.
-
-Después de cualquier modificación de dependencias o de metadata reproducida en el lockfile debe comprobarse como mínimo:
+La instalación estándar es:
 
 ```bash
 npm ci
-npm run audit:security
-npm run check
 ```
 
-Cuando el cambio pueda afectar a UI, CSS, eventos de navegador, Playwright, Axe o sus dependencias debe ejecutarse además:
+En workflows donde el audit se controla expresamente se utiliza:
 
 ```bash
-npx playwright install chromium
-npm run test:e2e
-```
-
-Para aislar específicamente la capa de accessibility smoke puede ejecutarse:
-
-```bash
-npm run test:a11y
-```
-
-En CI y en entornos Linux que necesiten las dependencias del sistema se utiliza:
-
-```bash
-npx playwright install --with-deps chromium
+npm ci --no-audit --fund=false
 ```
 
 No utilizar:
@@ -281,406 +190,479 @@ npm ci --force
 npm ci --legacy-peer-deps
 ```
 
-para ocultar conflictos de peer dependencies o saltarse controles del entorno.
+para ocultar conflictos de dependencias o saltarse el contrato de entorno.
 
-Un conflicto debe resolverse alineando correctamente las versiones de los paquetes afectados.
+Los conflictos deben resolverse alineando realmente los paquetes afectados.
 
-## Gestión del package-lock
+## Gestión de `package-lock.json`
 
-`package-lock.json` debe ser generado por npm y no debe editarse manualmente.
+`package-lock.json` debe ser generado por npm.
 
-Cuando se modifique `package.json`:
-
-1. utilizar Node 24 dentro de `>=24.15.0 <25`;
-2. utilizar `npm@11.19.0` para regenerar el lockfile;
-3. preservar una copia de `package.json` cuando se quiera comprobar que npm no lo modifica inesperadamente;
-4. regenerar `package-lock.json` mediante npm;
-5. revisar el diff del lockfile;
-6. ejecutar una instalación limpia mediante `npm ci`;
-7. ejecutar la auditoría de seguridad;
-8. ejecutar el pipeline completo de validación;
-9. instalar Chromium cuando el cambio afecte al baseline E2E;
-10. ejecutar `npm run test:e2e`;
-11. ejecutar `npm run test:a11y` cuando exista o cambie la capa Axe;
-12. versionar conjuntamente `package.json` y `package-lock.json`.
-
-Cuando se añade una dependencia directa nueva, como `@playwright/test` o `@axe-core/playwright`, es esperable que `package-lock.json` incorpore:
-
-- la nueva dependencia directa en la metadata raíz;
-- el paquete solicitado y sus dependencias transitivas;
-- `axe-core` cuando se añade `@axe-core/playwright`;
-- sus campos `resolved` e `integrity` generados por npm.
-
-Estos cambios deben proceder exclusivamente de npm.
+No debe editarse manualmente.
 
 No se deben:
 
 - escribir manualmente valores `integrity`;
 - inventar URLs `resolved`;
-- construir manualmente nodos del árbol;
-- copiar entradas de un lockfile de otra versión de Playwright o Axe;
-- modificar `lockfileVersion` sin que npm lo requiera.
+- construir nodos del árbol manualmente;
+- copiar entradas desde otros lockfiles;
+- modificar `lockfileVersion` manualmente.
 
-Si no se dispone de un entorno local compatible, puede utilizarse temporalmente un workflow aislado de GitHub Actions que:
+Cuando se modifique `package.json`, el lockfile debe regenerarse utilizando el entorno Node/npm soportado.
 
-1. se ejecute únicamente en la rama de la migración;
-2. utilice Node 24 compatible con el contrato;
-3. instale `npm@11.19.0`;
-4. preserve copias de los manifests relevantes;
-5. regenere el lockfile mediante npm;
-6. compruebe que `package.json` no cambió;
-7. ejecute `npm ci`;
-8. ejecute `npm run audit:security`;
-9. ejecute `npm run check`;
-10. instale únicamente Chromium y sus dependencias mediante Playwright;
-11. ejecute `npm run test:e2e`;
-12. ejecute `npm run test:a11y` si existe el script específico;
-13. compruebe que únicamente `package-lock.json` ha cambiado como resultado de la regeneración;
-14. exponga únicamente el lockfile validado como artefacto o haga commit únicamente de `package-lock.json`;
-15. sea eliminado antes de integrar la pull request.
-
-## Familias de dependencias que deben mantenerse alineadas
-
-Determinados paquetes están estrechamente relacionados y no deben actualizarse de manera aislada.
-
-### React
-
-Mantener alineadas las major versions de:
-
-- `react`
-- `react-dom`
-- `@types/react`
-- `@types/react-dom`
-
-No aceptar una actualización que deje, por ejemplo:
+El repositorio dispone de:
 
 ```text
-react 19
-react-dom 18
+.github/workflows/regenerate-package-lock.yml
 ```
 
-o:
+para regeneraciones controladas.
+
+Puede utilizar ramas:
 
 ```text
-@types/react 19
-@types/react-dom 18
+Mejoras
+maintenance/**
+security/**
 ```
 
-Aunque npm pueda ofrecer mecanismos para forzar la resolución, debe corregirse la incompatibilidad real.
+pero nunca debe escribir directamente sobre:
 
-### Testing Library
+```text
+main
+dependabot/**
+```
 
-El baseline actual utiliza:
+El workflow:
 
-- `@testing-library/react`
-- `@testing-library/dom`
-- `@testing-library/jest-dom`
-- `@testing-library/user-event`
+1. valida la branch objetivo;
+2. obtiene el contrato Node/npm desde `package.json`;
+3. instala la versión de npm de referencia;
+4. preserva `package.json`;
+5. regenera `package-lock.json`;
+6. intenta aplicar fixes compatibles;
+7. rechaza cambios inesperados fuera del lockfile;
+8. valida una instalación limpia;
+9. versiona únicamente `package-lock.json` cuando cambia;
+10. informa del estado de seguridad restante;
+11. ejecuta `npm run check`.
 
-`@testing-library/dom` debe permanecer declarado explícitamente mientras sea una peer dependency requerida por los paquetes utilizados.
+No debe utilizar:
 
-Al actualizar cualquiera de estos paquetes debe revisarse también su matriz de peer dependencies.
+```bash
+npm audit fix --force
+```
+
+Una corrección que requiera una major o una resolución incompatible debe tratarse mediante una PR explícita.
+
+## Controles automáticos
+
+El repositorio utiliza varias capas que tienen responsabilidades diferentes.
+
+### CI de pull requests
+
+Toda PR dirigida a `main` debe superar:
+
+```text
+CI / validate
+```
+
+El flujo principal es:
+
+```text
+Dependency Review
+  ↓
+npm ci --no-audit --fund=false
+  ↓
+npm run check
+  ↓
+npx playwright install --with-deps chromium
+  ↓
+npm run test:e2e
+```
+
+`validate` permanece como required status principal de `main`.
+
+### `npm run check`
+
+Ejecuta:
+
+```text
+Prettier format check
+  ↓
+ESLint
+  ↓
+Vitest
+  ↓
+Generación de CV e imágenes responsive
+  ↓
+TypeScript
+  ↓
+Vite build
+```
+
+Playwright permanece fuera de este comando porque también se reutiliza durante el despliegue.
 
 ### Playwright
 
-El baseline E2E utiliza:
-
-```text
-@playwright/test 1.63.x
-```
-
-con **Chromium como único navegador E2E soportado inicialmente**.
-
-Playwright complementa a Vitest; no lo sustituye.
-
-La separación de responsabilidades es:
-
-```text
-Vitest + Testing Library + jsdom
-  → lógica, estado, componentes y semántica rápida
-
-Playwright + Chromium
-  → navegador real, layout, CSS, rAF, hover,
-    pointer events, drag y responsive behavior
-
-Axe + Playwright + Chromium
-  → violations de accesibilidad automáticamente detectables
-    sobre estados reales del navegador
-```
-
-Los specs de Playwright se almacenan en `e2e/` y están excluidos expresamente del discovery de Vitest.
-
-Cada versión de Playwright requiere browser binaries compatibles con esa versión. Por tanto, después de actualizar `@playwright/test` debe ejecutarse nuevamente:
-
-```bash
-npx playwright install chromium
-```
-
-y en CI:
-
-```bash
-npx playwright install --with-deps chromium
-```
-
-No se instalan Firefox ni WebKit mientras no exista una decisión explícita de ampliar el baseline de navegadores E2E.
-
-No añadir paquetes como:
-
-```text
-@playwright/browser-chromium
-@playwright/browser-firefox
-@playwright/browser-webkit
-```
-
-únicamente para convertir la descarga de browsers en un efecto lateral de `npm ci`.
-
-El browser debe seguir instalándose explícitamente mediante el Playwright local del proyecto.
-
-La smoke suite debe permanecer reducida y centrada en:
-
-- carga real de la aplicación;
-- idiomas y estado DOM real;
-- navegación principal crítica;
-- menú responsive;
-- autoplay del carrusel;
-- hover;
-- drag;
-- diferenciación entre click y drag;
-- cobertura ultrawide;
-- reduced motion;
-- accessibility smoke sobre estados representativos de la interfaz.
-
-No convertir Playwright en una duplicación exhaustiva de todos los tests de componentes.
-
-### Axe y accessibility smoke
-
-El baseline utiliza:
-
-```text
-@axe-core/playwright 4.13.x
-```
-
-`package.json` declara `~4.13.0` para mantener la resolución automática dentro de la línea Axe 4.13. El lockfile fija la versión concreta instalada.
-
-`@axe-core/playwright` no sigue Semantic Versioning convencional: su major y minor siguen la versión de `axe-core`. Por ello, una futura actualización a Axe 4.14 o superior debe revisarse deliberadamente porque puede cambiar reglas, tags o resultados del gate aunque la integración de Playwright siga siendo compatible.
-
-La capa Axe reutiliza:
-
-- el mismo `playwright.config.ts`;
-- el mismo Chromium;
-- el mismo build de producción;
-- el mismo `vite preview`;
-- el mismo job `CI / validate`.
-
-No se crea una segunda infraestructura E2E ni otro required check.
-
-El script completo continúa siendo:
+La smoke suite completa se ejecuta mediante:
 
 ```bash
 npm run test:e2e
 ```
 
-y ejecuta todos los specs, incluido `e2e/accessibility.spec.ts`.
+Incluye E2E funcional y accessibility smoke.
 
-Para ejecución local focalizada existe:
+El baseline E2E utiliza únicamente:
+
+```text
+Chromium
+```
+
+Localmente Playwright genera el build necesario.
+
+En CI reutiliza el build ya validado por `npm run check`.
+
+Para ejecutar únicamente la capa de accesibilidad:
 
 ```bash
 npm run test:a11y
 ```
 
-Los scans Axe se limitan a los tags oficiales:
+### CodeQL
+
+CodeQL analiza JavaScript/TypeScript como una capa independiente de seguridad.
+
+Complementa, pero no sustituye:
+
+- TypeScript;
+- ESLint;
+- tests;
+- Dependency Review;
+- auditoría de dependencias.
+
+## Modelo de seguridad de dependencias
+
+El proyecto separa deliberadamente:
+
+1. vulnerabilidades **introducidas por una PR**;
+2. vulnerabilidades **ya presentes en `main`**.
+
+No deben tratarse ambas situaciones mediante el mismo gate absoluto.
+
+## Dependency Review
+
+Dependency Review compara las dependencias modificadas por una PR respecto a `main`.
+
+La política es:
+
+| Scope | Moderate | High | Critical |
+| --- | --- | --- | --- |
+| Runtime | ❌ Bloquea | ❌ Bloquea | ❌ Bloquea |
+| Unknown | ❌ Bloquea | ❌ Bloquea | ❌ Bloquea |
+| Development | ⚠️ No bloquea | ❌ Bloquea | ❌ Bloquea |
+
+El workflow implementa dos controles:
 
 ```text
-wcag2a
-wcag2aa
-wcag21a
-wcag21aa
-wcag22aa
+runtime + unknown
+  → bloquea desde moderate
+
+development
+  → bloquea desde high
 ```
 
-Axe 4.13 no expone un tag `wcag22a` independiente. No debe inventarse ni sustituirse por reglas experimentales.
+Las GitHub Actions utilizadas por el repositorio deben permanecer pinneadas a SHA completo.
 
-No habilitar manualmente reglas marcadas como experimentales o deshabilitadas por defecto únicamente para ampliar artificialmente la cobertura. La adopción de reglas adicionales debe ser una decisión separada y justificada.
+La comprobación de licencias no forma parte actualmente de este gate.
 
-La baseline inicial de CI falla ante violations con impacto:
+### Principio de no regresión
+
+Una vulnerabilidad ya existente en `main`:
 
 ```text
-critical
-serious
+NO debe bloquear una PR que no la introduce o empeora.
 ```
 
-Las violations `moderate` y `minor` se mantienen fuera del criterio de bloqueo inicial para evitar convertir la primera baseline en una suite ruidosa sin haber evaluado previamente su señal. Endurecer el gate para incluir `moderate` requiere comprobar antes que la baseline actual sea estable y no genere ruido injustificado.
-
-No utilizar exclusiones genéricas de Axe ni `disableRules()` para conseguir tests verdes. Si aparece una violation `critical` o `serious`, debe analizarse primero si representa un problema real y corregir la implementación cuando sea razonable.
-
-Los estados mínimos cubiertos son:
-
-- página principal desktop en `ca`;
-- página principal desktop en `es`;
-- página principal desktop en `en`;
-- menú móvil después de abrirlo realmente;
-- carrusel de certificaciones visible y con foco de teclado en su copia accesible.
-
-Cada idioma comprueba además que `document.documentElement.lang` corresponde al idioma activo.
-
-Las copias visuales `aria-hidden` del carrusel permanecen dentro del DOM analizado. Sus controles deben continuar fuera del tab order mediante `tabIndex=-1`; no se excluye el carrusel del scan.
-
-Axe analiza únicamente problemas automáticamente detectables y el estado actual del DOM. Por ello los estados ocultos por defecto, como el menú móvil, deben activarse antes del scan correspondiente.
-
-Axe no sustituye revisión manual ni pruebas con tecnologías de asistencia.
-
-### TypeScript y typescript-eslint
-
-El proyecto mantiene actualmente TypeScript en la rama `6.0.x`.
-
-La versión `8.69.x` de `typescript-eslint` utilizada por el proyecto no soporta TypeScript 7 dentro de su rango oficialmente compatible actual.
-
-Por este motivo `typescript` permanece deliberadamente restringido a:
+Por ejemplo:
 
 ```text
-~6.0.x
+main contiene H1 + H2
+
+PR A corrige H1
+PR B corrige H2
 ```
 
-No actualizar a TypeScript 7 utilizando:
+PR A debe poder integrarse aunque H2 continúe existiendo.
+
+PR B debe poder integrarse aunque H1 todavía exista en su base.
+
+Esto evita deadlocks de mantenimiento.
+
+## Estado absoluto de `main`
+
+El estado completo del árbol se comprueba mediante:
+
+```bash
+npm run audit:security
+```
+
+La política es:
+
+```text
+todo el árbol:
+  high / critical → error
+
+dependencias de producción:
+  moderate / high / critical → error
+
+dependencias exclusivamente de desarrollo:
+  moderate → seguimiento
+```
+
+Para revisar también las vulnerabilidades `moderate` del árbol completo existe:
+
+```bash
+npm run audit:security:moderate
+```
+
+El workflow:
+
+```text
+.github/workflows/dependency-audit.yml
+```
+
+se ejecuta periódicamente y bajo demanda.
+
+Su responsabilidad es supervisar el estado absoluto de `main`.
+
+No es el required gate de las PR.
+
+Una vulnerabilidad nueva descubierta contra una dependencia ya existente debe generar una remediación, pero no congelar cambios no relacionados.
+
+## Dependabot
+
+Dependabot revisa periódicamente:
+
+- paquetes npm;
+- GitHub Actions.
+
+Las actualizaciones ordinarias pueden agruparse por familias relacionadas.
+
+Las security updates npm utilizan un grupo específico:
+
+```yaml
+npm-security:
+  applies-to: 'security-updates'
+  patterns:
+    - '*'
+```
+
+El objetivo es permitir que varias actualizaciones necesarias para una misma remediación puedan llegar conjuntamente cuando Dependabot pueda resolverlas.
+
+### Configuración desde la default branch
+
+GitHub solo activa:
+
+```text
+.github/dependabot.yml
+```
+
+desde la default branch.
+
+Por tanto, al editar ese fichero desde una branch de trabajo puede aparecer el aviso:
+
+```text
+Cannot configure Dependabot from this branch
+```
+
+Ese aviso no invalida el fichero ni impide revisarlo mediante PR.
+
+La nueva configuración entra en vigor cuando llega a `main`.
+
+## Remediaciones coordinadas
+
+Si una vulnerabilidad no puede resolverse mediante una PR individual de Dependabot, debe utilizarse una branch:
+
+```text
+security/<descripcion>
+```
+
+creada desde el `main` actual.
+
+En ella pueden actualizarse conjuntamente:
+
+- dependencias directas;
+- dependencias relacionadas;
+- lockfile;
+- configuración necesaria.
+
+Después se abre una única PR de remediación.
+
+No se debe:
+
+- desactivar branch protection;
+- quitar el required check;
+- crear bypasses permanentes;
+- utilizar `--force`;
+- utilizar `--legacy-peer-deps`;
+- editar manualmente el lockfile.
+
+## Regenerador de lockfile y seguridad
+
+El regenerador intenta aplicar fixes compatibles mediante:
+
+```bash
+npm audit fix \
+  --package-lock-only \
+  --ignore-scripts \
+  --audit-level=high
+```
+
+sin `--force`.
+
+El paso puede continuar aunque queden findings que requieran una intervención adicional.
+
+Después ejecuta:
+
+```bash
+npm run audit:security
+```
+
+como señal informativa.
+
+Si quedan vulnerabilidades:
+
+- aparecen en los logs;
+- se genera un warning;
+- se recomienda Dependabot o una rama `security/**`;
+- la regeneración no queda bloqueada únicamente porque exista una vulnerabilidad previa.
+
+El gate que impide introducir nuevas vulnerabilidades se aplica posteriormente mediante Dependency Review en la PR.
+
+## Despliegue
+
+El workflow de GitHub Pages ejecuta:
+
+```text
+npm ci --no-audit --fund=false
+  ↓
+npm run check
+  ↓
+Upload GitHub Pages artifact
+  ↓
+Deploy
+```
+
+No ejecuta un audit absoluto del árbol.
+
+Esto es intencionado.
+
+Si se publica un advisory nuevo contra una dependencia que ya estaba desplegada, bloquear futuros despliegues:
+
+```text
+NO elimina esa vulnerabilidad
+```
+
+y podría impedir publicar su propia corrección.
+
+La detección y remediación corresponden a:
+
+```text
+Dependency audit
+Dependabot
+security/**
+```
+
+mientras Dependency Review evita introducir nuevas regresiones.
+
+## Branch protection
+
+`main` mantiene:
+
+- PR obligatoria;
+- `validate` como required status;
+- branch actualizada respecto a `main`;
+- force-push bloqueado;
+- eliminación bloqueada;
+- sin bypass.
+
+No es necesario debilitar estas reglas para realizar remediaciones.
+
+Si aparece un deadlock, debe corregirse la estrategia de actualización o preparar una remediación coordinada.
+
+## Familias de dependencias relacionadas
+
+### React
+
+Mantener alineadas las majors de:
+
+```text
+react
+react-dom
+@types/react
+@types/react-dom
+```
+
+No aceptar árboles conceptualmente incompatibles.
+
+### Tailwind
+
+Mantener la compatibilidad entre:
+
+```text
+tailwindcss
+@tailwindcss/vite
+vite
+```
+
+El proyecto utiliza integración CSS-first:
+
+```css
+@import 'tailwindcss';
+```
+
+mediante:
+
+```text
+@tailwindcss/vite
+```
+
+No mantiene un `tailwind.config.js` ni un `postcss.config.js` propios.
+
+### Testing Library
+
+Revisar conjuntamente:
+
+```text
+@testing-library/react
+@testing-library/dom
+@testing-library/jest-dom
+@testing-library/user-event
+```
+
+y sus peer dependencies.
+
+### TypeScript
+
+TypeScript permanece deliberadamente en major 6.
+
+Una futura migración a TypeScript 7 debe realizarse únicamente cuando el tooling relacionado declare una compatibilidad suficiente.
+
+No utilizar:
 
 ```text
 --force
 --legacy-peer-deps
 ```
 
-ni ignorando warnings o errores de compatibilidad.
+para adelantar esa migración.
 
-La migración podrá realizarse cuando el tooling relacionado declare soporte oficial adecuado y deberá tratarse en una pull request independiente del contrato de Node.
+### Playwright
 
-## Tailwind CSS 4
+El baseline E2E utiliza únicamente Chromium.
 
-La migración a Tailwind CSS 4 está completada, incluida la configuración CSS-first nativa.
-
-La entrada `styles.css` utiliza:
-
-```css
-@import 'tailwindcss';
-
-@theme {
-  --font-sans: Inter, 'Segoe UI', system-ui, sans-serif;
-  --font-serif: 'Playfair Display', Georgia, Cambria, 'Times New Roman', serif;
-
-  --color-brand-50: #f0f9ff;
-  --color-brand-100: #e0f2fe;
-  --color-brand-200: #bae6fd;
-  --color-brand-300: #7dd3fc;
-  --color-brand-400: #38bdf8;
-  --color-brand-500: #0ea5e9;
-  --color-brand-600: #0284c7;
-  --color-brand-700: #0369a1;
-  --color-brand-800: #075985;
-  --color-brand-900: #0c4a6e;
-  --color-brand-950: #082f49;
-}
-```
-
-El proyecto ya no utiliza `@config` y no mantiene `tailwind.config.js`.
-
-Tailwind está integrado directamente en el pipeline de Vite mediante:
-
-```text
-@tailwindcss/vite
-```
-
-y se registra en `vite.config.ts` mediante:
-
-```ts
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-  plugins: [tailwindcss(), react()],
-  base: './',
-});
-```
-
-El proyecto no mantiene un `postcss.config.js` propio y no declara como dependencias directas:
-
-```text
-@tailwindcss/postcss
-postcss
-autoprefixer
-```
-
-Esto no significa que `postcss` deba desaparecer necesariamente de `package-lock.json`.
-
-Vite puede mantener PostCSS como dependencia transitiva para su propio pipeline CSS. La ausencia relevante es la de `postcss` como dependencia directa del proyecto y la de `@tailwindcss/postcss` como mecanismo de integración de Tailwind.
-
-### Compatibilidad visual con Tailwind CSS 3
-
-Tailwind CSS 4 modificó el significado de algunas escalas de utilidades.
-
-Cuando se migre código originalmente diseñado con Tailwind 3 y se quiera conservar aproximadamente el mismo resultado visual, deben revisarse estas equivalencias:
-
-| Tailwind CSS 3                       | Tailwind CSS 4 equivalente |
-| ------------------------------------ | -------------------------- |
-| `shadow-sm`                          | `shadow-xs`                |
-| `shadow`                             | `shadow-sm`                |
-| `drop-shadow-sm`                     | `drop-shadow-xs`           |
-| `drop-shadow`                        | `drop-shadow-sm`           |
-| `blur-sm`                            | `blur-xs`                  |
-| `blur`                               | `blur-sm`                  |
-| `backdrop-blur-sm`                   | `backdrop-blur-xs`         |
-| `backdrop-blur`                      | `backdrop-blur-sm`         |
-| `rounded-sm`                         | `rounded-xs`               |
-| `rounded`                            | `rounded-sm`               |
-| semántica anterior de `outline-none` | `outline-hidden`           |
-
-Los gradientes lineales utilizan la sintaxis:
-
-```text
-bg-linear-*
-```
-
-Tailwind CSS 4 utiliza un espacio de color moderno por defecto para la interpolación de gradientes. Cuando sea necesario conservar específicamente una interpolación similar a la utilizada anteriormente puede utilizarse el modificador:
-
-```text
-/srgb
-```
-
-### Baseline de navegadores
-
-El baseline de navegador de referencia de Tailwind CSS 4 es:
-
-- Safari 16.4+
-- Chrome 111+
-- Firefox 128+
-
-Si en el futuro fuera necesario soportar navegadores anteriores, deberá revisarse expresamente la elección de Tailwind CSS 4.
-
-La utilización inicial de Chromium como único navegador E2E no modifica este baseline de compatibilidad de producto. Significa únicamente que la primera capa automatizada de navegador real está deliberadamente limitada a Chromium.
-
-## Scripts de instalación
-
-El repositorio utiliza:
-
-```text
-strict-allow-scripts=true
-```
-
-y `package.json` mantiene explícitamente los paquetes cuyos scripts de instalación están permitidos.
-
-Cuando una actualización introduzca o modifique un script de instalación:
-
-1. identificar el paquete que solicita ejecutar el script;
-2. revisar su procedencia;
-3. revisar la finalidad del script;
-4. comprobar que la versión instalada es la esperada;
-5. permitir únicamente la versión concreta necesaria;
-6. evitar rangos abiertos;
-7. ejecutar una instalación limpia;
-8. ejecutar la auditoría de seguridad;
-9. ejecutar el pipeline completo de validación.
-
-No se deben autorizar indiscriminadamente todos los scripts para eliminar un warning de npm.
-
-La instalación de los browser binaries de Playwright permanece separada de `npm ci` y se realiza explícitamente mediante:
+Después de actualizar Playwright debe instalarse nuevamente el browser compatible:
 
 ```bash
 npx playwright install chromium
@@ -692,317 +674,206 @@ o, en CI:
 npx playwright install --with-deps chromium
 ```
 
-No debe relajarse `strict-allow-scripts` para convertir la descarga del browser en un efecto lateral de la instalación npm.
+No añadir paquetes específicos de browsers únicamente para convertir la descarga en un efecto lateral de `npm ci`.
 
-`@axe-core/playwright` reutiliza el browser gestionado por Playwright y no justifica añadir otro browser ni relajar esta política.
+### Axe
 
-## Auditoría de seguridad
+La versión concreta de Axe no se duplica en documentación.
 
-El proyecto ejecuta:
-
-```bash
-npm audit --audit-level=high
-```
-
-mediante:
-
-```bash
-npm run audit:security
-```
-
-Una instalación correctamente resuelta puede seguir conteniendo vulnerabilidades.
-
-Por tanto:
-
-- que `npm ci` termine correctamente no implica que `npm audit` vaya a pasar;
-- una vulnerabilidad puede encontrarse en una dependencia transitiva;
-- una dependencia transitiva no debe añadirse automáticamente a `package.json` solo para controlar su versión;
-- cuando el rango existente ya permite una versión corregida, debe actualizarse el lockfile;
-- toda corrección debe volver a validarse mediante instalación limpia.
-
-No utilizar automáticamente:
-
-```bash
-npm audit fix --force
-```
-
-porque puede introducir actualizaciones major o resoluciones fuera de los rangos previstos.
-
-Cuando `npm audit fix` pueda utilizarse sin romper los rangos declarados, debe comprobarse después que:
-
-1. `package.json` no haya cambiado inesperadamente;
-2. `package-lock.json` sea instalable;
-3. la vulnerabilidad haya desaparecido;
-4. los tests sigan pasando;
-5. TypeScript compile correctamente;
-6. el build complete correctamente.
-
-La validación mínima posterior es:
-
-```bash
-npm ci
-npm run audit:security
-npm run check
-```
-
-Si el cambio afecta al tooling de navegador, Axe o a comportamiento de UI debe ejecutarse además la smoke suite E2E.
-
-## Actualizaciones major
-
-Las actualizaciones major no deben tratarse como simples cambios de versión.
-
-Antes de aceptar una major de Dependabot:
-
-1. revisar las release notes;
-2. revisar breaking changes;
-3. identificar paquetes relacionados;
-4. revisar peer dependencies;
-5. revisar requisitos de Node y npm;
-6. revisar cambios de configuración;
-7. revisar cambios de tipos;
-8. revisar APIs eliminadas o renombradas;
-9. regenerar el lockfile correctamente;
-10. ejecutar `npm ci`;
-11. ejecutar la auditoría;
-12. ejecutar lint;
-13. ejecutar tests;
-14. ejecutar TypeScript;
-15. ejecutar el build;
-16. realizar una revisión visual si afecta a UI, CSS o iconografía;
-17. comprobar comportamiento interactivo si afecta a eventos o APIs del navegador;
-18. ejecutar Playwright cuando el cambio pueda afectar al comportamiento real del navegador;
-19. ejecutar accessibility smoke cuando el cambio pueda afectar a UI, ARIA, foco, contenido o estilos;
-20. integrar únicamente cuando el CI esté completamente en verde.
-
-Una actualización major de Playwright debe revisar además:
-
-- requisitos de Node;
-- cambios de configuración;
-- browser version incorporada;
-- cambios en APIs de locators, assertions y mouse/pointer;
-- cambios en los requisitos de sistema de Chromium;
-- regeneración del lockfile;
-- reinstalación explícita de Chromium.
-
-Una actualización de la línea major/minor utilizada por `@axe-core/playwright` debe revisar además:
-
-- versión de `axe-core` incorporada;
-- reglas añadidas, eliminadas o modificadas;
-- cambios de impacto de las reglas;
-- tags WCAG soportados;
-- posibles cambios legítimos en la baseline;
-- compatibilidad con la versión actual de Playwright;
-- resultado de `npm run test:a11y` y `npm run test:e2e`.
-
-## Lecciones de la migración de septiembre de 2026
-
-La actualización major de 2026 permitió identificar varios patrones que deben tenerse en cuenta en futuras migraciones.
-
-### Mantener React alineado
-
-Actualizar `react` sin actualizar simultáneamente `react-dom` y sus tipos puede producir un árbol de dependencias inconsistente.
-
-Las cuatro piezas deben revisarse conjuntamente:
+Debe consultarse en:
 
 ```text
-react
-react-dom
-@types/react
-@types/react-dom
+package.json
+package-lock.json
 ```
 
-### Un npm ci correcto no sustituye al audit
+Una actualización de `@axe-core/playwright` puede modificar:
 
-Durante la migración, una versión vulnerable de una dependencia transitiva permitía instalar el proyecto correctamente pero hacía fallar:
+- reglas;
+- impacto de violations;
+- tags WCAG;
+- resultados del gate.
+
+Después de actualizarla deben revisarse:
 
 ```bash
-npm audit --audit-level=high
-```
-
-Por tanto, instalación y seguridad son controles independientes.
-
-### Los tipos DOM también pueden cambiar
-
-Las actualizaciones de TypeScript y de las definiciones DOM pueden ampliar interfaces del navegador.
-
-Los mocks utilizados en tests deben seguir implementando correctamente esas interfaces.
-
-Ejemplo encontrado durante la migración:
-
-```text
-IntersectionObserver
-```
-
-incorporó requisitos de tipos que obligaron a actualizar los mocks utilizados en las pruebas.
-
-La existencia de Playwright reduce el riesgo de depender únicamente de mocks para comportamientos que realmente necesitan layout o APIs implementadas por el browser, pero no elimina la utilidad de los unit tests existentes.
-
-### Las librerías pueden eliminar exports
-
-Una major puede eliminar APIs aunque el resto de la librería siga funcionando correctamente.
-
-Durante la actualización de Lucide React, el icono de LinkedIn dejó de estar disponible mediante el export utilizado previamente.
-
-La solución adoptada fue conservar ese recurso como SVG local en lugar de introducir una nueva dependencia únicamente para un icono.
-
-### Las migraciones CSS necesitan revisión visual
-
-Un build correcto no garantiza equivalencia visual.
-
-Tailwind CSS 4 modificó varias escalas y comportamientos, por lo que después de una major de CSS deben comprobarse especialmente:
-
-- sombras;
-- blur;
-- backdrop blur;
-- border radius;
-- rings;
-- gradientes;
-- animaciones;
-- transforms;
-- responsive behavior;
-- estados hover y focus.
-
-Los smoke tests Playwright proporcionan una red de seguridad adicional para una parte limitada de estos comportamientos sin convertirse en una suite de visual regression pixel-perfect.
-
-La capa Axe añade señal automatizada sobre regresiones de accesibilidad, pero tampoco sustituye una revisión manual de los cambios visuales e interactivos.
-
-### Separar framework e integración de build
-
-La versión de Tailwind y el mecanismo mediante el que se integra en el bundler son decisiones distintas.
-
-En proyectos Vite, el baseline actual utiliza el plugin dedicado:
-
-```text
-@tailwindcss/vite
-```
-
-en lugar de enrutar Tailwind a través de un `postcss.config.js` propio.
-
-Cuando se actualice Tailwind debe comprobarse también la compatibilidad entre:
-
-```text
-tailwindcss
-@tailwindcss/vite
-vite
-```
-
-y mantener alineadas las versiones de los dos paquetes de Tailwind.
-
-Si el cambio puede afectar al layout o a las transforms utilizadas por el carrusel debe ejecutarse también `npm run test:e2e`.
-
-## CI y protección de main
-
-Las pull requests hacia `main` deben superar el workflow de CI antes del merge.
-
-El pipeline valida:
-
-```text
-npm ci
-  ↓
-npm run audit:security
-  ↓
-npm run check
-  ↓
-npx playwright install --with-deps chromium
-  ↓
+npm run test:a11y
 npm run test:e2e
 ```
 
-`npm run check` incluye:
+No se deben desactivar reglas únicamente para recuperar un CI verde.
+
+La baseline actual bloquea violations con impacto:
 
 ```text
-lint
-  ↓
-tests
-  ↓
-generate:cv
-  ↓
-TypeScript
-  ↓
-Vite build
+critical
+serious
 ```
 
-La smoke suite Playwright permanece fuera de `npm run check`.
+Las `moderate` y `minor` no bloquean actualmente.
 
-Esto es intencionado porque `npm run check` también se utiliza durante el workflow de despliegue. Mantener E2E separado evita que el deploy tenga que instalar Chromium y ejecutar por segunda vez los tests de navegador.
+Solo deben configurarse tags realmente soportados por la versión instalada.
 
-`npm run test:e2e` ejecuta dentro de una única infraestructura Playwright:
+## Scripts de instalación
+
+El repositorio utiliza:
 
 ```text
-Smoke E2E funcional
-  +
-Accessibility smoke Axe
+strict-allow-scripts=true
 ```
 
-El job `validate` del workflow `CI` ejecuta ambos niveles de control:
+Los paquetes cuyos scripts se permiten deben estar autorizados explícitamente en `package.json`.
+
+Cuando una actualización introduzca o modifique scripts de instalación:
+
+1. identificar el paquete;
+2. revisar su procedencia;
+3. revisar la finalidad;
+4. comprobar la versión instalada;
+5. permitir únicamente lo necesario;
+6. volver a ejecutar instalación y validación.
+
+No debe desactivarse globalmente esta protección para eliminar warnings.
+
+Playwright instala los browser binaries explícitamente mediante su CLI.
+
+## Actualizaciones major
+
+Una major debe tratarse como una migración deliberada, no como mantenimiento rutinario.
+
+Revisar como mínimo:
+
+1. release notes;
+2. breaking changes;
+3. peer dependencies;
+4. Node/npm requerido;
+5. configuración;
+6. tipos;
+7. APIs eliminadas;
+8. scripts de instalación;
+9. impacto visual si aplica;
+10. comportamiento de navegador si aplica;
+11. regeneración del lockfile;
+12. instalación limpia;
+13. seguridad;
+14. `npm run check`;
+15. E2E cuando corresponda;
+16. accessibility smoke cuando corresponda.
+
+Una major no debe aceptarse únicamente porque npm consiga resolverla mediante opciones de fuerza.
+
+## Validación local recomendada
+
+Para cambios ordinarios:
+
+```bash
+npm ci
+npm run check
+```
+
+Para cambios de dependencias:
+
+```bash
+npm ci
+npm run audit:security
+npm run check
+```
+
+Para cambios de UI o tooling de navegador:
+
+```bash
+npm ci
+npm run audit:security
+npm run check
+npx playwright install chromium
+npm run test:e2e
+```
+
+Para cambios específicamente relacionados con accesibilidad:
+
+```bash
+npm run test:a11y
+```
+
+Un audit local puede fallar por una vulnerabilidad que ya existía en `main`.
+
+En ese caso debe distinguirse entre:
 
 ```text
-Validación rápida
-  +
-Smoke E2E Chromium
+regresión introducida por el cambio
+vs.
+finding preexistente
 ```
 
-La rama `main` debe mantener configurado como obligatorio el check asociado al job `validate` del workflow `CI`.
-
-No se crea un required check independiente para Playwright ni para Axe.
-
-No debe integrarse una pull request simplemente porque GitHub permita técnicamente el merge si el check requerido no corresponde al workflow real o permanece en estado `Expected`.
-
-Los artefactos Playwright de una ejecución fallida pueden conservarse temporalmente mediante la Action de upload configurada en el mismo job. Esa Action debe permanecer pinneada a un SHA completo, igual que el resto de Actions del repositorio.
+Dependency Review realiza esa distinción en la PR.
 
 ## Revisión periódica
 
-Ejecutar al menos trimestralmente:
+Al menos trimestralmente revisar:
 
 ```bash
 npm outdated
 npm run audit:security
+npm run audit:security:moderate
 npm run check
 npm run test:e2e
 ```
 
-Antes de `npm run test:e2e`, Chromium debe estar instalado para la versión local de Playwright.
+y comprobar:
 
-Revisar además:
-
-- versión mínima y major soportada de Node;
-- versión soportada y de referencia de npm;
-- alineación de `engines`, `packageManager` y `devEngines`;
-- alineación de `@types/node` con la major de runtime;
+- contrato Node/npm;
+- alineación de `@types/node`;
 - dependencias directas obsoletas;
 - dependencias transitivas vulnerables;
 - peer dependencies;
-- paquetes con scripts de instalación;
-- compatibilidad entre Tailwind CSS, `@tailwindcss/vite` y Vite;
-- soporte de TypeScript por `typescript-eslint`;
-- baseline de navegadores de Tailwind;
-- versión actual de `@playwright/test`;
-- versión actual de `@axe-core/playwright` y de `axe-core` incorporada;
-- tags WCAG y severidades que forman la baseline de accessibility smoke;
-- requisitos de sistema actuales de Playwright;
-- versión de Chromium gestionada por la release de Playwright instalada;
-- estabilidad y utilidad de la smoke suite E2E;
-- estabilidad y señal de la capa Axe, incluida la posible adopción futura de `moderate` como severidad bloqueante;
-- actualizaciones major abiertas por Dependabot;
-- versiones de GitHub Actions;
-- configuración de branch protection y required checks.
+- scripts de instalación;
+- compatibilidad Tailwind/Vite;
+- compatibilidad TypeScript/tooling;
+- Playwright y Chromium;
+- Axe y reglas configuradas;
+- GitHub Actions;
+- Dependabot;
+- CodeQL;
+- branch protection;
+- estabilidad de la suite E2E.
 
-## Major deliberadamente pospuesta
+## Cuándo debe actualizarse esta documentación
 
-### TypeScript 7
+Este documento **no debe modificarse por cada PR de Dependabot**.
 
-TypeScript 7 permanece deliberadamente fuera del baseline mientras el ecosistema utilizado por el proyecto no declare compatibilidad oficial adecuada.
+Debe actualizarse cuando cambie alguno de estos contratos o decisiones:
 
-Esta decisión es independiente de la major de Node utilizada por el proyecto.
+- major soportada de Node;
+- rango soportado de npm;
+- package manager de referencia;
+- major de una tecnología considerada baseline;
+- navegador E2E soportado;
+- política de severidades;
+- estrategia de Dependency Review;
+- estrategia Dependabot;
+- reglas de branch protection;
+- forma de regenerar el lockfile;
+- política de scripts de instalación;
+- arquitectura de CI o despliegue.
 
-Cuando pueda abordarse la migración:
+Una actualización minor o patch compatible normalmente no requiere cambios documentales.
 
-1. crear una pull request independiente;
-2. actualizar TypeScript y el tooling relacionado;
-3. revisar breaking changes del compilador;
-4. actualizar mocks y tipos si fuera necesario;
-5. revisar generación de CV;
-6. ejecutar toda la suite de tests;
-7. ejecutar el build completo;
-8. ejecutar la smoke suite E2E;
-9. integrar únicamente con todos los checks en verde.
+## Principios que no deben romperse
+
+```text
+npm como único package manager
+Node 24 como única major soportada actualmente
+npm@11.19.0 como referencia reproducible
+package-lock generado exclusivamente por npm
+sin --force
+sin --legacy-peer-deps
+Actions pinneadas por SHA
+PR obligatoria hacia main
+validate obligatorio
+sin bypass de main
+Dependency Review bloquea regresiones
+Dependency audit supervisa el estado absoluto
+security/** permite remediaciones coordinadas
+```
+
+Estos principios deben revisarse explícitamente si cambia de forma material la arquitectura del repositorio.
