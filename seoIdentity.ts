@@ -1,10 +1,14 @@
+import {
+  PROFILE_IMAGE_ASSET_STEM,
+} from './aboutMe.ts';
+
 export const SEO_IDENTITY = {
   givenName: 'Josep',
   familyName: 'Núñez Riba',
   alternateName: 'JosepNR97',
 
   imagePath:
-    'assets/people/josep-nunez-riba-2.webp',
+    `assets/${PROFILE_IMAGE_ASSET_STEM}.webp`,
 
   profiles: {
     linkedin:
