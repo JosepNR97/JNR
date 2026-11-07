@@ -23,7 +23,7 @@ La raíz `/JNR/` actúa como punto de entrada de idioma. Redirige a la preferenc
 - 🏅 Carrusel continuo e interactivo de organizaciones acreditadoras, con navegación mediante clic y arrastre manual.
 - ♿ Animaciones respetuosas con la preferencia `prefers-reduced-motion`.
 - ♿ Accessibility smoke automatizado con Axe sobre estados reales de Chromium para detectar regresiones WCAG A/AA de alto impacto.
-- 🖼️ Recursos visuales servidos localmente, sin depender de URLs externas para los elementos gráficos de la interfaz.
+- 🖼️ Recursos visuales servidos localmente, con generación automática de variantes responsive cuando aportan una mejora real de entrega.
 - 📄 CV descargable en el idioma activo, generado automáticamente desde los datos del portfolio.
 - 🔎 SEO multilingüe indexable con metadata localizada disponible antes de cargar React: `lang`, title, description, canonical, hreflang, Open Graph, Twitter Cards y datos estructurados `Person`.
 - 🗺️ Sitemap multilingüe con alternates `hreflang` recíprocos y `x-default`.
@@ -31,20 +31,32 @@ La raíz `/JNR/` actúa como punto de entrada de idioma. Redirige a la preferenc
 - 📊 Google Analytics inicializado al cargar la web.
 - 🧪 Smoke tests E2E con Chromium para validar interacción, layout, navegación multilingüe y comportamiento real de navegador.
 - ✅ Integración continua para validar pull requests antes de integrarlas.
+- 🔐 Dependency Review para impedir regresiones de seguridad sin bloquear la remediación de vulnerabilidades ya existentes.
 - ⚙️ Despliegue automatizado mediante GitHub Actions y GitHub Pages.
 
 ## 🧰 Stack tecnológico
+
+El stack se mantiene deliberadamente sobre las siguientes líneas principales:
 
 - **React 19** y **React DOM 19**.
 - **TypeScript 6** en modo estricto.
 - **Vite 8** para desarrollo y build.
 - **Tailwind CSS 4** integrado directamente en Vite mediante `@tailwindcss/vite`.
-- **Lucide React 1** para la iconografía de interfaz, complementado con SVG local cuando un icono deja de formar parte de la librería.
+- **Lucide React** para iconografía de interfaz, complementado con SVG local cuando es necesario.
 - **React PDF** para generar los CV en catalán, castellano e inglés.
-- **Vitest 5** y **Testing Library 16** para pruebas unitarias y de componentes sobre jsdom.
-- **Playwright 1.63** con **Chromium** para smoke tests E2E en navegador real.
-- **Axe 4.13** mediante `@axe-core/playwright` para accessibility smoke automatizado sobre la misma infraestructura E2E.
-- **ESLint 10** y **Prettier** para mantener la calidad y consistencia del código.
+- **Vitest 5** y **Testing Library** para pruebas unitarias y de componentes sobre jsdom.
+- **Playwright** con **Chromium** para smoke tests E2E en navegador real.
+- **Axe** mediante `@axe-core/playwright` para accessibility smoke automatizado sobre la misma infraestructura E2E.
+- **ESLint 10** y **Prettier 3** para mantener la calidad y consistencia del código.
+
+Las versiones concretas declaradas e instaladas **no se duplican en esta documentación**. La fuente de verdad es:
+
+```text
+package.json
+package-lock.json
+```
+
+Las majors indicadas aquí representan decisiones arquitectónicas o de compatibilidad y solo deben modificarse cuando se realice una migración deliberada.
 
 ## 🖥️ Requisitos de desarrollo
 
@@ -54,17 +66,21 @@ El proyecto declara como entorno soportado:
 - **npm:** `>=11.19.0 <12`.
 - **Package manager de referencia:** `npm@11.19.0`.
 
+Estos valores sí se documentan expresamente porque forman parte del contrato de entorno del proyecto.
+
 `package.json` utiliza `devEngines` para rechazar con error los comandos npm relevantes cuando el runtime Node o la versión de npm no cumplen estos rangos.
 
 El proyecto utiliza **npm** como único package manager soportado. No se declara soporte para pnpm ni Yarn.
 
-La versión exacta `npm@11.19.0` es la referencia reproducible utilizada por CI y despliegue. Si una instalación compatible de Node 24 incluye una versión anterior de npm, puede actualizarse antes de instalar las dependencias mediante:
+La versión exacta `npm@11.19.0` es la referencia reproducible utilizada por CI, despliegue y mantenimiento del lockfile.
+
+Si una instalación compatible de Node 24 incluye una versión anterior de npm, puede actualizarse mediante:
 
 ```bash
 npm install --global npm@11.19.0
 ```
 
-Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del framework es:
+Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia es:
 
 - Safari 16.4+
 - Chrome 111+
@@ -75,11 +91,13 @@ Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del fram
 ```text
 .
 ├── .github/
-│   └── workflows/              CI, auditoría, CodeQL y despliegue
+│   ├── dependabot.yml          Actualizaciones periódicas y security updates
+│   └── workflows/              CI, auditoría, CodeQL, lockfile y despliegue
 ├── components/                 Componentes de interfaz y sus pruebas
 ├── context/                    Estado y navegación de idioma
 ├── docs/
 │   ├── dependency-maintenance.md
+│   ├── image-delivery.md       Pipeline de imágenes responsive
 │   └── multilingual-seo.md     Arquitectura SEO y URLs multilingües
 ├── e2e/                        Smoke tests E2E, SEO, 404 y accessibility
 ├── hooks/                      Hooks reutilizables
@@ -95,15 +113,16 @@ Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del fram
 │   ├── robots.txt
 │   └── sitemap.xml             URLs canónicas y hreflang
 ├── scripts/
-│   ├── generate-cv.tsx         Generador de CV
-│   └── generate-localized-html.ts
+│   ├── generate-cv.tsx
+│   ├── generate-localized-html.ts
+│   └── generate-responsive-images.ts
 ├── test/                       Configuración global de pruebas
 ├── aboutMe.ts                  Contenido personal y textos base
 ├── assetPath.ts                Resolución de assets para root y locales
 ├── constants.ts                Formación, certificaciones, recursos y enlaces
 ├── experienceInfo.ts           Trayectoria profesional
 ├── localeRouting.ts            Contrato de rutas CA/ES/EN
-├── playwright.config.ts        Configuración única de Playwright
+├── playwright.config.ts        Configuración de Playwright
 ├── seo.ts                      Metadata SEO localizada
 ├── translations.ts             Construcción de traducciones
 ├── types.ts                    Contratos TypeScript
@@ -127,7 +146,9 @@ Vite mostrará la URL local, normalmente:
 http://localhost:5173
 ```
 
-La raíz local aplica la misma política de selección de idioma que el despliegue en GitHub Pages. También pueden abrirse directamente las entradas localizadas:
+La raíz local aplica la misma política de selección de idioma que el despliegue en GitHub Pages.
+
+También pueden abrirse directamente las entradas localizadas:
 
 ```text
 http://localhost:5173/ca/
@@ -139,15 +160,16 @@ Las tres rutas utilizan la misma aplicación React y los mismos datos de traducc
 
 La URL localizada es la fuente de verdad del idioma activo. Al cambiar de idioma desde `/ca/`, `/es/` o `/en/` se realiza una navegación de documento a la URL equivalente y se conservan la query string y el section hash cuando existen.
 
-Antes de iniciar Vite se generan los tres CV mediante el script `predev`.
+Antes de iniciar Vite se regeneran los CV y los assets responsive necesarios mediante `predev`.
 
-También pueden regenerarse manualmente con:
+También pueden ejecutarse manualmente:
 
 ```bash
 npm run generate:cv
+npm run generate:images
 ```
 
-Los PDF de `public/assets/documents/` se ignoran en Git y se recrean antes de cada build.
+Los PDF de `public/assets/documents/` y las imágenes responsive generadas son outputs reproducibles y no necesitan mantenerse manualmente en Git.
 
 ### Smoke E2E en navegador real
 
@@ -171,7 +193,9 @@ Ejecuta toda la smoke suite mediante:
 npm run test:e2e
 ```
 
-`npm run test:e2e` construye el artefacto de producción mediante Vite, levanta automáticamente `vite preview` en `127.0.0.1:4173`, ejecuta todos los specs E2E —incluido accessibility smoke— con Chromium en modo headless y detiene el servidor al finalizar.
+En desarrollo local, `npm run test:e2e` construye el artefacto de producción, levanta automáticamente `vite preview` y ejecuta todos los specs E2E —incluido accessibility smoke— con Chromium en modo headless.
+
+En CI, el build ya ha sido generado y validado previamente mediante `npm run check`, por lo que Playwright reutiliza ese artefacto y evita un segundo build innecesario.
 
 La suite valida también el contrato multilingüe en navegador real: URLs localizadas, cambio de idioma, persistencia de la preferencia, conservación de anchors y comportamiento de la página 404.
 
@@ -181,17 +205,15 @@ Para ejecutar únicamente la capa de accessibility smoke:
 npm run test:a11y
 ```
 
-`npm run test:a11y` reutiliza el mismo `playwright.config.ts`, el mismo build, el mismo servidor y el mismo Chromium; únicamente limita la ejecución a `e2e/accessibility.spec.ts`.
-
-Los tests E2E funcionales validan únicamente comportamientos para los que un navegador real aporta señal adicional, como layout, `requestAnimationFrame`, transforms CSS, hover, pointer events, drag, responsive behavior, navegación entre documentos y `prefers-reduced-motion`.
-
-La capa Axe complementa esos tests comprobando problemas de accesibilidad automáticamente detectables sobre estados reales de la interfaz.
+La capa Axe complementa los tests funcionales comprobando problemas de accesibilidad automáticamente detectables sobre estados reales de la interfaz.
 
 ## ✅ Controles de calidad
 
 Los principales comandos disponibles son:
 
 ```bash
+npm run format
+npm run format:check
 npm run lint
 npm run test
 npm run build
@@ -199,39 +221,41 @@ npm run check
 npm run test:e2e
 npm run test:a11y
 npm run audit:security
-npm run format:check
+npm run audit:security:moderate
 ```
-
-`npm run test` ejecuta la suite rápida de Vitest sobre jsdom.
-
-`npm run test:e2e` ejecuta la smoke suite completa de Playwright con Chromium sobre el build de producción, incluyendo accessibility smoke.
-
-`npm run test:a11y` ejecuta únicamente los accessibility smoke tests basados en Axe.
 
 `npm run check` ejecuta secuencialmente:
 
 ```text
+Prettier format check
+  ↓
 ESLint
   ↓
 Vitest
   ↓
-Generación de CV
+Generación de CV e imágenes responsive
   ↓
 TypeScript
   ↓
 Vite build
 ```
 
-Durante la configuración de Vite se generan también las entradas HTML localizadas utilizadas por el build multipage.
+Playwright permanece fuera de `npm run check`.
 
-Playwright no forma parte de `npm run check`. Esta separación mantiene rápido el control utilizado también durante el despliegue y evita instalar un browser en el workflow de GitHub Pages.
-
-Toda pull request dirigida a `main` ejecuta el workflow de CI desde una instalación limpia:
+Toda pull request dirigida a `main` ejecuta el job requerido:
 
 ```text
-npm ci
+CI / validate
+```
+
+Para una PR normal, el flujo es:
+
+```text
+Dependency Review
+  ├─ runtime / unknown: bloquea moderate+
+  └─ development: bloquea high+
   ↓
-npm run audit:security
+npm ci --no-audit --fund=false
   ↓
 npm run check
   ↓
@@ -240,31 +264,36 @@ Instalación de Chromium
 npm run test:e2e
 ```
 
-La instalación de CI utiliza únicamente Chromium y sus dependencias del sistema.
+Dependency Review evalúa las dependencias introducidas o modificadas por la PR respecto a `main`.
 
-El mismo job requerido `validate` cubre tanto la validación rápida como la smoke suite E2E completa, incluida la capa Axe. El check debe finalizar correctamente antes de integrar cambios en `main`.
+Una vulnerabilidad que ya existía en `main` no debe bloquear una PR que no la introduzca o empeore.
 
-No existe un job ni un required check independiente para accessibility.
+El mismo job `validate` cubre:
 
-CodeQL se ejecuta mediante un workflow de seguridad independiente y no forma parte del required check `validate`; durante su adopción inicial se mantiene como señal adicional no requerida.
+- seguridad incremental de dependencias;
+- formato;
+- lint;
+- unit tests;
+- TypeScript;
+- build;
+- E2E;
+- accessibility smoke.
 
-Si Playwright falla en CI, se conservan temporalmente los artefactos de fallo disponibles en `test-results/`, como screenshots y trazas generadas por la política configurada.
+No existe un required check independiente para Playwright ni para Axe.
 
-La política de actualización y mantenimiento de dependencias se documenta en [docs/dependency-maintenance.md](docs/dependency-maintenance.md).
+CodeQL se ejecuta mediante un workflow de seguridad independiente y complementario.
+
+Si Playwright falla, los artefactos disponibles en `test-results/` pueden conservarse temporalmente para facilitar el diagnóstico.
+
+La política detallada de actualización y seguridad se documenta en [docs/dependency-maintenance.md](docs/dependency-maintenance.md).
 
 ## 📦 Gestión de dependencias
 
 El proyecto utiliza **npm** como único package manager soportado.
 
-`packageManager` fija `npm@11.19.0` como versión de referencia, mientras que `engines.npm` y `devEngines.packageManager` permiten cualquier npm compatible dentro de `>=11.19.0 <12`.
+`packageManager`, `engines` y `devEngines` definen el contrato de entorno.
 
-`package.json` y `package-lock.json` deben permanecer siempre sincronizados.
-
-Las instalaciones reproducibles en desarrollo, CI y despliegue se realizan mediante:
-
-```bash
-npm ci
-```
+`package.json` y `package-lock.json` deben permanecer sincronizados.
 
 No se debe editar `package-lock.json` manualmente ni utilizar opciones como:
 
@@ -273,69 +302,125 @@ npm ci --force
 npm ci --legacy-peer-deps
 ```
 
-para ocultar conflictos entre dependencias o saltarse el contrato de entorno.
+para ocultar conflictos o saltarse el contrato de entorno.
 
-Las actualizaciones major deben revisarse de manera independiente cuando puedan implicar:
+Dependabot revisa periódicamente:
 
-- cambios de API;
-- cambios en peer dependencies;
-- modificaciones de tipos;
-- migraciones de configuración;
-- diferencias visuales;
-- cambios en compatibilidad de navegadores;
-- regresiones funcionales.
+- dependencias npm;
+- GitHub Actions.
 
-Dependabot revisa periódicamente tanto dependencias npm como GitHub Actions.
+Las actualizaciones normales pueden agruparse por familias relacionadas.
 
-Cuando se actualice Playwright debe regenerarse el lockfile y volver a instalarse el Chromium correspondiente a la nueva versión antes de ejecutar la smoke suite.
+Las actualizaciones de seguridad npm se agrupan cuando es posible para permitir remediaciones coordinadas y evitar que varias PR dependientes se bloqueen mutuamente.
 
-Cuando se actualice `@axe-core/playwright` debe revisarse también el cambio de reglas y tags de Axe porque puede modificar qué problemas de accesibilidad detecta la suite.
+La configuración de Dependabot se activa únicamente desde:
+
+```text
+.github/dependabot.yml
+```
+
+en la rama por defecto.
+
+Por tanto, es normal que GitHub muestre un aviso indicando que Dependabot no puede configurarse desde una branch de trabajo.
+
+Cuando se actualice Playwright debe volver a instalarse el Chromium correspondiente antes de ejecutar la smoke suite.
+
+Cuando se actualice `@axe-core/playwright` deben revisarse los cambios de reglas, impactos y tags soportados, ya que una actualización puede descubrir problemas de accesibilidad que la versión anterior no detectaba.
 
 ## 🔐 Seguridad de dependencias
 
-La auditoría utilizada por el proyecto es:
+El proyecto separa dos controles diferentes.
+
+### Seguridad incremental de las PR
+
+Dependency Review compara la PR con `main` y bloquea regresiones según esta política:
+
+```text
+runtime / unknown:
+  moderate, high, critical → bloquean
+
+development:
+  high, critical → bloquean
+  moderate → no bloquea
+```
+
+El objetivo del required check es impedir que una PR empeore la seguridad, no obligarla a resolver todas las vulnerabilidades históricas existentes.
+
+### Estado absoluto de `main`
+
+El estado completo del árbol se revisa mediante:
 
 ```bash
 npm run audit:security
 ```
 
-que ejecuta:
+La política es:
 
-```bash
-npm audit --audit-level=high
+```text
+todo el árbol:
+  high, critical → error
+
+dependencias de producción:
+  moderate, high, critical → error
+
+development:
+  moderate → seguimiento
 ```
 
-Las vulnerabilidades de severidad alta o crítica bloquean CI y despliegue.
+Además:
 
-Una instalación correcta mediante `npm ci` no garantiza por sí sola que la auditoría de seguridad vaya a pasar, ya que una dependencia transitiva puede quedar afectada por una vulnerabilidad aunque el árbol de dependencias sea técnicamente resoluble.
+```bash
+npm run audit:security:moderate
+```
 
-El proyecto utiliza además:
+permite revisar las vulnerabilidades `moderate` del árbol completo.
+
+El workflow periódico `Dependency audit` aplica esta política a `main`.
+
+Las vulnerabilidades `moderate` limitadas a tooling de desarrollo pueden mantenerse temporalmente como warnings cuando todavía no exista una remediación compatible.
+
+Una vulnerabilidad descubierta posteriormente en una dependencia que ya está en `main` debe generar una remediación de seguridad, pero no congelar PRs no relacionadas.
+
+El proyecto utiliza también:
 
 ```text
 strict-allow-scripts=true
 ```
 
-para evitar la ejecución indiscriminada de scripts de instalación de dependencias.
-
-Los browsers de Playwright se instalan explícitamente mediante su CLI; no se añaden paquetes de browsers ni se relaja la política de scripts del proyecto para descargarlos durante `npm ci`.
+para evitar la ejecución indiscriminada de scripts de instalación.
 
 ## 🔎 Seguridad estática
 
-CodeQL analiza JavaScript/TypeScript como una capa independiente de análisis estático de seguridad, complementaria a los controles de dependencias basados en `npm audit` y Dependabot.
+CodeQL analiza JavaScript/TypeScript como una capa independiente de análisis estático.
 
-El workflow se ejecuta en pull requests hacia `main`, pushes a `main`, semanalmente y bajo demanda. Utiliza la query suite `default` de CodeQL para priorizar resultados de alta precisión y no repite la instalación, el build ni la suite funcional del proyecto.
+Las responsabilidades quedan separadas:
 
-Los hallazgos se publican en **Security → Code scanning** y, cuando proceda, aparecen asociados a los checks y annotations de las pull requests.
+```text
+Dependency Review
+  → evita introducir dependencias vulnerables
 
-CodeQL complementa TypeScript, ESLint, tests y controles de dependencias; no garantiza la ausencia de vulnerabilidades ni sustituye una revisión de seguridad específica cuando sea necesaria.
+Dependency audit
+  → supervisa el estado absoluto de main
+
+Dependabot
+  → propone actualizaciones y remediaciones
+
+CodeQL
+  → analiza vulnerabilidades en el código
+
+CI funcional
+  → valida formato, lint, tests, build y E2E
+```
+
+Ninguna capa por separado garantiza la ausencia de vulnerabilidades.
 
 ## 🖼️ Gestión de imágenes
 
-Todos los recursos visuales utilizados directamente por la interfaz están almacenados en `public/assets/` y se referencian mediante `assetPath()`.
+Los recursos visuales utilizados directamente por la interfaz están almacenados en `public/assets/` y se referencian mediante `assetPath()`.
 
-`assetPath()` tiene en cuenta las entradas localizadas para que los recursos sigan resolviéndose desde `public/assets/` tanto desde la raíz como desde `/ca/`, `/es/` y `/en/`.
+Las imágenes raster soportadas se evalúan automáticamente durante desarrollo y build para generar variantes responsive cuando aportan una reducción real del tamaño transferido.
 
-Esto evita que logos, insignias o fotografías desaparezcan por cambios, bloqueos o caducidad de servidores externos y evita que las URLs localizadas intenten resolver incorrectamente los recursos dentro de sus propios subdirectorios.
+La arquitectura específica se documenta en [docs/image-delivery.md](docs/image-delivery.md).
 
 Los enlaces de credenciales, LinkedIn, Analytics y otros destinos de navegación pueden seguir siendo URLs externas porque no son recursos gráficos necesarios para renderizar la interfaz.
 
@@ -343,53 +428,36 @@ La smoke suite E2E no depende de Google Analytics ni de otros recursos externos 
 
 ## ♿ Accesibilidad y movimiento
 
-Las animaciones de entrada y los elementos interactivos tienen en cuenta:
+Las animaciones y elementos interactivos respetan:
 
 ```css
 prefers-reduced-motion: reduce;
 ```
 
-Cuando el usuario solicita movimiento reducido:
+La capa de accessibility smoke utiliza `@axe-core/playwright` sobre Chromium y cubre estados representativos de la interfaz, incluyendo:
 
-- se eliminan las animaciones decorativas;
-- se eliminan transiciones no esenciales;
-- el carrusel de acreditadores no se desplaza automáticamente;
-- el contenido sigue siendo completamente accesible mediante navegación manual.
+- los tres idiomas;
+- menú móvil abierto;
+- carrusel interactivo;
+- semántica y orden de foco;
+- elementos ocultos del carrusel.
 
-Playwright valida este comportamiento utilizando la preferencia de movimiento reducido del contexto real de Chromium, sin mockear `matchMedia`.
+Los scans se limitan a tags WCAG A/AA configurados expresamente.
 
-La capa de accessibility smoke utiliza `@axe-core/playwright` sobre el mismo Chromium y cubre como mínimo:
+Solo deben utilizarse tags y reglas realmente soportados por la versión instalada de Axe.
 
-- la página principal desktop en catalán, castellano e inglés;
-- la correspondencia entre el idioma activo y `document.documentElement.lang`;
-- el menú móvil después de abrirlo realmente;
-- el carrusel de certificaciones en un estado interactivo con foco de teclado;
-- las copias `aria-hidden` del carrusel, que deben permanecer fuera del tab order.
+No se deben inventar tags ni habilitar reglas experimentales únicamente para ampliar artificialmente la cobertura.
 
-Los scans se limitan a reglas WCAG A/AA etiquetadas por Axe mediante:
-
-```text
-wcag2a
-wcag2aa
-wcag21a
-wcag21aa
-wcag22aa
-```
-
-Axe 4.13 no expone un tag `wcag22a` independiente. No se inventa ese tag ni se habilitan reglas experimentales manualmente.
-
-La baseline inicial bloquea violations Axe con impacto:
+La baseline actual bloquea violations Axe con impacto:
 
 ```text
 critical
 serious
 ```
 
-Las violations `moderate` y `minor` no bloquean CI en esta baseline inicial, pero tampoco se desactivan reglas para conseguir un resultado verde.
+Las violations `moderate` y `minor` no bloquean CI actualmente, pero tampoco se desactivan reglas para conseguir un resultado verde.
 
-No se excluyen globalmente componentes como el carrusel o el menú móvil. Cuando un estado está oculto por defecto, Playwright lo activa antes de ejecutar Axe para analizar el DOM interactivo real.
-
-Axe automatiza únicamente una parte de la evaluación de accesibilidad. Esta capa **no sustituye** revisiones manuales de teclado, foco, lector de pantalla, contenido, zoom, reflow ni una auditoría WCAG completa.
+Axe automatiza únicamente una parte de la evaluación de accesibilidad y no sustituye revisiones manuales de teclado, foco, lector de pantalla, contenido, zoom, reflow ni una auditoría WCAG completa.
 
 ## 🌍 Arquitectura multilingüe y SEO
 
@@ -401,48 +469,33 @@ El portfolio utiliza tres URLs canónicas e indexables:
 /JNR/en/
 ```
 
-Cada locale es una entrada HTML real de Vite y comparte la misma aplicación React, los mismos componentes y los mismos datos tipados.
+Cada locale es una entrada HTML real de Vite y comparte la misma aplicación React, componentes y datos tipados.
 
-Los documentos localizados incluyen antes de cargar React su `lang`, title, description, canonical, hreflang, Open Graph, Twitter Cards y JSON-LD de tipo `Person`.
+Los documentos localizados incluyen antes de cargar React:
 
-La raíz `/JNR/` no es una copia indexable adicional del portfolio. Funciona como entrada `noindex,follow`, utiliza la preferencia almacenada o el idioma compatible del navegador y emplea español como fallback.
+- `lang`;
+- title;
+- description;
+- canonical;
+- hreflang;
+- Open Graph;
+- Twitter Cards;
+- JSON-LD.
 
-Dentro de una URL localizada, el locale de la propia URL es siempre autoritativo. La preferencia almacenada no puede sustituir un `/ca/`, `/es/` o `/en/` explícito.
+La raíz `/JNR/` funciona como entrada `noindex,follow` y redirige al idioma correspondiente.
 
-Cambiar de idioma navega directamente al documento localizado equivalente sin aplicar primero un estado React transitorio. La nueva página sincroniza después el locale explícito con `localStorage`.
+Dentro de una URL localizada, el locale de la propia URL es siempre autoritativo.
 
-GitHub Pages utiliza un único `404.html` estático. La página 404 determina su idioma mediante esta prioridad:
-
-```text
-locale explícito en la URL solicitada
-  ↓
-referrer localizado del propio portfolio
-  ↓
-preferencia almacenada
-  ↓
-idioma compatible del navegador
-  ↓
-español
-```
-
-La 404 localiza su título, descripción, contenido y acción de retorno, mantiene el mismo favicon del portfolio y devuelve directamente a la URL del locale resuelto.
-
-El sitemap publica únicamente las tres URLs canónicas e incluye alternates `hreflang` recíprocos y `x-default`.
+El sitemap publica las tres URLs canónicas con alternates `hreflang` recíprocos y `x-default`.
 
 La arquitectura completa se documenta en [docs/multilingual-seo.md](docs/multilingual-seo.md).
 
 ## 🚢 Despliegue
 
-Las pull requests se validan mediante el workflow de CI antes del merge.
-
-Después de integrar una pull request en `main`, el push resultante activa el workflow de GitHub Pages.
-
-El pipeline de despliegue vuelve a ejecutar:
+Después de integrar una PR en `main`, GitHub Pages ejecuta:
 
 ```text
-npm ci
-  ↓
-npm run audit:security
+npm ci --no-audit --fund=false
   ↓
 npm run check
   ↓
@@ -453,17 +506,13 @@ Upload GitHub Pages artifact
 Deploy GitHub Pages
 ```
 
-Esto garantiza que el código desplegado se valida nuevamente desde una instalación limpia, incluso aunque la pull request ya haya superado el CI.
+El despliegue no ejecuta un audit absoluto del árbol.
 
-El build genera las entradas localizadas que terminan desplegadas como:
+La seguridad de las nuevas dependencias ya ha sido evaluada mediante Dependency Review antes del merge y el estado absoluto de `main` se supervisa mediante `Dependency audit`.
 
-```text
-dist/ca/index.html
-dist/es/index.html
-dist/en/index.html
-```
+Esta separación evita que una vulnerabilidad descubierta posteriormente en una dependencia ya existente impida desplegar su propia corrección u otro cambio no relacionado.
 
-La smoke suite Playwright permanece deliberadamente fuera de `npm run check`. El workflow de deploy no instala Chromium ni vuelve a ejecutar E2E; esa responsabilidad pertenece al job requerido `validate` de la pull request.
+Playwright permanece fuera del workflow de deploy porque la smoke suite E2E ya forma parte del required check `validate` de la PR.
 
 ## ©️ Licencia
 
