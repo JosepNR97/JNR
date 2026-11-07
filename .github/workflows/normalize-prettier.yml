@@ -6,16 +6,22 @@ on:
       - 'Mejoras'
     paths:
       - '.github/workflows/normalize-prettier.yml'
+      - '.prettierignore'
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: normalize-prettier-${{ github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   format:
     if: github.actor != 'github-actions[bot]'
     name: Normalize Prettier baseline
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -24,41 +30,78 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Setup Node
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '24.15.0'
-          package-manager-cache: false
-
-      - name: Bootstrap project npm version
+      - name: Read toolchain contract
+        id: toolchain
         shell: bash
         run: |
           set -euo pipefail
 
-          echo "Bundled npm:"
+          NODE_RANGE="$(jq -r '.engines.node // empty' package.json)"
+          PACKAGE_MANAGER="$(jq -r '.packageManager // empty' package.json)"
+
+          if [ -z "$NODE_RANGE" ]; then
+            echo "::error::package.json does not define engines.node."
+            exit 1
+          fi
+
+          case "$PACKAGE_MANAGER" in
+            npm@*)
+              NPM_VERSION="${PACKAGE_MANAGER#npm@}"
+              ;;
+            *)
+              echo "::error::package.json packageManager must use npm@version."
+              exit 1
+              ;;
+          esac
+
+          if [ -z "$NPM_VERSION" ]; then
+            echo "::error::Unable to determine npm version."
+            exit 1
+          fi
+
+          echo "Node contract: $NODE_RANGE"
+          echo "npm version:   $NPM_VERSION"
+
+          echo "node_range=$NODE_RANGE" >> "$GITHUB_OUTPUT"
+          echo "npm_version=$NPM_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ steps.toolchain.outputs.node_range }}
+          package-manager-cache: false
+
+      - name: Bootstrap project npm version
+        shell: bash
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+        run: |
+          set -euo pipefail
+
+          echo "Bundled npm before bootstrap:"
           npm --version
 
           cd "$RUNNER_TEMP"
-          npm install --global npm@11.19.0
+          npm install --global "npm@${REQUIRED_NPM_VERSION}"
 
       - name: Verify runtime
         shell: bash
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+          REQUIRED_NODE_RANGE: ${{ steps.toolchain.outputs.node_range }}
         run: |
           set -euo pipefail
 
           NODE_VERSION="$(node --version)"
           NPM_VERSION="$(npm --version)"
 
-          echo "Node: $NODE_VERSION"
-          echo "npm:  $NPM_VERSION"
+          echo "Required Node range: $REQUIRED_NODE_RANGE"
+          echo "Actual Node:         $NODE_VERSION"
+          echo "Required npm:        $REQUIRED_NPM_VERSION"
+          echo "Actual npm:          $NPM_VERSION"
 
-          if [ "$NODE_VERSION" != "v24.15.0" ]; then
-            echo "::error::Expected Node v24.15.0 but found $NODE_VERSION."
-            exit 1
-          fi
-
-          if [ "$NPM_VERSION" != "11.19.0" ]; then
-            echo "::error::Expected npm 11.19.0 but found $NPM_VERSION."
+          if [ "$NPM_VERSION" != "$REQUIRED_NPM_VERSION" ]; then
+            echo "::error::Expected npm $REQUIRED_NPM_VERSION but found $NPM_VERSION."
             exit 1
           fi
 
@@ -68,17 +111,52 @@ jobs:
           set -euo pipefail
           npm ci
 
+      - name: Audit dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run audit:security
+
       - name: Preserve package-lock.json
         shell: bash
         run: |
           set -euo pipefail
           cp package-lock.json "$RUNNER_TEMP/package-lock.json.before"
 
-      - name: Format repository
+      - name: Create temporary Prettier ignore
         shell: bash
         run: |
           set -euo pipefail
-          npm run format
+
+          cp .prettierignore .prettierignore.normalize
+
+          {
+            echo
+            echo "# Temporary exclusion for automated baseline normalization."
+            echo "# Workflows remain covered by the permanent format:check."
+            echo ".github/workflows/**"
+          } >> .prettierignore.normalize
+
+      - name: Format repository except GitHub Actions workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npx prettier \
+            --write . \
+            --ignore-path .prettierignore.normalize
+
+          rm .prettierignore.normalize
+
+      - name: Verify temporary ignore was removed
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -e .prettierignore.normalize ]; then
+            echo "::error::Temporary Prettier ignore file was not removed."
+            exit 1
+          fi
 
       - name: Verify package-lock.json was not modified
         shell: bash
@@ -87,27 +165,92 @@ jobs:
 
           if ! cmp --silent "$RUNNER_TEMP/package-lock.json.before" package-lock.json; then
             echo "::error::Prettier unexpectedly modified package-lock.json."
+            diff -u "$RUNNER_TEMP/package-lock.json.before" package-lock.json || true
             exit 1
           fi
 
-      - name: Review formatting diff
+      - name: Stage and inspect formatting changes
+        id: formatting
         shell: bash
         run: |
           set -euo pipefail
 
-          git diff --check
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "Repository already matches the Prettier baseline."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           echo "Files normalized by Prettier:"
-          git diff --name-only
+          git diff --cached --name-only
 
-      - name: Commit formatting baseline
+          echo
+          echo "Formatting diff summary:"
+          git diff --cached --stat
+
+          git diff --cached --check
+
+          if git diff --cached --name-only | grep -q '^\.github/workflows/'; then
+            echo "::error::Refusing to modify GitHub Actions workflow files automatically."
+            exit 1
+          fi
+
+          if git diff --cached --name-only | grep -q '^package-lock\.json$'; then
+            echo "::error::Refusing to modify package-lock.json during formatting."
+            exit 1
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Validate formatted project
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+
+      - name: Install Playwright Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run test:e2e
+
+      - name: Verify validation did not modify tracked files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! git diff --quiet; then
+            echo "::error::Validation introduced unstaged tracked changes."
+            echo
+            echo "Files modified during validation:"
+            git diff --name-only
+            exit 1
+          fi
+
+          UNTRACKED_FILES="$(git ls-files --others --exclude-standard)"
+
+          if [ -n "$UNTRACKED_FILES" ]; then
+            echo "::error::Validation introduced unexpected untracked files:"
+            echo "$UNTRACKED_FILES"
+            exit 1
+          fi
+
+      - name: Commit validated formatting baseline
         id: commit
         shell: bash
         run: |
           set -euo pipefail
 
-          if git diff --quiet; then
-            echo "Repository already matches the Prettier baseline."
+          if git diff --cached --quiet; then
+            echo "No formatting changes need to be committed."
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -115,33 +258,36 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add -A
           git commit -m "style: normalize Prettier baseline"
-          git push origin HEAD:refs/heads/Mejoras
+          git push origin "HEAD:refs/heads/Mejoras"
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
-
-      - name: Validate normalized repository
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm run check
 
       - name: Summary
         if: always()
         shell: bash
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+          REQUIRED_NODE_RANGE: ${{ steps.toolchain.outputs.node_range }}
         run: |
           {
             echo "## Prettier baseline normalization"
             echo
             echo "- Branch: \`Mejoras\`"
-            echo "- Node: \`24.15.0\`"
-            echo "- npm: \`11.19.0\`"
-            echo "- package-lock.json protected from formatting changes"
+            echo "- Node contract: \`${REQUIRED_NODE_RANGE}\`"
+            echo "- npm: \`${REQUIRED_NPM_VERSION}\`"
+            echo "- package-lock.json protected"
+            echo "- GitHub Actions workflows excluded only from automated rewriting"
+            echo "- GitHub Actions workflows remain covered by format:check"
+            echo "- Security audit executed before commit"
+            echo "- Prettier, ESLint, tests and production build validated before commit"
+            echo "- Playwright E2E validated before commit"
             echo
             if [ "${{ steps.commit.outputs.changed }}" = "true" ]; then
-              echo "Formatting changes were committed to \`Mejoras\`."
+              echo "Validated formatting changes were committed to \`Mejoras\`."
+            elif [ "${{ steps.formatting.outputs.changed }}" = "false" ]; then
+              echo "The repository already matched the Prettier baseline."
             else
-              echo "No formatting changes were required."
+              echo "No formatting commit was produced."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
