@@ -173,66 +173,119 @@ jobs:
 
           cp package-lock.json "$RUNNER_TEMP/package-lock.json.before"
 
-      - name: Create temporary autofix ignore
+      - name: Identify branch-changed files
+        id: changed_files
         shell: bash
         run: |
           set -euo pipefail
 
-          cp .prettierignore .prettierignore.autofix
+          git fetch --no-tags origin main
 
-          {
-            echo
-            echo "# Automated formatting must never rewrite workflow files."
-            echo ".github/workflows/**"
-          } >> .prettierignore.autofix
+          BASE_SHA="$(git merge-base origin/main HEAD)"
+          HEAD_SHA="$(git rev-parse HEAD)"
 
-      - name: Apply Prettier formatting
-        shell: bash
-        run: |
-          set -euo pipefail
+          echo "Base commit: $BASE_SHA"
+          echo "Head commit: $HEAD_SHA"
 
-          npx prettier \
-            --write . \
-            --ignore-path .prettierignore.autofix
+          : > "$RUNNER_TEMP/prettier-files"
 
-      - name: Verify formatted files
-        shell: bash
-        run: |
-          set -euo pipefail
+          mapfile -d '' CANDIDATES < <(
+            git diff \
+              --name-only \
+              --diff-filter=ACMRTUXB \
+              -z \
+              "$BASE_SHA" \
+              "$HEAD_SHA"
+          )
 
-          npx prettier \
-            --check . \
-            --ignore-path .prettierignore.autofix
+          FORMAT_FILES=()
 
-          rm .prettierignore.autofix
+          for file in "${CANDIDATES[@]}"; do
+            if [ ! -f "$file" ]; then
+              continue
+            fi
 
-      - name: Verify protected files
-        shell: bash
-        run: |
-          set -euo pipefail
+            case "$file" in
+              package-lock.json)
+                echo "Protected file skipped: $file"
+                continue
+                ;;
+              .github/workflows/*)
+                echo "Protected workflow skipped: $file"
+                continue
+                ;;
+            esac
 
-          if [ -e .prettierignore.autofix ]; then
-            echo "::error::Temporary Prettier ignore file was not removed."
-            exit 1
+            FORMAT_FILES+=("$file")
+          done
+
+          if [ "${#FORMAT_FILES[@]}" -gt 0 ]; then
+            printf '%s\0' "${FORMAT_FILES[@]}" > "$RUNNER_TEMP/prettier-files"
           fi
+
+          echo "Files eligible for automatic formatting: ${#FORMAT_FILES[@]}"
+
+          for file in "${FORMAT_FILES[@]}"; do
+            echo "  - $file"
+          done
+
+          echo "count=${#FORMAT_FILES[@]}" >> "$GITHUB_OUTPUT"
+
+      - name: Apply Prettier to branch-changed files
+        if: steps.changed_files.outputs.count != '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -d '' FILES < "$RUNNER_TEMP/prettier-files"
+
+          npx prettier \
+            --write \
+            --ignore-unknown \
+            -- "${FILES[@]}"
+
+      - name: Verify complete Prettier baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm run format:check
+
+      - name: Verify autofix scope
+        shell: bash
+        run: |
+          set -euo pipefail
 
           if ! cmp --silent "$RUNNER_TEMP/package-lock.json.before" package-lock.json; then
             echo "::error::Prettier unexpectedly modified package-lock.json."
             exit 1
           fi
 
-          MODIFIED_FILES="$(git diff --name-only)"
+          declare -A ALLOWED_FILES=()
 
-          if echo "$MODIFIED_FILES" | grep -q '^\.github/workflows/'; then
-            echo "::error::Refusing to modify GitHub Actions workflow files automatically."
-            echo "$MODIFIED_FILES"
-            exit 1
+          if [ -s "$RUNNER_TEMP/prettier-files" ]; then
+            while IFS= read -r -d '' file; do
+              ALLOWED_FILES["$file"]=1
+            done < "$RUNNER_TEMP/prettier-files"
           fi
 
-          if echo "$MODIFIED_FILES" | grep -q '^package-lock\.json$'; then
-            echo "::error::Refusing to modify package-lock.json."
-            exit 1
-          fi
+          while IFS= read -r -d '' file; do
+            case "$file" in
+              package-lock.json)
+                echo "::error::Refusing to modify package-lock.json."
+                exit 1
+                ;;
+              .github/workflows/*)
+                echo "::error::Refusing to modify GitHub Actions workflow files automatically."
+                exit 1
+                ;;
+            esac
+
+            if [ -z "${ALLOWED_FILES[$file]+x}" ]; then
+              echo "::error::Prettier modified a file outside the branch-change allowlist: $file"
+              exit 1
+            fi
+          done < <(git diff --name-only -z)
 
           git diff --check
 
@@ -242,10 +295,18 @@ jobs:
         run: |
           set -euo pipefail
 
-          git add -A
+          if [ ! -s "$RUNNER_TEMP/prettier-files" ]; then
+            echo "No branch-changed files were eligible for automatic formatting."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          mapfile -d '' FILES < "$RUNNER_TEMP/prettier-files"
+
+          git add -- "${FILES[@]}"
 
           if git diff --cached --quiet; then
-            echo "Repository already matches the Prettier baseline."
+            echo "Branch-changed files already match the Prettier baseline."
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -280,15 +341,26 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          FORMATTED_COMMIT: ${{ steps.commit.outputs.commit_sha }}
         run: |
           set -euo pipefail
 
-          gh api \
-            --method POST \
-            "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/dispatches" \
-            -f ref="$TARGET_BRANCH"
+          jq -n \
+            --arg ref "$TARGET_BRANCH" \
+            --arg head_ref "$FORMATTED_COMMIT" \
+            '{
+              ref: $ref,
+              inputs: {
+                base_ref: "main",
+                head_ref: $head_ref
+              }
+            }' |
+            gh api \
+              --method POST \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/dispatches" \
+              --input -
 
-          echo "CI dispatched for branch: $TARGET_BRANCH"
+          echo "CI dispatched for formatted commit: $FORMATTED_COMMIT"
 
       - name: Summary
         if: always()
@@ -303,13 +375,15 @@ jobs:
             echo "- Branch: \`${TARGET_BRANCH}\`"
             echo "- Node contract: \`${REQUIRED_NODE_RANGE}\`"
             echo "- npm: \`${REQUIRED_NPM_VERSION}\`"
-            echo "- package-lock.json protected"
-            echo "- GitHub Actions workflows protected from automated rewriting"
+            echo "- Automatic formatting scope: files changed by the branch relative to \`main\`"
+            echo "- Global Prettier baseline: checked across the repository"
+            echo "- \`package-lock.json\`: protected"
+            echo "- \`.github/workflows/**\`: protected from automated rewriting"
             echo
             if [ "${{ steps.commit.outputs.changed }}" = "true" ]; then
               echo "Formatting fixes were committed automatically."
               echo
-              echo "CI was dispatched against the corrected branch."
+              echo "CI was explicitly dispatched against the corrected commit."
             elif [ "${{ steps.formatting.outputs.changed }}" = "false" ]; then
               echo "No formatting fixes were required."
             else
