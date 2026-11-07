@@ -28,5 +28,29 @@ jobs:
       - name: Setup npm
         run: npm install --global npm@11.19.0
 
-      - name: Audit high severity vulnerabilities
+      - name: Enforce dependency security policy
         run: npm run audit:security
+
+      - name: Check moderate vulnerabilities in full dependency tree
+        id: moderate_audit
+        continue-on-error: true
+        run: npm run audit:security:moderate
+
+      - name: Report moderate development vulnerabilities
+        if: steps.moderate_audit.outcome == 'failure'
+        shell: bash
+        run: |
+          {
+            echo "## Dependency security notice"
+            echo
+            echo "Moderate vulnerabilities remain in the full dependency tree."
+            echo
+            echo "The enforced security policy still passed, which means:"
+            echo
+            echo "- no high or critical vulnerabilities were detected; and"
+            echo "- no moderate vulnerabilities were detected in production dependencies."
+            echo
+            echo "The remaining moderate findings are currently limited to development dependencies and should be reviewed when compatible upstream fixes become available."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "::warning::Moderate vulnerabilities remain in development dependencies. Review npm audit output and upstream dependency updates."
