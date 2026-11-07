@@ -24,6 +24,26 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Review runtime dependency security
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: 'moderate'
+          fail-on-scopes: 'runtime, unknown'
+          vulnerability-check: true
+          license-check: false
+          show-openssf-scorecard: false
+
+      - name: Review development dependency security
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: 'high'
+          fail-on-scopes: 'development'
+          vulnerability-check: true
+          license-check: false
+          show-openssf-scorecard: false
+
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -35,9 +55,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --no-audit --fund=false
-
-      - name: Audit dependencies
-        run: npm run audit:security
 
       - name: Validate and build
         run: npm run check
