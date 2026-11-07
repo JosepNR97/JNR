@@ -87,7 +87,7 @@ const LanguageSelector = ({
           key={code}
           type="button"
           lang={code}
-          aria-label={label}
+          aria-label={`${code.toUpperCase()} — ${label}`}
           aria-pressed={language === code}
           onClick={() => onChange(code)}
           className={getButtonClassName(code)}
