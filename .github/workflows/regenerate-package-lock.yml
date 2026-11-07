@@ -1,0 +1,304 @@
+name: Regenerate package-lock
+
+on:
+  # Bootstrap / maintenance mode.
+  # Allows the workflow to run before it exists in main.
+  push:
+    branches:
+      - 'Mejoras'
+      - 'maintenance/**'
+      - 'security/**'
+    paths:
+      - 'package.json'
+      - '.github/workflows/regenerate-package-lock.yml'
+
+  # Permanent/manual mode.
+  # Once this workflow exists in main, it can also be launched manually
+  # against any maintenance branch.
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to regenerate (never main or a Dependabot branch)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regenerate-package-lock-${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  regenerate:
+    name: Regenerate package-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
+
+    steps:
+      - name: Validate target branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Target branch: $TARGET_BRANCH"
+
+          if [ -z "$TARGET_BRANCH" ]; then
+            echo "::error::A target branch is required."
+            exit 1
+          fi
+
+          if [ "$TARGET_BRANCH" = "main" ]; then
+            echo "::error::This workflow must never modify main directly."
+            exit 1
+          fi
+
+          case "$TARGET_BRANCH" in
+            dependabot/*)
+              echo "::error::Do not modify Dependabot branches directly."
+              exit 1
+              ;;
+          esac
+
+          git check-ref-format --branch "$TARGET_BRANCH"
+
+      - name: Checkout target branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Read toolchain contract
+        id: toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          NODE_RANGE="$(jq -r '.engines.node // empty' package.json)"
+          PACKAGE_MANAGER="$(jq -r '.packageManager // empty' package.json)"
+
+          if [ -z "$NODE_RANGE" ]; then
+            echo "::error::package.json does not define engines.node."
+            exit 1
+          fi
+
+          case "$PACKAGE_MANAGER" in
+            npm@*)
+              NPM_VERSION="${PACKAGE_MANAGER#npm@}"
+              ;;
+            *)
+              echo "::error::package.json packageManager must use the npm@version format."
+              exit 1
+              ;;
+          esac
+
+          if [ -z "$NPM_VERSION" ]; then
+            echo "::error::Unable to determine the npm version from packageManager."
+            exit 1
+          fi
+
+          echo "Node contract: $NODE_RANGE"
+          echo "npm reference version: $NPM_VERSION"
+
+          echo "node_range=$NODE_RANGE" >> "$GITHUB_OUTPUT"
+          echo "npm_version=$NPM_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ steps.toolchain.outputs.node_range }}
+
+          # setup-node v7 can automatically invoke the npm bundled with Node
+          # to configure its cache. That npm version may be older than the
+          # project's devEngines requirement, so automatic npm caching must
+          # remain disabled until the project npm version has been bootstrapped.
+          package-manager-cache: false
+
+      - name: Bootstrap project npm version
+        shell: bash
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+        run: |
+          set -euo pipefail
+
+          echo "Bundled npm before bootstrap:"
+          npm --version
+
+          # Run outside the repository so the bundled npm does not evaluate
+          # this project's devEngines before it has been upgraded.
+          cd "$RUNNER_TEMP"
+
+          npm install --global "npm@${REQUIRED_NPM_VERSION}"
+
+      - name: Verify runtime
+        shell: bash
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+          REQUIRED_NODE_RANGE: ${{ steps.toolchain.outputs.node_range }}
+        run: |
+          set -euo pipefail
+
+          NODE_VERSION="$(node --version)"
+          NPM_VERSION="$(npm --version)"
+
+          echo "Required Node range: $REQUIRED_NODE_RANGE"
+          echo "Actual Node:         $NODE_VERSION"
+          echo "Required npm:        $REQUIRED_NPM_VERSION"
+          echo "Actual npm:          $NPM_VERSION"
+
+          if [ "$NPM_VERSION" != "$REQUIRED_NPM_VERSION" ]; then
+            echo "::error::Expected npm $REQUIRED_NPM_VERSION but found $NPM_VERSION."
+            exit 1
+          fi
+
+      - name: Preserve package.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp package.json "$RUNNER_TEMP/package.json.before"
+
+      - name: Regenerate package-lock.json
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm install \
+            --package-lock-only \
+            --ignore-scripts
+
+      - name: Apply non-breaking security fixes to package-lock.json
+        id: audit_fix
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Apply only fixes that npm can resolve inside the dependency ranges
+          # already allowed by package.json.
+          #
+          # --package-lock-only:
+          #   modifies the lockfile resolution without installing packages.
+          #
+          # --ignore-scripts:
+          #   prevents dependency lifecycle scripts during lockfile generation.
+          #
+          # --audit-level=high:
+          #   Moderate-only advisories do not make this maintenance step fail.
+          #
+          # IMPORTANT:
+          #   Never add --force here. A fix requiring a major/breaking change
+          #   must be reviewed explicitly instead.
+          npm audit fix \
+            --package-lock-only \
+            --ignore-scripts \
+            --audit-level=high
+
+      - name: Verify package.json was not modified
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! cmp --silent "$RUNNER_TEMP/package.json.before" package.json; then
+            echo "::error::npm unexpectedly modified package.json."
+            diff -u "$RUNNER_TEMP/package.json.before" package.json || true
+            exit 1
+          fi
+
+      - name: Verify generated diff
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git diff --check
+
+          echo "Files modified by lockfile regeneration:"
+          git diff --name-only
+
+          UNEXPECTED_FILES="$(
+            git diff --name-only |
+            grep -v '^package-lock\.json$' || true
+          )"
+
+          if [ -n "$UNEXPECTED_FILES" ]; then
+            echo "::error::Lockfile regeneration modified unexpected tracked files:"
+            echo "$UNEXPECTED_FILES"
+            exit 1
+          fi
+
+      - name: Validate clean installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+
+      - name: Commit regenerated package-lock.json
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- package-lock.json; then
+            echo "package-lock.json is already synchronized."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add package-lock.json
+
+          STAGED_FILES="$(git diff --cached --name-only)"
+
+          if [ "$STAGED_FILES" != "package-lock.json" ]; then
+            echo "::error::Refusing to commit files other than package-lock.json."
+            echo "$STAGED_FILES"
+            exit 1
+          fi
+
+          git commit -m "chore: regenerate and secure package-lock"
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Audit regenerated dependency tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run audit:security
+
+      - name: Validate project
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+
+      - name: Summary
+        if: always()
+        shell: bash
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+          REQUIRED_NODE_RANGE: ${{ steps.toolchain.outputs.node_range }}
+          AUDIT_FIX_OUTCOME: ${{ steps.audit_fix.outcome }}
+        run: |
+          {
+            echo "## package-lock regeneration"
+            echo
+            echo "- Branch: \`${TARGET_BRANCH}\`"
+            echo "- Node contract: \`${REQUIRED_NODE_RANGE}\`"
+            echo "- npm: \`${REQUIRED_NPM_VERSION}\`"
+            echo "- Safe audit-fix outcome: \`${AUDIT_FIX_OUTCOME}\`"
+            echo "- package.json protected against unexpected changes"
+            echo "- package-lock.json generated by npm"
+            echo "- clean npm ci executed"
+            echo
+            if [ "${{ steps.commit.outputs.changed }}" = "true" ]; then
+              echo "A regenerated \`package-lock.json\` was committed to the branch."
+            else
+              echo "\`package-lock.json\` was already synchronized."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
