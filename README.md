@@ -16,43 +16,43 @@ La raíz `/JNR/` actúa como punto de entrada de idioma. Redirige a la preferenc
 
 ## ✨ Funcionalidades
 
-* 🌍 Contenido disponible en catalán, castellano e inglés mediante URLs estables `/ca/`, `/es/` y `/en/`.
-* 📱 Interfaz responsive y accesible mediante teclado.
-* 💼 Trayectoria profesional con proyectos desplegables.
-* 🎓 Formación académica y certificaciones agrupadas por proveedor.
-* 🏅 Carrusel continuo e interactivo de organizaciones acreditadoras, con navegación mediante clic y arrastre manual.
-* ♿ Animaciones respetuosas con la preferencia `prefers-reduced-motion`.
-* ♿ Accessibility smoke automatizado con Axe sobre estados reales de Chromium para detectar regresiones WCAG A/AA de alto impacto.
-* 🖼️ Recursos visuales servidos localmente, sin depender de URLs externas para los elementos gráficos de la interfaz.
-* 📄 CV descargable en el idioma activo, generado automáticamente desde los datos del portfolio.
-* 🔎 SEO multilingüe indexable con metadata localizada disponible antes de cargar React: `lang`, title, description, canonical, hreflang, Open Graph, Twitter Cards y datos estructurados `Person`.
-* 🗺️ Sitemap multilingüe con alternates `hreflang` recíprocos y `x-default`.
-* 🚧 Página 404 estática y multilingüe que conserva el contexto de idioma y devuelve directamente al portfolio en el locale correspondiente.
-* 📊 Google Analytics inicializado al cargar la web.
-* 🧪 Smoke tests E2E con Chromium para validar interacción, layout, navegación multilingüe y comportamiento real de navegador.
-* ✅ Integración continua para validar pull requests antes de integrarlas.
-* ⚙️ Despliegue automatizado mediante GitHub Actions y GitHub Pages.
+- 🌍 Contenido disponible en catalán, castellano e inglés mediante URLs estables `/ca/`, `/es/` y `/en/`.
+- 📱 Interfaz responsive y accesible mediante teclado.
+- 💼 Trayectoria profesional con proyectos desplegables.
+- 🎓 Formación académica y certificaciones agrupadas por proveedor.
+- 🏅 Carrusel continuo e interactivo de organizaciones acreditadoras, con navegación mediante clic y arrastre manual.
+- ♿ Animaciones respetuosas con la preferencia `prefers-reduced-motion`.
+- ♿ Accessibility smoke automatizado con Axe sobre estados reales de Chromium para detectar regresiones WCAG A/AA de alto impacto.
+- 🖼️ Recursos visuales servidos localmente, sin depender de URLs externas para los elementos gráficos de la interfaz.
+- 📄 CV descargable en el idioma activo, generado automáticamente desde los datos del portfolio.
+- 🔎 SEO multilingüe indexable con metadata localizada disponible antes de cargar React: `lang`, title, description, canonical, hreflang, Open Graph, Twitter Cards y datos estructurados `Person`.
+- 🗺️ Sitemap multilingüe con alternates `hreflang` recíprocos y `x-default`.
+- 🚧 Página 404 estática y multilingüe que conserva el contexto de idioma y devuelve directamente al portfolio en el locale correspondiente.
+- 📊 Google Analytics inicializado al cargar la web.
+- 🧪 Smoke tests E2E con Chromium para validar interacción, layout, navegación multilingüe y comportamiento real de navegador.
+- ✅ Integración continua para validar pull requests antes de integrarlas.
+- ⚙️ Despliegue automatizado mediante GitHub Actions y GitHub Pages.
 
 ## 🧰 Stack tecnológico
 
-* **React 19** y **React DOM 19**.
-* **TypeScript 6** en modo estricto.
-* **Vite 8** para desarrollo y build.
-* **Tailwind CSS 4** integrado directamente en Vite mediante `@tailwindcss/vite`.
-* **Lucide React 1** para la iconografía de interfaz, complementado con SVG local cuando un icono deja de formar parte de la librería.
-* **React PDF** para generar los CV en catalán, castellano e inglés.
-* **Vitest 5** y **Testing Library 16** para pruebas unitarias y de componentes sobre jsdom.
-* **Playwright 1.63** con **Chromium** para smoke tests E2E en navegador real.
-* **Axe 4.13** mediante `@axe-core/playwright` para accessibility smoke automatizado sobre la misma infraestructura E2E.
-* **ESLint 10** y **Prettier** para mantener la calidad y consistencia del código.
+- **React 19** y **React DOM 19**.
+- **TypeScript 6** en modo estricto.
+- **Vite 8** para desarrollo y build.
+- **Tailwind CSS 4** integrado directamente en Vite mediante `@tailwindcss/vite`.
+- **Lucide React 1** para la iconografía de interfaz, complementado con SVG local cuando un icono deja de formar parte de la librería.
+- **React PDF** para generar los CV en catalán, castellano e inglés.
+- **Vitest 5** y **Testing Library 16** para pruebas unitarias y de componentes sobre jsdom.
+- **Playwright 1.63** con **Chromium** para smoke tests E2E en navegador real.
+- **Axe 4.13** mediante `@axe-core/playwright` para accessibility smoke automatizado sobre la misma infraestructura E2E.
+- **ESLint 10** y **Prettier** para mantener la calidad y consistencia del código.
 
 ## 🖥️ Requisitos de desarrollo
 
 El proyecto declara como entorno soportado:
 
-* **Node.js:** `>=24.15.0 <25` — únicamente la rama Node 24.
-* **npm:** `>=11.19.0 <12`.
-* **Package manager de referencia:** `npm@11.19.0`.
+- **Node.js:** `>=24.15.0 <25` — únicamente la rama Node 24.
+- **npm:** `>=11.19.0 <12`.
+- **Package manager de referencia:** `npm@11.19.0`.
 
 `package.json` utiliza `devEngines` para rechazar con error los comandos npm relevantes cuando el runtime Node o la versión de npm no cumplen estos rangos.
 
@@ -66,9 +66,9 @@ npm install --global npm@11.19.0
 
 Tailwind CSS 4 requiere navegadores modernos. El baseline de referencia del framework es:
 
-* Safari 16.4+
-* Chrome 111+
-* Firefox 128+
+- Safari 16.4+
+- Chrome 111+
+- Firefox 128+
 
 ## 🗂️ Estructura del proyecto
 
@@ -277,13 +277,13 @@ para ocultar conflictos entre dependencias o saltarse el contrato de entorno.
 
 Las actualizaciones major deben revisarse de manera independiente cuando puedan implicar:
 
-* cambios de API;
-* cambios en peer dependencies;
-* modificaciones de tipos;
-* migraciones de configuración;
-* diferencias visuales;
-* cambios en compatibilidad de navegadores;
-* regresiones funcionales.
+- cambios de API;
+- cambios en peer dependencies;
+- modificaciones de tipos;
+- migraciones de configuración;
+- diferencias visuales;
+- cambios en compatibilidad de navegadores;
+- regresiones funcionales.
 
 Dependabot revisa periódicamente tanto dependencias npm como GitHub Actions.
 
@@ -346,25 +346,25 @@ La smoke suite E2E no depende de Google Analytics ni de otros recursos externos 
 Las animaciones de entrada y los elementos interactivos tienen en cuenta:
 
 ```css
-prefers-reduced-motion: reduce
+prefers-reduced-motion: reduce;
 ```
 
 Cuando el usuario solicita movimiento reducido:
 
-* se eliminan las animaciones decorativas;
-* se eliminan transiciones no esenciales;
-* el carrusel de acreditadores no se desplaza automáticamente;
-* el contenido sigue siendo completamente accesible mediante navegación manual.
+- se eliminan las animaciones decorativas;
+- se eliminan transiciones no esenciales;
+- el carrusel de acreditadores no se desplaza automáticamente;
+- el contenido sigue siendo completamente accesible mediante navegación manual.
 
 Playwright valida este comportamiento utilizando la preferencia de movimiento reducido del contexto real de Chromium, sin mockear `matchMedia`.
 
 La capa de accessibility smoke utiliza `@axe-core/playwright` sobre el mismo Chromium y cubre como mínimo:
 
-* la página principal desktop en catalán, castellano e inglés;
-* la correspondencia entre el idioma activo y `document.documentElement.lang`;
-* el menú móvil después de abrirlo realmente;
-* el carrusel de certificaciones en un estado interactivo con foco de teclado;
-* las copias `aria-hidden` del carrusel, que deben permanecer fuera del tab order.
+- la página principal desktop en catalán, castellano e inglés;
+- la correspondencia entre el idioma activo y `document.documentElement.lang`;
+- el menú móvil después de abrirlo realmente;
+- el carrusel de certificaciones en un estado interactivo con foco de teclado;
+- las copias `aria-hidden` del carrusel, que deben permanecer fuera del tab order.
 
 Los scans se limitan a reglas WCAG A/AA etiquetadas por Axe mediante:
 

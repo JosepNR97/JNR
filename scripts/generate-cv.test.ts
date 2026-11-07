@@ -20,10 +20,7 @@ import { generateCvDocuments } from './generate-cv';
 
 const languages: Language[] = ['ca', 'es', 'en'];
 
-const forbiddenLegacyData = [
-  'Masculino',
-  'voluntariado',
-];
+const forbiddenLegacyData = ['Masculino', 'voluntariado'];
 
 describe('CV generator', () => {
   let outputDirectory = '';
@@ -67,10 +64,9 @@ describe('CV generator', () => {
       expect(pdf.getSubject()).toBe(model.profile.title);
       expect(pdf.getCreator()).toBe('JNR Portfolio CV Generator');
 
-      const annotationCount = pdf.getPages().reduce(
-        (total, page) => total + (page.node.Annots()?.size() ?? 0),
-        0,
-      );
+      const annotationCount = pdf
+        .getPages()
+        .reduce((total, page) => total + (page.node.Annots()?.size() ?? 0), 0);
 
       expect(annotationCount).toBe(validCredentialLinks + 3);
 
@@ -81,36 +77,26 @@ describe('CV generator', () => {
           return [];
         }
 
-        return Array.from(
-          { length: annotations.size() },
-          (_, index) => {
-            const annotation = pdf.context.lookup(
-              annotations.get(index),
-              PDFDict,
-            );
+        return Array.from({ length: annotations.size() }, (_, index) => {
+          const annotation = pdf.context.lookup(
+            annotations.get(index),
+            PDFDict,
+          );
 
-            const action = annotation.lookup(
-              PDFName.of('A'),
-              PDFDict,
-            );
+          const action = annotation.lookup(PDFName.of('A'), PDFDict);
 
-            const uri = action.lookup(PDFName.of('URI'));
+          const uri = action.lookup(PDFName.of('URI'));
 
-            const newWindow = action.lookup(
-              PDFName.of('NewWindow'),
-              PDFBool,
-            );
+          const newWindow = action.lookup(PDFName.of('NewWindow'), PDFBool);
 
-            return {
-              url:
-                uri instanceof PDFString ||
-                uri instanceof PDFHexString
-                  ? uri.decodeText()
-                  : '',
-              opensInNewWindow: newWindow.asBoolean(),
-            };
-          },
-        );
+          return {
+            url:
+              uri instanceof PDFString || uri instanceof PDFHexString
+                ? uri.decodeText()
+                : '',
+            opensInNewWindow: newWindow.asBoolean(),
+          };
+        });
       });
 
       const expectedUrls = [
@@ -119,28 +105,21 @@ describe('CV generator', () => {
         model.profile.website,
         ...model.certificationProviders.flatMap((provider) =>
           provider.certifications.flatMap((certification) =>
-            certification.credentialUrl
-              ? [certification.credentialUrl]
-              : [],
+            certification.credentialUrl ? [certification.credentialUrl] : [],
           ),
         ),
       ];
 
-      expect(
-        annotationLinks.map((link) => link.url).sort(),
-      ).toEqual(expectedUrls.sort());
+      expect(annotationLinks.map((link) => link.url).sort()).toEqual(
+        expectedUrls.sort(),
+      );
 
-      expect(
-        annotationLinks.every((link) => link.opensInNewWindow),
-      ).toBe(true);
+      expect(annotationLinks.every((link) => link.opensInNewWindow)).toBe(true);
 
       pdf.getPages().forEach((page) => {
         const resources = page.node.Resources();
 
-        const fonts = resources?.lookup(
-          PDFName.of('Font'),
-          PDFDict,
-        );
+        const fonts = resources?.lookup(PDFName.of('Font'), PDFDict);
 
         expect(fonts?.keys().length).toBeGreaterThan(0);
       });
@@ -158,43 +137,27 @@ describe('CV generator', () => {
         (item) => item.achievements,
       );
 
-      const modelProjects = [
-        ...model.recentProjects,
-        ...model.earlierProjects,
-      ];
+      const modelProjects = [...model.recentProjects, ...model.earlierProjects];
 
-      const sourceCertificationNames =
-        source.education.professional.flatMap(
-          (provider) =>
-            provider.certifications.map(
-              (certification) =>
-                sanitizePdfText(certification.name),
-            ),
-        );
-
-      const modelCertificationNames =
-        model.certificationProviders.flatMap(
-          (provider) =>
-            provider.certifications.map(
-              (certification) => certification.name,
-            ),
-        );
-
-      expect(model.experience).toHaveLength(
-        source.experience.items.length,
+      const sourceCertificationNames = source.education.professional.flatMap(
+        (provider) =>
+          provider.certifications.map((certification) =>
+            sanitizePdfText(certification.name),
+          ),
       );
 
-      expect(modelProjects).toHaveLength(
-        sourceProjects.length,
+      const modelCertificationNames = model.certificationProviders.flatMap(
+        (provider) =>
+          provider.certifications.map((certification) => certification.name),
       );
 
-      expect(model.education).toHaveLength(
-        source.education.academic.length,
-      );
+      expect(model.experience).toHaveLength(source.experience.items.length);
 
-      expect(modelCertificationNames).toEqual(
-        sourceCertificationNames,
-      );
+      expect(modelProjects).toHaveLength(sourceProjects.length);
+
+      expect(model.education).toHaveLength(source.education.academic.length);
+
+      expect(modelCertificationNames).toEqual(sourceCertificationNames);
 
       forbiddenLegacyData.forEach((value) => {
         expect(serializedModel).not.toContain(value);

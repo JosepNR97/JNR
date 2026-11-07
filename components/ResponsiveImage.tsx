@@ -1,18 +1,11 @@
-import type {
-  ImgHTMLAttributes,
-} from 'react';
-import {
-  getResponsiveImageSources,
-} from '../imageAssets';
-import type {
-  ResponsiveImageSource,
-} from '../imageAssets';
+import type { ImgHTMLAttributes } from 'react';
+import { getResponsiveImageSources } from '../imageAssets';
+import type { ResponsiveImageSource } from '../imageAssets';
 
-interface ResponsiveImageProps
-  extends Omit<
-    ImgHTMLAttributes<HTMLImageElement>,
-    'alt' | 'sizes' | 'srcSet'
-  > {
+interface ResponsiveImageProps extends Omit<
+  ImgHTMLAttributes<HTMLImageElement>,
+  'alt' | 'sizes' | 'srcSet'
+> {
   alt: string;
   sources?: readonly ResponsiveImageSource[];
   sizes?: string;
@@ -38,57 +31,29 @@ export const ResponsiveImage = ({
   className,
   ...imageProps
 }: ResponsiveImageProps) => {
-  const automaticSources =
-    getResponsiveImageSources(
-      typeof imageProps.src ===
-        'string'
-        ? imageProps.src
-        : undefined,
-    );
+  const automaticSources = getResponsiveImageSources(
+    typeof imageProps.src === 'string' ? imageProps.src : undefined,
+  );
 
-  const resolvedSources =
-    sources ?? automaticSources;
+  const resolvedSources = sources ?? automaticSources;
 
-  const imageClassName = [
-    'block',
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const imageClassName = ['block', className].filter(Boolean).join(' ');
 
   const image = (
-    <img
-      {...imageProps}
-      alt={alt}
-      sizes={sizes}
-      className={
-        imageClassName
-      }
-    />
+    <img {...imageProps} alt={alt} sizes={sizes} className={imageClassName} />
   );
 
   const content =
-    resolvedSources.length >
-    0 ? (
+    resolvedSources.length > 0 ? (
       <picture className="contents">
-        {resolvedSources.map(
-          (
-            source,
-          ) => (
-            <source
-              key={`${source.type}-${source.srcSet}`}
-              type={
-                source.type
-              }
-              srcSet={
-                source.srcSet
-              }
-              sizes={
-                sizes
-              }
-            />
-          ),
-        )}
+        {resolvedSources.map((source) => (
+          <source
+            key={`${source.type}-${source.srcSet}`}
+            type={source.type}
+            srcSet={source.srcSet}
+            sizes={sizes}
+          />
+        ))}
 
         {image}
       </picture>
@@ -109,18 +74,8 @@ export const ResponsiveImage = ({
    *
    * therefore behave identically in Grid/Flex layouts.
    */
-  if (
-    pictureClassName
-  ) {
-    return (
-      <span
-        className={
-          pictureClassName
-        }
-      >
-        {content}
-      </span>
-    );
+  if (pictureClassName) {
+    return <span className={pictureClassName}>{content}</span>;
   }
 
   return content;

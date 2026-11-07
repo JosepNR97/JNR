@@ -1,156 +1,67 @@
 import { useState } from 'react';
-import {
-  render,
-  screen,
-} from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LanguageProvider } from '../context/LanguageContext';
 import { Experience } from './Experience';
 
-const ExperienceHarness =
-  () => {
-    const [
-      expandedId,
-      setExpandedId,
-    ] =
-      useState<string | null>(
-        null,
-      );
+const ExperienceHarness = () => {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-    const handleToggle = (
-      itemId: string,
-    ) => {
-      setExpandedId(
-        (
-          currentId,
-        ) =>
-          currentId ===
-          itemId
-            ? null
-            : itemId,
-      );
-    };
-
-    return (
-      <Experience
-        expandedId={
-          expandedId
-        }
-        onToggle={
-          handleToggle
-        }
-      />
-    );
+  const handleToggle = (itemId: string) => {
+    setExpandedId((currentId) => (currentId === itemId ? null : itemId));
   };
 
-describe(
-  'Experience',
-  () => {
-    beforeEach(() => {
-      window.localStorage.clear();
+  return <Experience expandedId={expandedId} onToggle={handleToggle} />;
+};
 
-      window.localStorage.setItem(
-        'jnr-language-v1',
-        'en',
-      );
-    });
+describe('Experience', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
 
-    afterEach(() => {
-      window.localStorage.clear();
-    });
+    window.localStorage.setItem('jnr-language-v1', 'en');
+  });
 
-    it(
-      'exposes controlled expandable project details to keyboard and assistive technology',
-      async () => {
-        const user =
-          userEvent.setup();
+  afterEach(() => {
+    window.localStorage.clear();
+  });
 
-        render(
-          <LanguageProvider>
-            <ExperienceHarness />
-          </LanguageProvider>,
-        );
+  it('exposes controlled expandable project details to keyboard and assistive technology', async () => {
+    const user = userEvent.setup();
 
-        const trigger =
-          screen.getByRole(
-            'button',
-            {
-              name:
-                /Senior Consultant/i,
-            },
-          );
-
-        const panelId =
-          trigger.getAttribute(
-            'aria-controls',
-          );
-
-        const panel =
-          panelId
-            ? document.getElementById(
-                panelId,
-              )
-            : null;
-
-        expect(
-          trigger,
-        ).toHaveAttribute(
-          'aria-expanded',
-          'false',
-        );
-
-        expect(
-          panel,
-        ).toHaveAttribute(
-          'aria-hidden',
-          'true',
-        );
-
-        await user.click(
-          trigger,
-        );
-
-        expect(
-          trigger,
-        ).toHaveAttribute(
-          'aria-expanded',
-          'true',
-        );
-
-        expect(
-          panel,
-        ).not.toHaveAttribute(
-          'aria-hidden',
-        );
-
-        expect(
-          screen.getByRole(
-            'region',
-            {
-              name:
-                /Senior Consultant/i,
-            },
-          ),
-        ).toBeVisible();
-
-        await user.click(
-          trigger,
-        );
-
-        expect(
-          trigger,
-        ).toHaveAttribute(
-          'aria-expanded',
-          'false',
-        );
-
-        expect(
-          panel,
-        ).toHaveAttribute(
-          'aria-hidden',
-          'true',
-        );
-      },
+    render(
+      <LanguageProvider>
+        <ExperienceHarness />
+      </LanguageProvider>,
     );
-  },
-);
+
+    const trigger = screen.getByRole('button', {
+      name: /Senior Consultant/i,
+    });
+
+    const panelId = trigger.getAttribute('aria-controls');
+
+    const panel = panelId ? document.getElementById(panelId) : null;
+
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    expect(panel).toHaveAttribute('aria-hidden', 'true');
+
+    await user.click(trigger);
+
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+    expect(panel).not.toHaveAttribute('aria-hidden');
+
+    expect(
+      screen.getByRole('region', {
+        name: /Senior Consultant/i,
+      }),
+    ).toBeVisible();
+
+    await user.click(trigger);
+
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    expect(panel).toHaveAttribute('aria-hidden', 'true');
+  });
+});

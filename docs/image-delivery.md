@@ -114,10 +114,7 @@ is also removed by the generator for migration safety.
 Application components therefore only provide the original source:
 
 ```tsx
-<ResponsiveImage
-  src={item.logoUrl}
-  alt="..."
-/>
+<ResponsiveImage src={item.logoUrl} alt="..." />
 ```
 
 They do not need to know which formats or widths were generated.

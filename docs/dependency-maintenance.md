@@ -6,27 +6,27 @@ Este documento define las reglas de mantenimiento, actualización y validación 
 
 Baseline revisado tras la migración major realizada en septiembre de 2026, el endurecimiento posterior del contrato Node/npm, la incorporación de smoke testing E2E en navegador real y la capa mínima de accessibility smoke automatizado.
 
-| Componente | Baseline actual |
-| --- | --- |
-| Node.js | `>=24.15.0 <25` |
-| npm | `>=11.19.0 <12` |
-| Package manager de referencia | `npm@11.19.0` |
-| `@types/node` | `24.x` |
-| React | `19.2.x` |
-| React DOM | `19.2.x` |
-| TypeScript | `6.0.x` |
-| typescript-eslint | `8.69.x` |
-| Vite | `8.2.x` |
-| Tailwind CSS | `4.3.x` |
-| Integración Tailwind | `@tailwindcss/vite` `4.3.x` |
-| Lucide React | `1.x` |
-| Testing Library React | `16.3.x` |
-| Testing Library DOM | `10.4.x` |
-| Vitest | `5.0.x` |
-| Playwright | `@playwright/test` `1.63.x` |
-| Accessibility E2E | `@axe-core/playwright` `4.13.x` |
-| Navegador E2E | Chromium gestionado por Playwright |
-| ESLint | `10.x` |
+| Componente                    | Baseline actual                    |
+| ----------------------------- | ---------------------------------- |
+| Node.js                       | `>=24.15.0 <25`                    |
+| npm                           | `>=11.19.0 <12`                    |
+| Package manager de referencia | `npm@11.19.0`                      |
+| `@types/node`                 | `24.x`                             |
+| React                         | `19.2.x`                           |
+| React DOM                     | `19.2.x`                           |
+| TypeScript                    | `6.0.x`                            |
+| typescript-eslint             | `8.69.x`                           |
+| Vite                          | `8.2.x`                            |
+| Tailwind CSS                  | `4.3.x`                            |
+| Integración Tailwind          | `@tailwindcss/vite` `4.3.x`        |
+| Lucide React                  | `1.x`                              |
+| Testing Library React         | `16.3.x`                           |
+| Testing Library DOM           | `10.4.x`                           |
+| Vitest                        | `5.0.x`                            |
+| Playwright                    | `@playwright/test` `1.63.x`        |
+| Accessibility E2E             | `@axe-core/playwright` `4.13.x`    |
+| Navegador E2E                 | Chromium gestionado por Playwright |
+| ESLint                        | `10.x`                             |
 
 `package.json` y `package-lock.json` son la fuente de verdad para las versiones concretas instaladas.
 
@@ -559,11 +559,11 @@ La migración a Tailwind CSS 4 está completada, incluida la configuración CSS-
 La entrada `styles.css` utiliza:
 
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --font-sans: Inter, "Segoe UI", system-ui, sans-serif;
-  --font-serif: "Playfair Display", Georgia, Cambria, "Times New Roman", serif;
+  --font-sans: Inter, 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, Cambria, 'Times New Roman', serif;
 
   --color-brand-50: #f0f9ff;
   --color-brand-100: #e0f2fe;
@@ -618,19 +618,19 @@ Tailwind CSS 4 modificó el significado de algunas escalas de utilidades.
 
 Cuando se migre código originalmente diseñado con Tailwind 3 y se quiera conservar aproximadamente el mismo resultado visual, deben revisarse estas equivalencias:
 
-| Tailwind CSS 3 | Tailwind CSS 4 equivalente |
-| --- | --- |
-| `shadow-sm` | `shadow-xs` |
-| `shadow` | `shadow-sm` |
-| `drop-shadow-sm` | `drop-shadow-xs` |
-| `drop-shadow` | `drop-shadow-sm` |
-| `blur-sm` | `blur-xs` |
-| `blur` | `blur-sm` |
-| `backdrop-blur-sm` | `backdrop-blur-xs` |
-| `backdrop-blur` | `backdrop-blur-sm` |
-| `rounded-sm` | `rounded-xs` |
-| `rounded` | `rounded-sm` |
-| semántica anterior de `outline-none` | `outline-hidden` |
+| Tailwind CSS 3                       | Tailwind CSS 4 equivalente |
+| ------------------------------------ | -------------------------- |
+| `shadow-sm`                          | `shadow-xs`                |
+| `shadow`                             | `shadow-sm`                |
+| `drop-shadow-sm`                     | `drop-shadow-xs`           |
+| `drop-shadow`                        | `drop-shadow-sm`           |
+| `blur-sm`                            | `blur-xs`                  |
+| `blur`                               | `blur-sm`                  |
+| `backdrop-blur-sm`                   | `backdrop-blur-xs`         |
+| `backdrop-blur`                      | `backdrop-blur-sm`         |
+| `rounded-sm`                         | `rounded-xs`               |
+| `rounded`                            | `rounded-sm`               |
+| semántica anterior de `outline-none` | `outline-hidden`           |
 
 Los gradientes lineales utilizan la sintaxis:
 

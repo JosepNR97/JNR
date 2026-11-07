@@ -1,10 +1,16 @@
 import type { Language } from './types.ts';
 
-export const SUPPORTED_LANGUAGES = ['ca', 'es', 'en'] as const satisfies readonly Language[];
+export const SUPPORTED_LANGUAGES = [
+  'ca',
+  'es',
+  'en',
+] as const satisfies readonly Language[];
 
 export const LANGUAGE_STORAGE_KEY = 'jnr-language-v1';
 
-export const isLanguage = (value: string | null | undefined): value is Language =>
+export const isLanguage = (
+  value: string | null | undefined,
+): value is Language =>
   value !== null &&
   value !== undefined &&
   SUPPORTED_LANGUAGES.includes(value as Language);

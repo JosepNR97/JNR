@@ -4,13 +4,7 @@ import type { Page } from '@playwright/test';
 
 const LANGUAGE_STORAGE_KEY = 'jnr-language-v1';
 
-const WCAG_TAGS = [
-  'wcag2a',
-  'wcag2aa',
-  'wcag21a',
-  'wcag21aa',
-  'wcag22aa',
-];
+const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 const LANGUAGES = [
   { code: 'ca', name: 'Català' },
@@ -46,8 +40,7 @@ const formatImpactSummary = (violations: AxeViolation[]) => {
   });
 
   const unknownCount = violations.filter(
-    (violation) =>
-      violation.impact === null || violation.impact === undefined,
+    (violation) => violation.impact === null || violation.impact === undefined,
   ).length;
 
   if (unknownCount > 0) {
@@ -178,9 +171,7 @@ test.describe('accessibility smoke', () => {
     await menuButton.focus();
     await page.keyboard.press('Tab');
 
-    await expect(
-      mobileNavigation.locator('a[href="#top"]'),
-    ).toBeFocused();
+    await expect(mobileNavigation.locator('a[href="#top"]')).toBeFocused();
   });
 
   test('certifications carousel is accessible in its keyboard state', async ({
@@ -189,9 +180,7 @@ test.describe('accessibility smoke', () => {
     await openPortfolio(page, 'es');
 
     const viewport = page.getByTestId('certifications-viewport');
-    const interactiveSegment = page.locator(
-      '[data-carousel-segment="true"]',
-    );
+    const interactiveSegment = page.locator('[data-carousel-segment="true"]');
     const firstLogoButton = interactiveSegment.getByRole('button').first();
     const hiddenLogoButtons = page.locator(
       '[data-testid="certifications-segment"][aria-hidden="true"] button',

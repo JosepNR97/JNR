@@ -18,8 +18,7 @@ export const useCountUp = (
 
   const safeTarget = Math.max(0, target);
   const showTargetImmediately =
-    isVisible &&
-    (safeTarget === 0 || duration <= 0 || prefersReducedMotion);
+    isVisible && (safeTarget === 0 || duration <= 0 || prefersReducedMotion);
 
   useEffect(() => {
     if (!isVisible || showTargetImmediately) return undefined;

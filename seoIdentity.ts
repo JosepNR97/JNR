@@ -1,24 +1,17 @@
-import {
-  PROFILE_IMAGE_ASSET_STEM,
-} from './aboutMe.ts';
+import { PROFILE_IMAGE_ASSET_STEM } from './aboutMe.ts';
 
 export const SEO_IDENTITY = {
   givenName: 'Josep',
   familyName: 'Núñez Riba',
   alternateName: 'JosepNR97',
 
-  imagePath:
-    `assets/${PROFILE_IMAGE_ASSET_STEM}.webp`,
+  imagePath: `assets/${PROFILE_IMAGE_ASSET_STEM}.webp`,
 
   profiles: {
-    linkedin:
-      'https://www.linkedin.com/in/josep-nunez-riba',
-    github:
-      'https://github.com/JosepNR97',
-    youtube:
-      'https://www.youtube.com/@JNR517',
-    instagram:
-      'https://www.instagram.com/pepito517/',
+    linkedin: 'https://www.linkedin.com/in/josep-nunez-riba',
+    github: 'https://github.com/JosepNR97',
+    youtube: 'https://www.youtube.com/@JNR517',
+    instagram: 'https://www.instagram.com/pepito517/',
   },
 
   employer: {

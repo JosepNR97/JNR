@@ -1,9 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { About } from './components/About';
 import { Analytics } from './components/Analytics';
 import { Certifications } from './components/Certifications';
@@ -14,10 +9,7 @@ import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Services } from './components/Services';
-import {
-  LanguageProvider,
-  useLanguage,
-} from './context/LanguageContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import {
   clearLanguageNavigationState,
   readLanguageNavigationState,
@@ -31,145 +23,85 @@ import {
 } from './portfolioSessionState';
 import { scrollToElementAfterLayout } from './scrollToElement';
 
-const getCurrentLocation =
-  (): string =>
-    `${window.location.pathname}${window.location.search}${window.location.hash}`;
+const getCurrentLocation = (): string =>
+  `${window.location.pathname}${window.location.search}${window.location.hash}`;
 
-const isReloadNavigation =
-  (): boolean => {
-    if (
-      typeof PerformanceNavigationTiming ===
-      'undefined'
-    ) {
-      return false;
-    }
+const isReloadNavigation = (): boolean => {
+  if (typeof PerformanceNavigationTiming === 'undefined') {
+    return false;
+  }
 
-    return performance
-      .getEntriesByType(
-        'navigation',
-      )
-      .some(
-        (
-          entry,
-        ) =>
-          entry instanceof
-            PerformanceNavigationTiming &&
-          entry.type ===
-            'reload',
-      );
-  };
-
-const restoreDocumentScrollY = (
-  scrollY: number,
-): void => {
-  const maximumScrollY =
-    Math.max(
-      0,
-      document.documentElement
-        .scrollHeight -
-        window.innerHeight,
+  return performance
+    .getEntriesByType('navigation')
+    .some(
+      (entry) =>
+        entry instanceof PerformanceNavigationTiming && entry.type === 'reload',
     );
-
-  const clampedScrollY =
-    Math.max(
-      0,
-      Math.min(
-        scrollY,
-        maximumScrollY,
-      ),
-    );
-
-  const documentElement =
-    document.documentElement;
-
-  const previousScrollBehavior =
-    documentElement.style
-      .scrollBehavior;
-
-  documentElement.style
-    .scrollBehavior =
-    'auto';
-
-  window.scrollTo({
-    top:
-      clampedScrollY,
-    left:
-      0,
-    behavior:
-      'auto',
-  });
-
-  documentElement.style
-    .scrollBehavior =
-    previousScrollBehavior;
 };
 
-const restoreHashPositionAfterMount =
-  () => {
-    const rawHash =
-      window.location.hash.slice(1);
+const restoreDocumentScrollY = (scrollY: number): void => {
+  const maximumScrollY = Math.max(
+    0,
+    document.documentElement.scrollHeight - window.innerHeight,
+  );
 
-    if (!rawHash) {
-      return;
-    }
+  const clampedScrollY = Math.max(0, Math.min(scrollY, maximumScrollY));
 
-    let targetId =
-      rawHash;
+  const documentElement = document.documentElement;
 
-    try {
-      targetId =
-        decodeURIComponent(
-          rawHash,
-        );
-    } catch {
-      // Keep the raw hash if it is not valid percent-encoded text.
-    }
+  const previousScrollBehavior = documentElement.style.scrollBehavior;
 
-    const target =
-      document.getElementById(
-        targetId,
-      );
+  documentElement.style.scrollBehavior = 'auto';
 
-    if (!target) {
-      return;
-    }
+  window.scrollTo({
+    top: clampedScrollY,
+    left: 0,
+    behavior: 'auto',
+  });
 
-    const documentElement =
-      document.documentElement;
+  documentElement.style.scrollBehavior = previousScrollBehavior;
+};
 
-    const previousScrollBehavior =
-      documentElement.style
-        .scrollBehavior;
+const restoreHashPositionAfterMount = () => {
+  const rawHash = window.location.hash.slice(1);
 
-    documentElement.style
-      .scrollBehavior =
-      'auto';
+  if (!rawHash) {
+    return;
+  }
 
-    target.scrollIntoView({
-      block:
-        'start',
-      behavior:
-        'auto',
-    });
+  let targetId = rawHash;
 
-    documentElement.style
-      .scrollBehavior =
-      previousScrollBehavior;
-  };
+  try {
+    targetId = decodeURIComponent(rawHash);
+  } catch {
+    // Keep the raw hash if it is not valid percent-encoded text.
+  }
+
+  const target = document.getElementById(targetId);
+
+  if (!target) {
+    return;
+  }
+
+  const documentElement = document.documentElement;
+
+  const previousScrollBehavior = documentElement.style.scrollBehavior;
+
+  documentElement.style.scrollBehavior = 'auto';
+
+  target.scrollIntoView({
+    block: 'start',
+    behavior: 'auto',
+  });
+
+  documentElement.style.scrollBehavior = previousScrollBehavior;
+};
 
 const Portfolio = () => {
-  const {
-    language,
-    t,
-  } = useLanguage();
+  const { language, t } = useLanguage();
 
-  const [
-    languageNavigationState,
-  ] = useState(
-    () =>
-      readLanguageNavigationState(
-        language,
-      ),
+  const [languageNavigationState] = useState(() =>
+    readLanguageNavigationState(language),
   );
 
   /*
@@ -178,44 +110,29 @@ const Portfolio = () => {
    * state. Locale changes initiated by the UI are authorised separately
    * through languageNavigationState.
    */
-  const [
-    reloadNavigation,
-  ] = useState(
-    isReloadNavigation,
-  );
+  const [reloadNavigation] = useState(isReloadNavigation);
 
   const shouldRestoreExpandedPanels =
-    languageNavigationState !== null ||
-    reloadNavigation;
+    languageNavigationState !== null || reloadNavigation;
 
-  const [
-    portfolioSessionState,
-    setPortfolioSessionState,
-  ] = useState(
-    () => {
-      const persistedState =
-        readPortfolioSessionState();
+  const [portfolioSessionState, setPortfolioSessionState] = useState(() => {
+    const persistedState = readPortfolioSessionState();
 
-      if (
-        shouldRestoreExpandedPanels
-      ) {
-        return persistedState;
-      }
+    if (shouldRestoreExpandedPanels) {
+      return persistedState;
+    }
 
-      /*
-       * A normal document entry represents a new browsing context.
-       * Stale accordion state from an earlier visit must therefore not
-       * influence the first React render.
-       */
-      return {
-        ...persistedState,
-        expandedExperienceId:
-          null,
-        expandedVendorId:
-          null,
-      };
-    },
-  );
+    /*
+     * A normal document entry represents a new browsing context.
+     * Stale accordion state from an earlier visit must therefore not
+     * influence the first React render.
+     */
+    return {
+      ...persistedState,
+      expandedExperienceId: null,
+      expandedVendorId: null,
+    };
+  });
 
   /*
    * Keep storage aligned with the clean React state on a normal entry.
@@ -229,52 +146,32 @@ const Portfolio = () => {
    * context.
    */
   useLayoutEffect(() => {
-    if (
-      shouldRestoreExpandedPanels
-    ) {
+    if (shouldRestoreExpandedPanels) {
       return;
     }
 
-    persistExpandedExperienceId(
-      null,
-    );
+    persistExpandedExperienceId(null);
 
-    persistExpandedVendorId(
-      null,
-    );
-  }, [
-    shouldRestoreExpandedPanels,
-  ]);
+    persistExpandedVendorId(null);
+  }, [shouldRestoreExpandedPanels]);
 
   /*
    * Only a real browser reload may consume the persisted reload position.
    * Direct navigation, Back/Forward and locale navigation must not replay it.
    */
-  const [
-    reloadPosition,
-  ] = useState(
-    () => {
-      if (
-        !reloadNavigation
-      ) {
-        return null;
-      }
+  const [reloadPosition] = useState(() => {
+    if (!reloadNavigation) {
+      return null;
+    }
 
-      const candidate =
-        portfolioSessionState
-          .reloadPosition;
+    const candidate = portfolioSessionState.reloadPosition;
 
-      if (
-        !candidate ||
-        candidate.location !==
-          getCurrentLocation()
-      ) {
-        return null;
-      }
+    if (!candidate || candidate.location !== getCurrentLocation()) {
+      return null;
+    }
 
-      return candidate;
-    },
-  );
+    return candidate;
+  });
 
   /*
    * pagehide runs immediately before a reload or document navigation and is
@@ -283,47 +180,30 @@ const Portfolio = () => {
    * have been an actual reload.
    */
   useEffect(() => {
-    const handlePageHide =
-      () => {
-        persistPortfolioReloadPosition({
-          location:
-            getCurrentLocation(),
-          scrollY:
-            Math.max(
-              0,
-              window.scrollY,
-            ),
-        });
-      };
+    const handlePageHide = () => {
+      persistPortfolioReloadPosition({
+        location: getCurrentLocation(),
+        scrollY: Math.max(0, window.scrollY),
+      });
+    };
 
-    window.addEventListener(
-      'pagehide',
-      handlePageHide,
-    );
+    window.addEventListener('pagehide', handlePageHide);
 
     return () => {
-      window.removeEventListener(
-        'pagehide',
-        handlePageHide,
-      );
+      window.removeEventListener('pagehide', handlePageHide);
     };
   }, []);
 
   useLayoutEffect(() => {
-    const restorePosition =
-      languageNavigationState
+    const restorePosition = languageNavigationState
+      ? () => {
+          restoreLanguageNavigationPosition(languageNavigationState);
+        }
+      : reloadPosition
         ? () => {
-            restoreLanguageNavigationPosition(
-              languageNavigationState,
-            );
+            restoreDocumentScrollY(reloadPosition.scrollY);
           }
-        : reloadPosition
-          ? () => {
-              restoreDocumentScrollY(
-                reloadPosition.scrollY,
-              );
-            }
-          : null;
+        : null;
 
     if (!restorePosition) {
       /*
@@ -335,62 +215,43 @@ const Portfolio = () => {
       return undefined;
     }
 
-    let cancelled =
-      false;
+    let cancelled = false;
 
-    const pendingAnimationFrames =
-      new Set<number>();
+    const pendingAnimationFrames = new Set<number>();
 
-    const applyRestoration =
-      () => {
+    const applyRestoration = () => {
+      if (cancelled) {
+        return;
+      }
+
+      restorePosition();
+    };
+
+    const requestTrackedAnimationFrame = (callback: () => void) => {
+      let animationFrame = 0;
+
+      animationFrame = window.requestAnimationFrame(() => {
+        pendingAnimationFrames.delete(animationFrame);
+
         if (cancelled) {
           return;
         }
 
-        restorePosition();
-      };
+        callback();
+      });
 
-    const requestTrackedAnimationFrame =
-      (
-        callback: () => void,
-      ) => {
-        let animationFrame =
-          0;
+      pendingAnimationFrames.add(animationFrame);
+    };
 
-        animationFrame =
-          window.requestAnimationFrame(
-            () => {
-              pendingAnimationFrames.delete(
-                animationFrame,
-              );
+    const restoreAcrossAnimationFrames = () => {
+      requestTrackedAnimationFrame(() => {
+        applyRestoration();
 
-              if (cancelled) {
-                return;
-              }
-
-              callback();
-            },
-          );
-
-        pendingAnimationFrames.add(
-          animationFrame,
-        );
-      };
-
-    const restoreAcrossAnimationFrames =
-      () => {
-        requestTrackedAnimationFrame(
-          () => {
-            applyRestoration();
-
-            requestTrackedAnimationFrame(
-              () => {
-                applyRestoration();
-              },
-            );
-          },
-        );
-      };
+        requestTrackedAnimationFrame(() => {
+          applyRestoration();
+        });
+      });
+    };
 
     /*
      * Expanded panels already exist in the first React layout because their
@@ -399,276 +260,159 @@ const Portfolio = () => {
     applyRestoration();
     restoreAcrossAnimationFrames();
 
-    const restoreAfterFonts =
-      async () => {
-        try {
-          await document.fonts.ready;
-        } catch {
-          /*
-           * Font readiness improves geometric stability but must never make
-           * navigation dependent on successful font loading.
-           */
-        }
+    const restoreAfterFonts = async () => {
+      try {
+        await document.fonts.ready;
+      } catch {
+        /*
+         * Font readiness improves geometric stability but must never make
+         * navigation dependent on successful font loading.
+         */
+      }
 
-        if (cancelled) {
-          return;
-        }
+      if (cancelled) {
+        return;
+      }
 
-        applyRestoration();
-        restoreAcrossAnimationFrames();
-      };
+      applyRestoration();
+      restoreAcrossAnimationFrames();
+    };
 
     void restoreAfterFonts();
 
-    const restoreAfterLoad =
-      () => {
-        if (cancelled) {
-          return;
-        }
+    const restoreAfterLoad = () => {
+      if (cancelled) {
+        return;
+      }
 
-        applyRestoration();
-        restoreAcrossAnimationFrames();
-      };
+      applyRestoration();
+      restoreAcrossAnimationFrames();
+    };
 
-    if (
-      document.readyState ===
-      'complete'
-    ) {
+    if (document.readyState === 'complete') {
       restoreAfterLoad();
     } else {
-      window.addEventListener(
-        'load',
-        restoreAfterLoad,
-        {
-          once:
-            true,
-        },
-      );
+      window.addEventListener('load', restoreAfterLoad, {
+        once: true,
+      });
     }
 
     /*
      * Only the locale-transition geometry is one-shot. Reload position is
      * tab-scoped and will simply be replaced by the next pagehide.
      */
-    if (
-      languageNavigationState
-    ) {
+    if (languageNavigationState) {
       clearLanguageNavigationState();
     }
 
     return () => {
-      cancelled =
-        true;
+      cancelled = true;
 
-      window.removeEventListener(
-        'load',
-        restoreAfterLoad,
-      );
+      window.removeEventListener('load', restoreAfterLoad);
 
-      for (
-        const animationFrame
-        of pendingAnimationFrames
-      ) {
-        window.cancelAnimationFrame(
-          animationFrame,
-        );
+      for (const animationFrame of pendingAnimationFrames) {
+        window.cancelAnimationFrame(animationFrame);
       }
 
       pendingAnimationFrames.clear();
     };
-  }, [
-    languageNavigationState,
-    reloadPosition,
-  ]);
+  }, [languageNavigationState, reloadPosition]);
 
   /*
    * These two setters are the single synchronization boundary between React
    * UI state and its tab-scoped persisted representation.
    */
-  const setExpandedExperienceId =
-    useCallback(
-      (
-        expandedExperienceId:
-          string | null,
-      ) => {
-        setPortfolioSessionState(
-          (
-            currentState,
-          ) => ({
-            ...currentState,
-            expandedExperienceId,
-          }),
-        );
+  const setExpandedExperienceId = useCallback(
+    (expandedExperienceId: string | null) => {
+      setPortfolioSessionState((currentState) => ({
+        ...currentState,
+        expandedExperienceId,
+      }));
 
-        persistExpandedExperienceId(
-          expandedExperienceId,
-        );
-      },
-      [],
-    );
+      persistExpandedExperienceId(expandedExperienceId);
+    },
+    [],
+  );
 
-  const setExpandedVendorId =
-    useCallback(
-      (
-        expandedVendorId:
-          string | null,
-      ) => {
-        setPortfolioSessionState(
-          (
-            currentState,
-          ) => ({
-            ...currentState,
-            expandedVendorId,
-          }),
-        );
+  const setExpandedVendorId = useCallback((expandedVendorId: string | null) => {
+    setPortfolioSessionState((currentState) => ({
+      ...currentState,
+      expandedVendorId,
+    }));
 
-        persistExpandedVendorId(
-          expandedVendorId,
-        );
-      },
-      [],
-    );
+    persistExpandedVendorId(expandedVendorId);
+  }, []);
 
-  const handleExperienceToggle =
-    useCallback(
-      (
-        itemId: string,
-      ) => {
-        const shouldExpand =
-          portfolioSessionState
-            .expandedExperienceId !==
-          itemId;
+  const handleExperienceToggle = useCallback(
+    (itemId: string) => {
+      const shouldExpand =
+        portfolioSessionState.expandedExperienceId !== itemId;
 
-        setExpandedExperienceId(
-          shouldExpand
-            ? itemId
-            : null,
-        );
+      setExpandedExperienceId(shouldExpand ? itemId : null);
 
-        if (shouldExpand) {
-          scrollToElementAfterLayout(
-            `experience-item-${itemId}`,
-          );
-        }
-      },
-      [
-        portfolioSessionState
-          .expandedExperienceId,
-        setExpandedExperienceId,
-      ],
-    );
+      if (shouldExpand) {
+        scrollToElementAfterLayout(`experience-item-${itemId}`);
+      }
+    },
+    [portfolioSessionState.expandedExperienceId, setExpandedExperienceId],
+  );
 
-  const handleVendorToggle =
-    useCallback(
-      (
-        vendorId: string,
-      ) => {
-        const shouldExpand =
-          portfolioSessionState
-            .expandedVendorId !==
-          vendorId;
+  const handleVendorToggle = useCallback(
+    (vendorId: string) => {
+      const shouldExpand = portfolioSessionState.expandedVendorId !== vendorId;
 
-        setExpandedVendorId(
-          shouldExpand
-            ? vendorId
-            : null,
-        );
+      setExpandedVendorId(shouldExpand ? vendorId : null);
 
-        if (shouldExpand) {
-          scrollToElementAfterLayout(
-            `education-card-${vendorId}`,
-          );
-        }
-      },
-      [
-        portfolioSessionState
-          .expandedVendorId,
-        setExpandedVendorId,
-      ],
-    );
+      if (shouldExpand) {
+        scrollToElementAfterLayout(`education-card-${vendorId}`);
+      }
+    },
+    [portfolioSessionState.expandedVendorId, setExpandedVendorId],
+  );
 
-  const handleCertificationSelect =
-    useCallback(
-      (
-        vendorId: string,
-      ) => {
-        setExpandedVendorId(
-          vendorId,
-        );
+  const handleCertificationSelect = useCallback(
+    (vendorId: string) => {
+      setExpandedVendorId(vendorId);
 
-        scrollToElementAfterLayout(
-          `education-card-${vendorId}`,
-        );
-      },
-      [
-        setExpandedVendorId,
-      ],
-    );
+      scrollToElementAfterLayout(`education-card-${vendorId}`);
+    },
+    [setExpandedVendorId],
+  );
 
-  const handleSkipToContent =
-    useCallback(() => {
-      document
-        .getElementById(
-          'main-content',
-        )
-        ?.focus();
-    }, []);
+  const handleSkipToContent = useCallback(() => {
+    document.getElementById('main-content')?.focus();
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-slate-50">
       <a
         href="#main-content"
-        onClick={
-          handleSkipToContent
-        }
+        onClick={handleSkipToContent}
         className="fixed left-4 top-4 z-[60] -translate-y-[calc(100%+2rem)] rounded-md bg-brand-950 px-4 py-3 text-sm font-semibold text-white shadow-lg transition-transform duration-150 focus-visible:translate-y-0 motion-reduce:transition-none"
       >
-        {
-          t.accessibility
-            .skipToContent
-        }
+        {t.accessibility.skipToContent}
       </a>
 
       <Header />
 
-      <main
-        id="main-content"
-        tabIndex={-1}
-      >
+      <main id="main-content" tabIndex={-1}>
         <Hero />
         <About />
 
-        <div
-          id="certifications"
-          className="scroll-mt-20"
-        >
-          <Certifications
-            onSelectVendor={
-              handleCertificationSelect
-            }
-          />
+        <div id="certifications" className="scroll-mt-20">
+          <Certifications onSelectVendor={handleCertificationSelect} />
         </div>
 
         <Services />
 
         <Experience
-          expandedId={
-            portfolioSessionState
-              .expandedExperienceId
-          }
-          onToggle={
-            handleExperienceToggle
-          }
+          expandedId={portfolioSessionState.expandedExperienceId}
+          onToggle={handleExperienceToggle}
         />
 
         <Education
-          expandedVendorId={
-            portfolioSessionState
-              .expandedVendorId
-          }
-          onVendorToggle={
-            handleVendorToggle
-          }
+          expandedVendorId={portfolioSessionState.expandedVendorId}
+          onVendorToggle={handleVendorToggle}
         />
 
         <Contact />

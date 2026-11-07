@@ -15,7 +15,10 @@ describe('useRevealOnScroll', () => {
       readonly scrollMargin = '0px 0px 0px 0px';
       readonly thresholds = [0.15];
 
-      constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+      constructor(
+        callback: IntersectionObserverCallback,
+        options?: IntersectionObserverInit,
+      ) {
         intersectionCallback = callback;
         observerOptions = options;
       }
@@ -30,7 +33,13 @@ describe('useRevealOnScroll', () => {
 
     const Probe = () => {
       const { ref, isVisible } = useRevealOnScroll<HTMLDivElement>();
-      return <div ref={ref} data-testid="reveal-probe" data-visible={String(isVisible)} />;
+      return (
+        <div
+          ref={ref}
+          data-testid="reveal-probe"
+          data-visible={String(isVisible)}
+        />
+      );
     };
 
     render(<Probe />);

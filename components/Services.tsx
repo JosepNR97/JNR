@@ -28,9 +28,7 @@ export const Services: React.FC = () => {
           {t.services.items.map((service, index) => (
             <div
               key={service.id}
-              className={`reveal h-full ${
-                servicesVisible ? 'is-visible' : ''
-              }`}
+              className={`reveal h-full ${servicesVisible ? 'is-visible' : ''}`}
               style={{ transitionDelay: `${Math.min(index * 80, 320)}ms` }}
             >
               <div className="group h-full rounded-lg border border-slate-100 bg-white p-8 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-xl">

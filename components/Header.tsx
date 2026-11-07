@@ -128,8 +128,7 @@ export const Header = () => {
         documentElement.scrollHeight - documentElement.clientHeight,
       );
 
-      const progress =
-        scrollableHeight > 0 ? scrollTop / scrollableHeight : 0;
+      const progress = scrollableHeight > 0 ? scrollTop / scrollableHeight : 0;
 
       const clampedProgress = Math.max(0, Math.min(1, progress));
 
@@ -201,9 +200,7 @@ export const Header = () => {
 
   const scrolledHeader = isScrolled && !mobileMenuOpen;
 
-  const navLinkClass = scrolledHeader
-    ? 'text-slate-600'
-    : 'text-slate-200';
+  const navLinkClass = scrolledHeader ? 'text-slate-600' : 'text-slate-200';
 
   const navLinkInteractionClass = scrolledHeader
     ? 'hover:text-brand-700 focus-visible:text-brand-700'
