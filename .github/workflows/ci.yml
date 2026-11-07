@@ -4,7 +4,17 @@ on:
   pull_request:
     branches:
       - 'main'
+
   workflow_dispatch:
+    inputs:
+      base_ref:
+        description: 'Optional base ref for Dependency Review'
+        required: false
+        type: string
+      head_ref:
+        description: 'Optional head ref for Dependency Review and checkout'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -22,12 +32,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.head_ref != '' && inputs.head_ref || github.ref }}
           persist-credentials: false
 
       - name: Review runtime dependency security
-        if: github.event_name == 'pull_request'
+        if: >-
+          github.event_name == 'pull_request' ||
+          (github.event_name == 'workflow_dispatch' &&
+          inputs.base_ref != '' &&
+          inputs.head_ref != '')
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
+          base-ref: ${{ inputs.base_ref }}
+          head-ref: ${{ inputs.head_ref }}
           fail-on-severity: 'moderate'
           fail-on-scopes: 'runtime, unknown'
           vulnerability-check: true
@@ -35,9 +52,15 @@ jobs:
           show-openssf-scorecard: false
 
       - name: Review development dependency security
-        if: github.event_name == 'pull_request'
+        if: >-
+          github.event_name == 'pull_request' ||
+          (github.event_name == 'workflow_dispatch' &&
+          inputs.base_ref != '' &&
+          inputs.head_ref != '')
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
+          base-ref: ${{ inputs.base_ref }}
+          head-ref: ${{ inputs.head_ref }}
           fail-on-severity: 'high'
           fail-on-scopes: 'development'
           vulnerability-check: true
