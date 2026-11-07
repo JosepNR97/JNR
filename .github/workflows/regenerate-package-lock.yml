@@ -1,10 +1,8 @@
 name: Regenerate package-lock
 
 on:
-  # Bootstrap / maintenance mode:
-  # Allows the workflow to run even before it exists in main.
-  # A commit that changes package.json or this workflow in one of these
-  # maintenance branches automatically regenerates package-lock.json.
+  # Bootstrap / maintenance mode.
+  # This makes the workflow usable before it exists in main.
   push:
     branches:
       - 'Mejoras'
@@ -14,9 +12,9 @@ on:
       - 'package.json'
       - '.github/workflows/regenerate-package-lock.yml'
 
-  # Permanent mode:
-  # Once this workflow exists in main, it can also be launched manually
-  # from GitHub Actions against any maintenance branch.
+  # Permanent/manual mode.
+  # Once the workflow exists in main, it can also be launched manually
+  # against a maintenance branch from GitHub Actions.
   workflow_dispatch:
     inputs:
       target_branch:
@@ -35,7 +33,7 @@ jobs:
   regenerate:
     name: Regenerate package-lock
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     env:
       TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
@@ -74,34 +72,88 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - name: Read toolchain contract
+        id: toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          NODE_RANGE="$(jq -r '.engines.node // empty' package.json)"
+          PACKAGE_MANAGER="$(jq -r '.packageManager // empty' package.json)"
+
+          if [ -z "$NODE_RANGE" ]; then
+            echo "::error::package.json does not define engines.node."
+            exit 1
+          fi
+
+          case "$PACKAGE_MANAGER" in
+            npm@*)
+              NPM_VERSION="${PACKAGE_MANAGER#npm@}"
+              ;;
+            *)
+              echo "::error::package.json packageManager must use the npm@version format."
+              exit 1
+              ;;
+          esac
+
+          if [ -z "$NPM_VERSION" ]; then
+            echo "::error::Unable to determine the npm version from packageManager."
+            exit 1
+          fi
+
+          echo "Node contract: $NODE_RANGE"
+          echo "npm reference version: $NPM_VERSION"
+
+          echo "node_range=$NODE_RANGE" >> "$GITHUB_OUTPUT"
+          echo "npm_version=$NPM_VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: '24.15.0'
-          cache: 'npm'
+          node-version: ${{ steps.toolchain.outputs.node_range }}
 
-      - name: Setup npm
+          # IMPORTANT:
+          # setup-node v7 automatically enables npm caching when package.json
+          # declares packageManager or devEngines.packageManager.
+          #
+          # That would invoke the npm bundled with Node before we bootstrap
+          # the npm version required by this project, causing EBADDEVENGINES.
+          package-manager-cache: false
+
+      - name: Bootstrap project npm version
         shell: bash
-        run: npm install --global npm@11.19.0
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+        run: |
+          set -euo pipefail
+
+          echo "Bundled npm before bootstrap:"
+          npm --version
+
+          # Run outside the repository so the bundled npm does not evaluate
+          # this project's devEngines before it has been upgraded.
+          cd "$RUNNER_TEMP"
+
+          npm install --global "npm@${REQUIRED_NPM_VERSION}"
 
       - name: Verify runtime
         shell: bash
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+          REQUIRED_NODE_RANGE: ${{ steps.toolchain.outputs.node_range }}
         run: |
           set -euo pipefail
 
           NODE_VERSION="$(node --version)"
           NPM_VERSION="$(npm --version)"
 
-          echo "Node: $NODE_VERSION"
-          echo "npm:  $NPM_VERSION"
+          echo "Required Node range: $REQUIRED_NODE_RANGE"
+          echo "Actual Node:         $NODE_VERSION"
+          echo "Required npm:        $REQUIRED_NPM_VERSION"
+          echo "Actual npm:          $NPM_VERSION"
 
-          if [ "$NODE_VERSION" != "v24.15.0" ]; then
-            echo "::error::Expected Node v24.15.0 but found $NODE_VERSION."
-            exit 1
-          fi
-
-          if [ "$NPM_VERSION" != "11.19.0" ]; then
-            echo "::error::Expected npm 11.19.0 but found $NPM_VERSION."
+          if [ "$NPM_VERSION" != "$REQUIRED_NPM_VERSION" ]; then
+            echo "::error::Expected npm $REQUIRED_NPM_VERSION but found $NPM_VERSION."
             exit 1
           fi
 
@@ -183,7 +235,7 @@ jobs:
             exit 1
           fi
 
-          git commit -m "chore: regenerate package-lock with npm 11.19.0"
+          git commit -m "chore: regenerate package-lock"
           git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -203,13 +255,16 @@ jobs:
       - name: Summary
         if: always()
         shell: bash
+        env:
+          REQUIRED_NPM_VERSION: ${{ steps.toolchain.outputs.npm_version }}
+          REQUIRED_NODE_RANGE: ${{ steps.toolchain.outputs.node_range }}
         run: |
           {
             echo "## package-lock regeneration"
             echo
             echo "- Branch: \`${TARGET_BRANCH}\`"
-            echo "- Node: \`24.15.0\`"
-            echo "- npm: \`11.19.0\`"
+            echo "- Node contract: \`${REQUIRED_NODE_RANGE}\`"
+            echo "- npm: \`${REQUIRED_NPM_VERSION}\`"
             echo "- package.json protected against unexpected changes"
             echo "- package-lock.json generated by npm"
             echo "- clean npm ci executed"
