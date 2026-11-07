@@ -1,0 +1,177 @@
+name: Regenerate package-lock
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to update (for example: security/dependency-baseline)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regenerate-package-lock-${{ inputs.target_branch }}
+  cancel-in-progress: false
+
+jobs:
+  regenerate:
+    name: Regenerate package-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      TARGET_BRANCH: ${{ inputs.target_branch }}
+
+    steps:
+      - name: Validate target branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "$TARGET_BRANCH" ]; then
+            echo "::error::A target branch is required."
+            exit 1
+          fi
+
+          if [ "$TARGET_BRANCH" = "main" ]; then
+            echo "::error::This workflow is not allowed to modify main directly. Use a feature branch and a pull request."
+            exit 1
+          fi
+
+          case "$TARGET_BRANCH" in
+            dependabot/*)
+              echo "::error::Do not modify Dependabot branches directly. Create a dedicated maintenance branch instead."
+              exit 1
+              ;;
+          esac
+
+          git check-ref-format --branch "$TARGET_BRANCH"
+
+      - name: Checkout target branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.target_branch }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.15.0'
+          cache: 'npm'
+
+      - name: Setup npm
+        shell: bash
+        run: npm install --global npm@11.19.0
+
+      - name: Verify runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Node:"
+          node --version
+
+          echo "npm:"
+          npm --version
+
+          if [ "$(node --version)" != "v24.15.0" ]; then
+            echo "::error::Unexpected Node version."
+            exit 1
+          fi
+
+          if [ "$(npm --version)" != "11.19.0" ]; then
+            echo "::error::Unexpected npm version."
+            exit 1
+          fi
+
+      - name: Preserve package manifest
+        shell: bash
+        run: cp package.json /tmp/package.json.before
+
+      - name: Regenerate package-lock
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm install --package-lock-only --ignore-scripts
+
+      - name: Verify package.json was not modified
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! cmp --silent /tmp/package.json.before package.json; then
+            echo "::error::npm unexpectedly modified package.json."
+            diff -u /tmp/package.json.before package.json || true
+            exit 1
+          fi
+
+      - name: Check lockfile formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git diff --check
+
+      - name: Validate clean installation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm ci
+
+      - name: Verify only package-lock changed
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Changed tracked files:"
+          git diff --name-only
+
+          UNEXPECTED_FILES="$(
+            git diff --name-only |
+            grep -v '^package-lock\.json$' || true
+          )"
+
+          if [ -n "$UNEXPECTED_FILES" ]; then
+            echo "::error::Unexpected tracked files were modified:"
+            echo "$UNEXPECTED_FILES"
+            exit 1
+          fi
+
+      - name: Commit regenerated package-lock
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- package-lock.json; then
+            echo "package-lock.json is already up to date. Nothing to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add package-lock.json
+
+          git commit -m "chore: regenerate package-lock with npm 11.19.0"
+
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo "## package-lock regeneration"
+            echo
+            echo "- Target branch: \`${TARGET_BRANCH}\`"
+            echo "- Node: \`24.15.0\`"
+            echo "- npm: \`11.19.0\`"
+            echo "- package.json preserved: yes"
+            echo "- npm ci validation: passed"
+            echo
+            echo "The existing CI workflow should now validate audit, lint, tests, build and Playwright through the pull request."
+          } >> "$GITHUB_STEP_SUMMARY"
