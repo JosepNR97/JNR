@@ -1,10 +1,26 @@
 name: Regenerate package-lock
 
 on:
+  # Bootstrap / maintenance mode:
+  # Allows the workflow to run even before it exists in main.
+  # A commit that changes package.json or this workflow in one of these
+  # maintenance branches automatically regenerates package-lock.json.
+  push:
+    branches:
+      - 'Mejoras'
+      - 'maintenance/**'
+      - 'security/**'
+    paths:
+      - 'package.json'
+      - '.github/workflows/regenerate-package-lock.yml'
+
+  # Permanent mode:
+  # Once this workflow exists in main, it can also be launched manually
+  # from GitHub Actions against any maintenance branch.
   workflow_dispatch:
     inputs:
       target_branch:
-        description: 'Branch to update (for example: security/dependency-baseline)'
+        description: 'Branch to regenerate (never main or a Dependabot branch)'
         required: true
         type: string
 
@@ -12,17 +28,17 @@ permissions:
   contents: write
 
 concurrency:
-  group: regenerate-package-lock-${{ inputs.target_branch }}
+  group: regenerate-package-lock-${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
   regenerate:
     name: Regenerate package-lock
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     env:
-      TARGET_BRANCH: ${{ inputs.target_branch }}
+      TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
 
     steps:
       - name: Validate target branch
@@ -30,19 +46,21 @@ jobs:
         run: |
           set -euo pipefail
 
+          echo "Target branch: $TARGET_BRANCH"
+
           if [ -z "$TARGET_BRANCH" ]; then
             echo "::error::A target branch is required."
             exit 1
           fi
 
           if [ "$TARGET_BRANCH" = "main" ]; then
-            echo "::error::This workflow is not allowed to modify main directly. Use a feature branch and a pull request."
+            echo "::error::This workflow must never modify main directly."
             exit 1
           fi
 
           case "$TARGET_BRANCH" in
             dependabot/*)
-              echo "::error::Do not modify Dependabot branches directly. Create a dedicated maintenance branch instead."
+              echo "::error::Do not modify Dependabot branches directly."
               exit 1
               ;;
           esac
@@ -52,7 +70,7 @@ jobs:
       - name: Checkout target branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.target_branch }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
           fetch-depth: 0
           persist-credentials: true
 
@@ -71,64 +89,56 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "Node:"
-          node --version
+          NODE_VERSION="$(node --version)"
+          NPM_VERSION="$(npm --version)"
 
-          echo "npm:"
-          npm --version
+          echo "Node: $NODE_VERSION"
+          echo "npm:  $NPM_VERSION"
 
-          if [ "$(node --version)" != "v24.15.0" ]; then
-            echo "::error::Unexpected Node version."
+          if [ "$NODE_VERSION" != "v24.15.0" ]; then
+            echo "::error::Expected Node v24.15.0 but found $NODE_VERSION."
             exit 1
           fi
 
-          if [ "$(npm --version)" != "11.19.0" ]; then
-            echo "::error::Unexpected npm version."
+          if [ "$NPM_VERSION" != "11.19.0" ]; then
+            echo "::error::Expected npm 11.19.0 but found $NPM_VERSION."
             exit 1
           fi
 
-      - name: Preserve package manifest
+      - name: Preserve package.json
         shell: bash
-        run: cp package.json /tmp/package.json.before
+        run: |
+          set -euo pipefail
+          cp package.json "$RUNNER_TEMP/package.json.before"
 
-      - name: Regenerate package-lock
+      - name: Regenerate package-lock.json
         shell: bash
         run: |
           set -euo pipefail
 
-          npm install --package-lock-only --ignore-scripts
+          npm install \
+            --package-lock-only \
+            --ignore-scripts
 
       - name: Verify package.json was not modified
         shell: bash
         run: |
           set -euo pipefail
 
-          if ! cmp --silent /tmp/package.json.before package.json; then
+          if ! cmp --silent "$RUNNER_TEMP/package.json.before" package.json; then
             echo "::error::npm unexpectedly modified package.json."
-            diff -u /tmp/package.json.before package.json || true
+            diff -u "$RUNNER_TEMP/package.json.before" package.json || true
             exit 1
           fi
 
-      - name: Check lockfile formatting
+      - name: Verify generated diff
         shell: bash
         run: |
           set -euo pipefail
 
           git diff --check
 
-      - name: Validate clean installation
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          npm ci
-
-      - name: Verify only package-lock changed
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          echo "Changed tracked files:"
+          echo "Files modified by lockfile regeneration:"
           git diff --name-only
 
           UNEXPECTED_FILES="$(
@@ -137,18 +147,26 @@ jobs:
           )"
 
           if [ -n "$UNEXPECTED_FILES" ]; then
-            echo "::error::Unexpected tracked files were modified:"
+            echo "::error::Lockfile regeneration modified unexpected tracked files:"
             echo "$UNEXPECTED_FILES"
             exit 1
           fi
 
-      - name: Commit regenerated package-lock
+      - name: Validate clean installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+
+      - name: Commit regenerated package-lock.json
+        id: commit
         shell: bash
         run: |
           set -euo pipefail
 
           if git diff --quiet -- package-lock.json; then
-            echo "package-lock.json is already up to date. Nothing to commit."
+            echo "package-lock.json is already synchronized."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -157,21 +175,48 @@ jobs:
 
           git add package-lock.json
 
-          git commit -m "chore: regenerate package-lock with npm 11.19.0"
+          STAGED_FILES="$(git diff --cached --name-only)"
 
+          if [ "$STAGED_FILES" != "package-lock.json" ]; then
+            echo "::error::Refusing to commit files other than package-lock.json."
+            echo "$STAGED_FILES"
+            exit 1
+          fi
+
+          git commit -m "chore: regenerate package-lock with npm 11.19.0"
           git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
 
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Audit regenerated dependency tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run audit:security
+
+      - name: Validate project
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+
       - name: Summary
+        if: always()
         shell: bash
         run: |
           {
             echo "## package-lock regeneration"
             echo
-            echo "- Target branch: \`${TARGET_BRANCH}\`"
+            echo "- Branch: \`${TARGET_BRANCH}\`"
             echo "- Node: \`24.15.0\`"
             echo "- npm: \`11.19.0\`"
-            echo "- package.json preserved: yes"
-            echo "- npm ci validation: passed"
+            echo "- package.json protected against unexpected changes"
+            echo "- package-lock.json generated by npm"
+            echo "- clean npm ci executed"
             echo
-            echo "The existing CI workflow should now validate audit, lint, tests, build and Playwright through the pull request."
+            if [ "${{ steps.commit.outputs.changed }}" = "true" ]; then
+              echo "A regenerated \`package-lock.json\` was committed to the branch."
+            else
+              echo "\`package-lock.json\` was already synchronized."
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
