@@ -145,7 +145,9 @@ describe('Certifications', () => {
 
     const track = screen.getByTestId('certifications-track');
 
-    expect(track.style.transform).toBe('translate3d(-4000px, 0, 0)');
+    expect(track.style.transform).toMatch(
+      /^translate3d\(-4000px,\s*0(?:px)?,\s*0(?:px)?\)$/,
+    );
 
     runAnimationFrame(1000);
 
