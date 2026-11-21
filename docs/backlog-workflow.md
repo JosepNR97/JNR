@@ -1,47 +1,47 @@
-# Gestion del backlog de JNR
+# Gestión del backlog de JNR
 
-GitHub Issues es la fuente de verdad del trabajo pendiente. No mantener un
-segundo backlog en HTML ni duplicar el contenido de las issues en una Wiki.
+GitHub Issues es la fuente de verdad del trabajo pendiente. No debe mantenerse un
+segundo backlog en HTML ni duplicarse el contenido de las issues en una wiki.
 
 ## Modelo ligero
 
 - Una issue por mejora que pueda cerrarse de forma independiente.
-- Titulo con identificador estable, por ejemplo `[D13] ...`.
-- Area mediante etiqueta: `area:design`, `area:technical` o
+- Título con identificador estable, por ejemplo, `[D13] ...`.
+- Área mediante una etiqueta: `area:design`, `area:technical` o
   `area:functionality`.
-- Fase mediante etiqueta: `phase:now`, `phase:next` o `phase:optional`.
+- Fase mediante una etiqueta: `phase:now`, `phase:next` o `phase:optional`.
 - `open` significa pendiente o en curso; `closed` significa resuelta o descartada
-  con explicacion. No son necesarios estados adicionales para una sola persona.
-- La descripcion de cada issue incluye contexto, objetivo, alcance, referencias,
-  impacto estimado, criterio de reindexacion y prompt cuando proceda.
-- Las dependencias recomendadas se enlazan con `#numero` y no bloquean.
-  Usar la relacion nativa "blocked by" solo para verdaderos prerrequisitos.
+  con una explicación. No son necesarios estados adicionales para una sola persona.
+- La descripción de cada issue incluye contexto, objetivo, alcance, referencias,
+  impacto estimado, criterio de reindexación y prompt, cuando proceda.
+- Las dependencias recomendadas se enlazan con `#N` y no bloquean.
+  La relación nativa «blocked by» se reserva para los verdaderos prerrequisitos.
 
 ## Ciclo de una mejora
 
 1. Revisar la issue, el `main` actual y las dependencias.
-2. Desarrollar en una rama separada de `main`, mediante la web de GitHub si se
-   prefiere. Mantener las PR pequenas y revisables.
-3. Incluir `Closes #N` en la descripcion de la PR si su merge debe cerrar la
-   issue. Si la tarea es una auditoria sin cambios de codigo, documentar sus
+2. Desarrollar en una rama separada de `main`, directamente desde la web de GitHub
+   si se prefiere. Mantener las PR pequeñas y revisables.
+3. Incluir `Closes #N` en la descripción de la PR si su fusión debe cerrar la issue.
+   Si la tarea consiste en una auditoría sin cambios de código, documentar sus
    conclusiones en la issue y cerrarla manualmente.
-4. Conservar el required check `CI / validate`, los tests E2E y el control de
-   accesibilidad ya existentes.
-5. Solicitar reindexacion manual solo cuando cambie contenido o metadata
-   indexable de forma significativa; no por cada merge.
+4. Conservar la comprobación obligatoria `CI / validate`, las pruebas E2E y el
+   control de accesibilidad ya existentes.
+5. Solicitar la reindexación manual solo cuando cambien de forma significativa el
+   contenido o los metadatos indexables; no por cada fusión de una PR.
 
-## Consultas utiles
+## Consultas útiles
 
 - [Todas las issues abiertas](https://github.com/JosepNR97/JNR/issues?q=is%3Aissue+is%3Aopen)
 - [Iniciativas para ahora](https://github.com/JosepNR97/JNR/issues?q=is%3Aissue+is%3Aopen+label%3Aphase%3Anow)
-- [Trabajo tecnico](https://github.com/JosepNR97/JNR/issues?q=is%3Aissue+is%3Aopen+label%3Aarea%3Atechnical)
+- [Trabajo técnico](https://github.com/JosepNR97/JNR/issues?q=is%3Aissue+is%3Aopen+label%3Aarea%3Atechnical)
 
-## Documentacion y tablero
+## Documentación y tablero
 
-Mantener el README como entrada al proyecto y las guias tecnicas versionadas en
-`docs/` (`dependency-maintenance.md`, `multilingual-seo.md`, `image-delivery.md`
-y futuras guias). No duplicar esas guias en la Wiki.
+Mantener el `README.md` como punto de entrada al proyecto y las guías técnicas
+versionadas en `docs/` (`dependency-maintenance.md`, `multilingual-seo.md`,
+`image-delivery.md` y futuras guías). No duplicar esas guías en la wiki.
 
-No es necesario GitHub Projects mientras las issues y sus etiquetas basten para
-priorizar el trabajo. Si despues se necesita un tablero, crear un unico Project
-que referencie estas mismas issues, sin una segunda lista de tareas.
+No es necesario utilizar GitHub Projects mientras las issues y sus etiquetas
+permitan priorizar el trabajo. Si después se necesita un tablero, crear un único
+Project que haga referencia a estas mismas issues, sin una segunda lista de tareas.
