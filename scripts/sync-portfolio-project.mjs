@@ -1,4 +1,3 @@
-
 /* Sincroniza JNR Issues -> GitHub Project. Solo la issue es fuente de verdad. */
 const OWNER = 'JosepNR97';
 const REPO = 'JNR';
@@ -789,13 +788,7 @@ async function syncItems(project, issues, related) {
       );
 
       if (option) {
-        await updateField(
-          project,
-          item.id,
-          status,
-          option.name,
-          actual,
-        );
+        await updateField(project, item.id, status, option.name, actual);
       }
     }
 
@@ -849,13 +842,7 @@ async function ensureViews(project) {
       name: '03 · Ejecución',
       layout: 'board',
       vertical_group_by: col(['Status']),
-      visible_fields: col([
-        'Title',
-        'Status',
-        'Área',
-        'Fase',
-        'Impacto',
-      ]),
+      visible_fields: col(['Title', 'Status', 'Área', 'Fase', 'Impacto']),
     },
     {
       name: '04 · Dependencias',
@@ -949,8 +936,7 @@ async function ensureViews(project) {
             input: {
               projectId: project.id,
               name: spec.name,
-              layout:
-                spec.layout === 'table' ? 'TABLE_LAYOUT' : 'BOARD_LAYOUT',
+              layout: spec.layout === 'table' ? 'TABLE_LAYOUT' : 'BOARD_LAYOUT',
               configuration: {
                 visibleFieldIds: graphFields,
               },
