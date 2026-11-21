@@ -1,4 +1,5 @@
-// Sincroniza JNR Issues -> GitHub Project. Solo la issue es fuente de verdad.
+
+/* Sincroniza JNR Issues -> GitHub Project. Solo la issue es fuente de verdad. */
 const OWNER = 'JosepNR97';
 const REPO = 'JNR';
 const PROJECT_TITLE = 'JNR · Portfolio Backlog';
@@ -9,6 +10,7 @@ const PROJECT_TOKEN = process.env.GH_PROJECT_PAT;
 const DRY_RUN =
   process.env.GITHUB_EVENT_NAME === 'workflow_dispatch' &&
   process.env.DRY_RUN !== 'false';
+
 const PAUSE = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const WRITE_PAUSE_MS = Number(process.env.JNR_WRITE_PAUSE_MS ?? 850);
 
@@ -112,7 +114,19 @@ async function graphql(query, variables = {}) {
   return result.data;
 }
 
-// Admite las descripciones importadas en 2026 y las nuevas issue forms.
+// GitHub Issue Forms convierte las respuestas vacías en "_No response_"
+// (o en "None" en determinados campos). No deben tratarse como valores reales.
+function normalizeFormAnswer(value) {
+  const text = (value || '').trim();
+
+  if (['_No response_', 'No response', 'None'].includes(text)) {
+    return '';
+  }
+
+  return text;
+}
+
+// Admite las descripciones importadas en 2026 y las nuevas Issue Forms.
 function valueFromBody(body, label) {
   const safe = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -121,12 +135,12 @@ function valueFromBody(body, label) {
   );
 
   if (legacy) {
-    return legacy[1].trim();
+    return normalizeFormAnswer(legacy[1]);
   }
 
   const form = new RegExp(`^### ${safe}\\s*\\n+([^\\n#]+)`, 'm').exec(body);
 
-  return form?.[1].trim() || '';
+  return normalizeFormAnswer(form?.[1]);
 }
 
 function issueMetadata(issue) {
@@ -775,7 +789,13 @@ async function syncItems(project, issues, related) {
       );
 
       if (option) {
-        await updateField(project, item.id, status, option.name, actual);
+        await updateField(
+          project,
+          item.id,
+          status,
+          option.name,
+          actual,
+        );
       }
     }
 
@@ -829,7 +849,13 @@ async function ensureViews(project) {
       name: '03 · Ejecución',
       layout: 'board',
       vertical_group_by: col(['Status']),
-      visible_fields: col(['Title', 'Status', 'Área', 'Fase', 'Impacto']),
+      visible_fields: col([
+        'Title',
+        'Status',
+        'Área',
+        'Fase',
+        'Impacto',
+      ]),
     },
     {
       name: '04 · Dependencias',
@@ -923,7 +949,8 @@ async function ensureViews(project) {
             input: {
               projectId: project.id,
               name: spec.name,
-              layout: spec.layout === 'table' ? 'TABLE_LAYOUT' : 'BOARD_LAYOUT',
+              layout:
+                spec.layout === 'table' ? 'TABLE_LAYOUT' : 'BOARD_LAYOUT',
               configuration: {
                 visibleFieldIds: graphFields,
               },
