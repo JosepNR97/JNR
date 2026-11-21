@@ -1,0 +1,125 @@
+name: Mejora del portafolio
+description: Crea una iniciativa de diseño, tecnología o funcionalidad para el portafolio.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Fuente de verdad:** esta issue. Los campos del Project se sincronizan automáticamente.
+        No crees otra versión del backlog ni conviertas recomendaciones en bloqueos.
+
+  - type: textarea
+    id: objetivo
+    attributes:
+      label: Qué queremos conseguir
+      description: Resultado concreto que debe aportar esta iniciativa.
+      placeholder: Explica qué debería mejorar y para quién.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivacion
+    attributes:
+      label: Por qué merece la pena
+      description: Problema observado, oportunidad y beneficio esperado.
+    validations:
+      required: true
+
+  - type: textarea
+    id: enfoque
+    attributes:
+      label: Enfoque recomendado
+      description: Alcance, restricciones, archivos probables y decisiones de diseño o tecnología.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - Diseño
+        - Técnico
+        - Funcionalidad
+    validations:
+      required: true
+
+  - type: dropdown
+    id: fase
+    attributes:
+      label: Fase
+      options:
+        - Ahora
+        - Siguiente
+        - Opcional
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impacto
+    attributes:
+      label: Impacto
+      options:
+        - Alto
+        - Medio
+        - Bajo
+    validations:
+      required: true
+
+  - type: dropdown
+    id: esfuerzo
+    attributes:
+      label: Esfuerzo estimado
+      options:
+        - Bajo
+        - Medio
+        - Alto
+    validations:
+      required: true
+
+  - type: dropdown
+    id: reindexacion
+    attributes:
+      label: Reindexación manual
+      options:
+        - 'No'
+        - Recomendada
+        - Sí
+    validations:
+      required: true
+
+  - type: input
+    id: orden
+    attributes:
+      label: Orden (opcional)
+      description: Entero positivo. En blanco, se añade al final y podrás reordenarlo desde Projects.
+      placeholder: '16'
+
+  - type: textarea
+    id: dependencias_recomendadas
+    attributes:
+      label: Dependencias recomendadas
+      description: Una issue por línea, por ejemplo, '#126 — Conviene crear primero las capturas'. No son bloqueos.
+      placeholder: '#126 — Motivo de la recomendación'
+
+  - type: textarea
+    id: dependencias_bloqueantes
+    attributes:
+      label: Dependencias bloqueantes
+      description: Solo prerrequisitos reales; se crearán como relaciones nativas «Blocked by».
+      placeholder: '#127 — No se puede completar esta mejora sin resolver esta otra issue'
+
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación
+      description: Lista verificable de condiciones para poder cerrar la mejora.
+      placeholder: '- [ ] El resultado está validado en CA/ES/EN.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: prompt
+    attributes:
+      label: Prompt de implementación
+      description: Opcional. Incluye instrucciones completas para futuras sesiones con IA.
+      render: text
