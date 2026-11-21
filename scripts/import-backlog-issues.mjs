@@ -168,14 +168,14 @@ function renderIssue(item, harness, issueMap, pending) {
   const prompt = [
     harness,
     '',
-    'TAREA ESPECIFICA',
+    'TAREA ESPECÍFICA',
     '',
     item.promptTask,
     '',
-    'REINDEXACION / SEARCH CONSOLE',
+    'REINDEXACIÓN / SEARCH CONSOLE',
     '',
-    `Clasificacion: ${item.reindex}`,
-    `Accion: ${item.reindexNote}`,
+    `Clasificación: ${item.reindex}`,
+    `Acción: ${item.reindexNote}`,
   ].join('\n');
 
   return [
