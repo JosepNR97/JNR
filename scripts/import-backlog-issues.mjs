@@ -43,8 +43,8 @@ const labelDefinitions = [
 ];
 
 const areaLabels = {
-  'Diseño': 'area:design',
-  'Técnico': 'area:technical',
+  Diseño: 'area:design',
+  Técnico: 'area:technical',
   Funcionalidad: 'area:functionality',
 };
 const phaseLabels = {
@@ -285,7 +285,9 @@ async function main() {
   validateSeed(seed);
 
   if (dryRun) {
-    console.log(`DRY RUN: ${seed.items.length} issues planned for ${repository}`);
+    console.log(
+      `DRY RUN: ${seed.items.length} issues planned for ${repository}`,
+    );
     for (const item of seed.items) {
       const body = renderIssue(item, seed.harness, new Map(), true);
       console.log(`- ${issueTitle(item)} (${body.length} characters)`);
@@ -303,7 +305,9 @@ async function main() {
 
   for (const item of seed.items) {
     if (issues.has(item.id)) {
-      console.log(`Skipping existing ${item.id} (#${issues.get(item.id).number})`);
+      console.log(
+        `Skipping existing ${item.id} (#${issues.get(item.id).number})`,
+      );
       continue;
     }
     const issue = await request('POST', `${apiRoot}/issues`, {
@@ -338,7 +342,9 @@ async function main() {
     `- Pre-existing issues reused: ${seed.items.length - created.length}`,
     '',
     '### Imported issue links',
-    ...seed.items.map((item) => `- ${item.id}: ${issues.get(item.id).html_url}`),
+    ...seed.items.map(
+      (item) => `- ${item.id}: ${issues.get(item.id).html_url}`,
+    ),
   ].join('\n');
   console.log(summary);
   if (process.env.GITHUB_STEP_SUMMARY) {
