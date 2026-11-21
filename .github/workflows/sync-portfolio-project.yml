@@ -1,0 +1,53 @@
+name: Sincronizar JNR Project
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Simular sin crear ni modificar nada'
+        required: true
+        type: boolean
+        default: true
+  issues:
+    types:
+      - opened
+      - edited
+      - reopened
+      - closed
+      - labeled
+      - unlabeled
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: jnr-project-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    # No se exponen credenciales a eventos lanzados por terceros.
+    if: github.event_name == 'workflow_dispatch' || github.actor == 'JosepNR97'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Obtener repositorio
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Preparar Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Sincronizar issues, campos, dependencias y vistas
+        env:
+          GH_REPO_TOKEN: ${{ github.token }}
+          GH_PROJECT_PAT: ${{ secrets.JNR_PROJECT_PAT }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          ISSUE_ACTION: ${{ github.event.action }}
+        run: node scripts/sync-portfolio-project.mjs
