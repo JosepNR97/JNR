@@ -40,12 +40,7 @@ const FIELDS = [
   },
   {
     name: 'Relación',
-    values: [
-      'Sin relaciones',
-      'Recomendada',
-      'Bloqueante',
-      'Mixta',
-    ],
+    values: ['Sin relaciones', 'Recomendada', 'Bloqueante', 'Mixta'],
     colors: ['GRAY', 'BLUE', 'RED', 'PURPLE'],
   },
   { name: 'Orden', type: 'NUMBER' },
@@ -91,10 +86,7 @@ async function rest(path, token, method = 'GET', payload) {
 
     const error = await response.text();
 
-    if (
-      [429, 500, 502, 503, 504].includes(response.status) &&
-      attempt < 3
-    ) {
+    if ([429, 500, 502, 503, 504].includes(response.status) && attempt < 3) {
       await PAUSE(attempt * 1600);
       continue;
     }
@@ -124,19 +116,15 @@ async function graphql(query, variables = {}) {
 function valueFromBody(body, label) {
   const safe = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  const legacy = new RegExp(
-    `^\\s*- \\*\\*${safe}:\\*\\*\\s*(.+)$`,
-    'm',
-  ).exec(body);
+  const legacy = new RegExp(`^\\s*- \\*\\*${safe}:\\*\\*\\s*(.+)$`, 'm').exec(
+    body,
+  );
 
   if (legacy) {
     return legacy[1].trim();
   }
 
-  const form = new RegExp(
-    `^### ${safe}\\s*\\n+([^\\n#]+)`,
-    'm',
-  ).exec(body);
+  const form = new RegExp(`^### ${safe}\\s*\\n+([^\\n#]+)`, 'm').exec(body);
 
   return form?.[1].trim() || '';
 }
@@ -147,10 +135,7 @@ function issueMetadata(issue) {
     Fase: valueFromBody(issue.body || '', 'Fase'),
     Impacto: valueFromBody(issue.body || '', 'Impacto'),
     Esfuerzo: valueFromBody(issue.body || '', 'Esfuerzo estimado'),
-    Reindexación: valueFromBody(
-      issue.body || '',
-      'Reindexación manual',
-    ),
+    Reindexación: valueFromBody(issue.body || '', 'Reindexación manual'),
   };
 
   for (const config of FIELDS.filter(
@@ -163,18 +148,10 @@ function issueMetadata(issue) {
     }
   }
 
-  const rawOrder = valueFromBody(
-    issue.body || '',
-    'Orden (opcional)',
-  );
+  const rawOrder = valueFromBody(issue.body || '', 'Orden (opcional)');
 
-  if (
-    rawOrder &&
-    (!/^\d+$/.test(rawOrder) || Number(rawOrder) < 1)
-  ) {
-    throw new Error(
-      `#${issue.number}: Orden debe ser un entero positivo.`,
-    );
+  if (rawOrder && (!/^\d+$/.test(rawOrder) || Number(rawOrder) < 1)) {
+    throw new Error(`#${issue.number}: Orden debe ser un entero positivo.`);
   }
 
   return {
@@ -193,8 +170,7 @@ function section(body, heading) {
     const header = /^#{2,3}\s+(.+)\s*$/.exec(line);
 
     if (header) {
-      active =
-        header[1].trim().toLocaleLowerCase('es') === target;
+      active = header[1].trim().toLocaleLowerCase('es') === target;
       continue;
     }
 
@@ -209,8 +185,8 @@ function section(body, heading) {
 function references(text) {
   return [
     ...new Set(
-      [...text.matchAll(/(?:^|[^\w])#(\d+)\b/g)].map(
-        (match) => Number(match[1]),
+      [...text.matchAll(/(?:^|[^\w])#(\d+)\b/g)].map((match) =>
+        Number(match[1]),
       ),
     ),
   ];
@@ -218,22 +194,15 @@ function references(text) {
 
 function declaredRelations(issue) {
   const recommended = new Set(
-    references(
-      section(issue.body, 'Dependencias recomendadas'),
-    ),
+    references(section(issue.body, 'Dependencias recomendadas')),
   );
 
   const blocking = new Set(
-    references(
-      section(issue.body, 'Dependencias bloqueantes'),
-    ),
+    references(section(issue.body, 'Dependencias bloqueantes')),
   );
 
   // Compatibilidad con el formato del importador inicial.
-  for (const line of section(
-    issue.body,
-    'Dependencias',
-  ).split('\n')) {
+  for (const line of section(issue.body, 'Dependencias').split('\n')) {
     if (/Recomendada \(no bloqueante\)/i.test(line)) {
       references(line).forEach((n) => recommended.add(n));
     }
@@ -259,23 +228,17 @@ async function listIssues() {
     );
 
     if (!Array.isArray(batch)) {
-      throw new Error(
-        'La API de issues no ha devuelto un listado.',
-      );
+      throw new Error('La API de issues no ha devuelto un listado.');
     }
 
-    all.push(
-      ...batch.filter((issue) => !issue.pull_request),
-    );
+    all.push(...batch.filter((issue) => !issue.pull_request));
 
     if (batch.length < 100) {
       break;
     }
 
     if (page === 30) {
-      throw new Error(
-        'Demasiadas páginas de issues: revisa la paginación.',
-      );
+      throw new Error('Demasiadas páginas de issues: revisa la paginación.');
     }
   }
 
@@ -288,19 +251,12 @@ async function listIssues() {
 }
 
 async function reconcileLabels(issue, metadata) {
-  const expected = [
-    AREA[metadata.Área],
-    FASE[metadata.Fase],
-  ];
+  const expected = [AREA[metadata.Área], FASE[metadata.Fase]];
 
-  const current = new Set(
-    issue.labels.map((label) => label.name),
-  );
+  const current = new Set(issue.labels.map((label) => label.name));
 
   const unwanted = [...current].filter(
-    (name) =>
-      /^(area:|phase:)/.test(name) &&
-      !expected.includes(name),
+    (name) => /^(area:|phase:)/.test(name) && !expected.includes(name),
   );
 
   if (DRY_RUN) {
@@ -315,9 +271,7 @@ async function reconcileLabels(issue, metadata) {
     );
   }
 
-  const missing = expected.filter(
-    (name) => !current.has(name),
-  );
+  const missing = expected.filter((name) => !current.has(name));
 
   if (missing.length) {
     await rest(
@@ -330,19 +284,14 @@ async function reconcileLabels(issue, metadata) {
 }
 
 async function relationsFor(issues) {
-  const known = new Map(
-    issues.map((issue) => [issue.number, issue]),
-  );
+  const known = new Map(issues.map((issue) => [issue.number, issue]));
 
   const relations = new Map();
 
   for (const issue of issues) {
     const declared = declaredRelations(issue);
 
-    for (const number of [
-      ...declared.recommended,
-      ...declared.blocking,
-    ]) {
+    for (const number of [...declared.recommended, ...declared.blocking]) {
       if (!known.has(number)) {
         throw new Error(
           `#${issue.number}: dependencia #${number} ajena al backlog. Revísala antes de sincronizar.`,
@@ -362,9 +311,7 @@ async function relationsFor(issues) {
       );
     }
 
-    const nativeSet = new Set(
-      native.map((entry) => entry.number),
-    );
+    const nativeSet = new Set(native.map((entry) => entry.number));
 
     // Solo añadimos bloqueos explícitos; nunca recomendaciones.
     for (const number of declared.blocking) {
@@ -420,12 +367,8 @@ function relationValues(issues, relations) {
 
   const describe = (rel) =>
     [
-      rel.recommended.size
-        ? `Recomendadas: ${show(rel.recommended)}`
-        : '',
-      rel.blocking.size
-        ? `Bloqueantes: ${show(rel.blocking)}`
-        : '',
+      rel.recommended.size ? `Recomendadas: ${show(rel.recommended)}` : '',
+      rel.blocking.size ? `Bloqueantes: ${show(rel.blocking)}` : '',
     ]
       .filter(Boolean)
       .join(' · ') || '—';
@@ -436,11 +379,9 @@ function relationValues(issues, relations) {
     const rel = relations.get(issue.number);
     const back = inverse.get(issue.number);
 
-    const hasRecommended =
-      rel.recommended.size + back.recommended.size > 0;
+    const hasRecommended = rel.recommended.size + back.recommended.size > 0;
 
-    const hasBlocking =
-      rel.blocking.size + back.blocking.size > 0;
+    const hasBlocking = rel.blocking.size + back.blocking.size > 0;
 
     output.set(issue.number, {
       'Depende de': describe(rel),
@@ -571,9 +512,7 @@ async function getProject(number) {
   const project = result.user?.projectV2;
 
   if (!project) {
-    throw new Error(
-      `No se ha podido recuperar el Project #${number}.`,
-    );
+    throw new Error(`No se ha podido recuperar el Project #${number}.`);
   }
 
   if (project.items.pageInfo.hasNextPage) {
@@ -591,14 +530,12 @@ async function ensureProject() {
     repo: REPO,
   });
 
-  const matches = (
-    owner.user?.projectsV2.nodes || []
-  ).filter((p) => p.title === PROJECT_TITLE);
+  const matches = (owner.user?.projectsV2.nodes || []).filter(
+    (p) => p.title === PROJECT_TITLE,
+  );
 
   if (matches.length > 1) {
-    throw new Error(
-      'Existen varios Projects con el mismo nombre.',
-    );
+    throw new Error('Existen varios Projects con el mismo nombre.');
   }
 
   if (matches.length === 1) {
@@ -606,11 +543,16 @@ async function ensureProject() {
   }
 
   const data = await graphql(
-    `mutation($input:CreateProjectV2Input!) {
-      createProjectV2(input:$input) {
-        projectV2 { number url }
+    `
+      mutation ($input: CreateProjectV2Input!) {
+        createProjectV2(input: $input) {
+          projectV2 {
+            number
+            url
+          }
+        }
       }
-    }`,
+    `,
     {
       input: {
         ownerId: owner.user.id,
@@ -620,20 +562,14 @@ async function ensureProject() {
     },
   );
 
-  console.log(
-    `Project creado: ${data.createProjectV2.projectV2.url}`,
-  );
+  console.log(`Project creado: ${data.createProjectV2.projectV2.url}`);
 
-  return getProject(
-    data.createProjectV2.projectV2.number,
-  );
+  return getProject(data.createProjectV2.projectV2.number);
 }
 
 async function ensureFields(project) {
   const existing = new Set(
-    project.fields.nodes
-      .filter(Boolean)
-      .map((field) => field.name),
+    project.fields.nodes.filter(Boolean).map((field) => field.name),
   );
 
   for (const config of FIELDS) {
@@ -648,24 +584,28 @@ async function ensureFields(project) {
     };
 
     if (config.values) {
-      input.singleSelectOptions = config.values.map(
-        (name, i) => ({
-          name,
-          description: name,
-          color: config.colors[i],
-        }),
-      );
+      input.singleSelectOptions = config.values.map((name, i) => ({
+        name,
+        description: name,
+        color: config.colors[i],
+      }));
     }
 
     await graphql(
-      `mutation($input:CreateProjectV2FieldInput!) {
-        createProjectV2Field(input:$input) {
-          projectV2Field {
-            ... on ProjectV2Field { id }
-            ... on ProjectV2SingleSelectField { id }
+      `
+        mutation ($input: CreateProjectV2FieldInput!) {
+          createProjectV2Field(input: $input) {
+            projectV2Field {
+              ... on ProjectV2Field {
+                id
+              }
+              ... on ProjectV2SingleSelectField {
+                id
+              }
+            }
           }
         }
-      }`,
+      `,
       { input },
     );
 
@@ -685,22 +625,13 @@ function currentValues(item) {
       continue;
     }
 
-    result.set(
-      entry.field.name,
-      entry.name ?? entry.text ?? entry.number,
-    );
+    result.set(entry.field.name, entry.name ?? entry.text ?? entry.number);
   }
 
   return result;
 }
 
-async function updateField(
-  project,
-  itemId,
-  field,
-  desired,
-  current,
-) {
+async function updateField(project, itemId, field, desired, current) {
   if (desired === null || desired === undefined) {
     return;
   }
@@ -723,21 +654,20 @@ async function updateField(
           }
         : { text: desired };
 
-  if (
-    value.singleSelectOptionId === undefined &&
-    field.options
-  ) {
-    throw new Error(
-      `Opción desconocida: ${field.name} = ${desired}`,
-    );
+  if (value.singleSelectOptionId === undefined && field.options) {
+    throw new Error(`Opción desconocida: ${field.name} = ${desired}`);
   }
 
   await graphql(
-    `mutation($input:UpdateProjectV2ItemFieldValueInput!) {
-      updateProjectV2ItemFieldValue(input:$input) {
-        projectV2Item { id }
+    `
+      mutation ($input: UpdateProjectV2ItemFieldValueInput!) {
+        updateProjectV2ItemFieldValue(input: $input) {
+          projectV2Item {
+            id
+          }
+        }
       }
-    }`,
+    `,
     {
       input: {
         projectId: project.id,
@@ -753,22 +683,16 @@ async function updateField(
 
 async function syncItems(project, issues, related) {
   const fields = new Map(
-    project.fields.nodes
-      .filter(Boolean)
-      .map((field) => [field.name, field]),
+    project.fields.nodes.filter(Boolean).map((field) => [field.name, field]),
   );
 
   const items = new Map(
     project.items.nodes
       .filter(
         (item) =>
-          item.content?.repository?.nameWithOwner ===
-          `${OWNER}/${REPO}`,
+          item.content?.repository?.nameWithOwner === `${OWNER}/${REPO}`,
       )
-      .map((item) => [
-        item.content.number,
-        item,
-      ]),
+      .map((item) => [item.content.number, item]),
   );
 
   const status = fields.get('Status');
@@ -783,11 +707,15 @@ async function syncItems(project, issues, related) {
 
     if (!item) {
       const data = await graphql(
-        `mutation($input:AddProjectV2ItemByIdInput!) {
-          addProjectV2ItemById(input:$input) {
-            item { id }
+        `
+          mutation ($input: AddProjectV2ItemByIdInput!) {
+            addProjectV2ItemById(input: $input) {
+              item {
+                id
+              }
+            }
           }
-        }`,
+        `,
         {
           input: {
             projectId: project.id,
@@ -809,30 +737,17 @@ async function syncItems(project, issues, related) {
       const field = fields.get(config.name);
 
       if (!field) {
-        throw new Error(
-          `Falta el campo del Project: ${config.name}`,
-        );
+        throw new Error(`Falta el campo del Project: ${config.name}`);
       }
 
       let desired = values[config.name];
 
       // Si no hay orden explícito, respetar cambios manuales.
-      if (
-        config.name === 'Orden' &&
-        desired === null
-      ) {
-        desired = actual.has('Orden')
-          ? null
-          : index + 1;
+      if (config.name === 'Orden' && desired === null) {
+        desired = actual.has('Orden') ? null : index + 1;
       }
 
-      await updateField(
-        project,
-        item.id,
-        field,
-        desired,
-        actual,
-      );
+      await updateField(project, item.id, field, desired, actual);
     }
 
     if (status) {
@@ -841,22 +756,14 @@ async function syncItems(project, issues, related) {
 
       if (
         issue.state === 'closed' &&
-        (
-          created ||
-          eventAction === 'closed' ||
-          !actual.has('Status')
-        )
+        (created || eventAction === 'closed' || !actual.has('Status'))
       ) {
         nextStatus = 'Done';
       }
 
       if (
         issue.state === 'open' &&
-        (
-          created ||
-          eventAction === 'reopened' ||
-          !actual.has('Status')
-        )
+        (created || eventAction === 'reopened' || !actual.has('Status'))
       ) {
         nextStatus = 'Todo';
       }
@@ -868,21 +775,11 @@ async function syncItems(project, issues, related) {
       );
 
       if (option) {
-        await updateField(
-          project,
-          item.id,
-          status,
-          option.name,
-          actual,
-        );
+        await updateField(project, item.id, status, option.name, actual);
       }
     }
 
-    console.log(
-      `#${issue.number}: sincronizada${
-        created ? ' (nueva)' : ''
-      }.`,
-    );
+    console.log(`#${issue.number}: sincronizada${created ? ' (nueva)' : ''}.`);
   }
 }
 
@@ -892,17 +789,10 @@ async function ensureViews(project) {
     PROJECT_TOKEN,
   );
 
-  const ids = new Map(
-    restFields.map((field) => [
-      field.name,
-      field.id,
-    ]),
-  );
+  const ids = new Map(restFields.map((field) => [field.name, field.id]));
 
   const col = (names) =>
-    names
-      .map((name) => ids.get(name))
-      .filter(Number.isInteger);
+    names.map((name) => ids.get(name)).filter(Number.isInteger);
 
   const specs = [
     {
@@ -939,13 +829,7 @@ async function ensureViews(project) {
       name: '03 · Ejecución',
       layout: 'board',
       vertical_group_by: col(['Status']),
-      visible_fields: col([
-        'Title',
-        'Status',
-        'Área',
-        'Fase',
-        'Impacto',
-      ]),
+      visible_fields: col(['Title', 'Status', 'Área', 'Fase', 'Impacto']),
     },
     {
       name: '04 · Dependencias',
@@ -967,61 +851,42 @@ async function ensureViews(project) {
     },
   ];
 
-  const existing = new Set(
-    project.views.nodes.map((v) => v.name),
-  );
+  const existing = new Set(project.views.nodes.map((v) => v.name));
 
-  const account = await rest(
-    `/users/${OWNER}`,
-    REPO_TOKEN,
-  );
+  const account = await rest(`/users/${OWNER}`, REPO_TOKEN);
 
   for (const spec of specs) {
     if (existing.has(spec.name)) {
       continue;
     }
 
-    const path =
-      `/users/${account.id}/projectsV2/` +
-      `${project.number}/views`;
+    const path = `/users/${account.id}/projectsV2/` + `${project.number}/views`;
 
     const request = {
       ...spec,
       filter: 'is:issue',
     };
 
-    request.sort_by = request.sort_by?.filter(
-      ([field]) => Number.isInteger(field),
+    request.sort_by = request.sort_by?.filter(([field]) =>
+      Number.isInteger(field),
     );
 
     try {
-      await rest(
-        path,
-        PROJECT_TOKEN,
-        'POST',
-        request,
-      );
+      await rest(path, PROJECT_TOKEN, 'POST', request);
 
-      console.log(
-        `Vista configurada: ${spec.name}`,
-      );
+      console.log(`Vista configurada: ${spec.name}`);
     } catch (error) {
       console.warn(
         `${spec.name}: no se admitió la configuración avanzada (${error.message}).`,
       );
 
       try {
-        await rest(
-          path,
-          PROJECT_TOKEN,
-          'POST',
-          {
-            name: spec.name,
-            layout: spec.layout,
-            filter: 'is:issue',
-            visible_fields: spec.visible_fields,
-          },
-        );
+        await rest(path, PROJECT_TOKEN, 'POST', {
+          name: spec.name,
+          layout: spec.layout,
+          filter: 'is:issue',
+          visible_fields: spec.visible_fields,
+        });
       } catch (restError) {
         console.warn(
           `REST sin éxito (${restError.message}). Se utiliza GraphQL para crear la vista.`,
@@ -1045,19 +910,20 @@ async function ensureViews(project) {
           .map((field) => field.id);
 
         await graphql(
-          `mutation($input:CreateProjectV2ViewInput!) {
-            createProjectV2View(input:$input) {
-              projectV2View { id }
+          `
+            mutation ($input: CreateProjectV2ViewInput!) {
+              createProjectV2View(input: $input) {
+                projectV2View {
+                  id
+                }
+              }
             }
-          }`,
+          `,
           {
             input: {
               projectId: project.id,
               name: spec.name,
-              layout:
-                spec.layout === 'table'
-                  ? 'TABLE_LAYOUT'
-                  : 'BOARD_LAYOUT',
+              layout: spec.layout === 'table' ? 'TABLE_LAYOUT' : 'BOARD_LAYOUT',
               configuration: {
                 visibleFieldIds: graphFields,
               },
@@ -1066,21 +932,14 @@ async function ensureViews(project) {
         );
       }
 
-      console.warn(
-        `Revisa manualmente Group by y Sort by en: ${spec.name}.`,
-      );
+      console.warn(`Revisa manualmente Group by y Sort by en: ${spec.name}.`);
     }
 
     await PAUSE(250);
   }
 }
 
-function projectReadme(
-  project,
-  issues,
-  relations,
-  related,
-) {
+function projectReadme(project, issues, relations, related) {
   const begin = '<!-- JNR_DEPENDENCIES_BEGIN -->';
   const end = '<!-- JNR_DEPENDENCIES_END -->';
 
@@ -1101,28 +960,20 @@ function projectReadme(
     '',
     '```mermaid',
     'flowchart LR',
-    ...issues.map(
-      (issue) =>
-        `  i${issue.number}["#${issue.number}"]`,
-    ),
+    ...issues.map((issue) => `  i${issue.number}["#${issue.number}"]`),
     ...issues.flatMap((issue) => {
       const rel = relations.get(issue.number);
 
       return [
         ...[...rel.recommended].map(
-          (number) =>
-            `  i${number} -.-> i${issue.number}`,
+          (number) => `  i${number} -.-> i${issue.number}`,
         ),
         ...[...rel.blocking].map(
-          (number) =>
-            `  i${number} --> i${issue.number}`,
+          (number) => `  i${number} --> i${issue.number}`,
         ),
       ];
     }),
-    ...issues.map(
-      (issue) =>
-        `  click i${issue.number} "${issue.html_url}"`,
-    ),
+    ...issues.map((issue) => `  click i${issue.number} "${issue.html_url}"`),
     '```',
     '',
     'Flecha continua = bloqueo real. Flecha discontinua = recomendación de orden. Si la vista de README no representa Mermaid, utiliza la tabla anterior.',
@@ -1137,41 +988,28 @@ function projectReadme(
 
   if (start >= 0 && finish > start) {
     return (
-      current.slice(0, start) +
-      sectionText +
-      current.slice(finish + end.length)
+      current.slice(0, start) + sectionText + current.slice(finish + end.length)
     );
   }
 
-  return [current.trim(), sectionText]
-    .filter(Boolean)
-    .join('\n\n');
+  return [current.trim(), sectionText].filter(Boolean).join('\n\n');
 }
 
 async function main() {
-  if (
-    process.env.GITHUB_REPOSITORY !==
-    `${OWNER}/${REPO}`
-  ) {
-    throw new Error(
-      'Este workflow solo puede ejecutarse en JNR.',
-    );
+  if (process.env.GITHUB_REPOSITORY !== `${OWNER}/${REPO}`) {
+    throw new Error('Este workflow solo puede ejecutarse en JNR.');
   }
 
   const issues = await listIssues();
 
-  issues.sort(
-    (a, b) => a.number - b.number,
-  );
+  issues.sort((a, b) => a.number - b.number);
 
   const metadata = issues.map((issue) => ({
     issue,
     fields: issueMetadata(issue),
   }));
 
-  console.log(
-    `Issues de mejora verificadas: ${metadata.length}.`,
-  );
+  console.log(`Issues de mejora verificadas: ${metadata.length}.`);
 
   if (DRY_RUN) {
     for (const { issue, fields } of metadata) {
@@ -1198,9 +1036,7 @@ async function main() {
   }
 
   if (!issues.length) {
-    throw new Error(
-      'No hay issues de mejora con el formato esperado.',
-    );
+    throw new Error('No hay issues de mejora con el formato esperado.');
   }
 
   const relations = await relationsFor(issues);
@@ -1210,28 +1046,23 @@ async function main() {
 
   project = await ensureFields(project);
 
-  await syncItems(
-    project,
-    issues,
-    related,
-  );
+  await syncItems(project, issues, related);
 
   await ensureViews(project);
 
-  const readme = projectReadme(
-    project,
-    issues,
-    relations,
-    related,
-  );
+  const readme = projectReadme(project, issues, relations, related);
 
   if (readme !== (project.readme || '')) {
     await graphql(
-      `mutation($input:UpdateProjectV2Input!) {
-        updateProjectV2(input:$input) {
-          projectV2 { id }
+      `
+        mutation ($input: UpdateProjectV2Input!) {
+          updateProjectV2(input: $input) {
+            projectV2 {
+              id
+            }
+          }
         }
-      }`,
+      `,
       {
         input: {
           projectId: project.id,
@@ -1241,13 +1072,9 @@ async function main() {
     );
   }
 
-  console.log(
-    `Proyecto actualizado: ${project.url}`,
-  );
+  console.log(`Proyecto actualizado: ${project.url}`);
 
-  const { appendFile } = await import(
-    'node:fs/promises'
-  );
+  const { appendFile } = await import('node:fs/promises');
 
   if (process.env.GITHUB_STEP_SUMMARY) {
     await appendFile(

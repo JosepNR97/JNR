@@ -1,4 +1,3 @@
-
 # Gestión del backlog y GitHub Project de JNR
 
 ## Fuente de verdad
