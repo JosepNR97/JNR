@@ -1,31 +1,31 @@
 ---
-name: Portfolio improvement
-about: Propose one small, reviewable improvement to the JNR portfolio
+name: Mejora del portafolio
+about: Propón una mejora pequeña, acotada y revisable para el portafolio JNR.
 ---
 
 ## Objetivo
 
-<!-- Describe the user-facing or maintenance outcome. -->
+<!-- Describe el resultado esperado para las personas usuarias o el mantenimiento. -->
 
-## Contexto y motivacion
+## Contexto y motivación
 
-<!-- Explain why the improvement matters and what is currently missing. -->
+<!-- Explica por qué es necesaria la mejora y qué falta actualmente. -->
 
 ## Alcance
 
-<!-- Include the intended approach, important paths, and what must not change. -->
+<!-- Indica el enfoque previsto, los archivos relevantes y qué debe mantenerse intacto. -->
 
 ## Dependencias
 
-<!-- Reference linked issues as #N; distinguish blockers from recommendations. -->
+<!-- Referencia las issues relacionadas mediante #N y distingue los bloqueos de las recomendaciones. -->
 
-## Criterios de aceptacion
+## Criterios de aceptación
 
-- [ ] El comportamiento esperado esta definido y verificado.
-- [ ] Las pruebas existentes siguen pasando, con nuevas pruebas si corresponde.
-- [ ] Se preservan CA/ES/EN, accesibilidad, SEO y GitHub Pages.
-- [ ] Se revisa si Search Console necesita una accion posterior al despliegue.
+- [ ] El comportamiento esperado está definido y verificado.
+- [ ] Las pruebas existentes siguen pasando; se añaden otras cuando corresponde.
+- [ ] Se preservan CA/ES/EN, la accesibilidad, el SEO y GitHub Pages.
+- [ ] Se revisa si Search Console requiere alguna acción tras el despliegue.
 
-## Prompt de implementacion (opcional)
+## Prompt de implementación (opcional)
 
-<!-- Add the exact reusable implementation prompt when appropriate. -->
+<!-- Incluye el prompt completo de implementación cuando corresponda. -->
